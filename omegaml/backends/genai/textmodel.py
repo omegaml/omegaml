@@ -4,6 +4,7 @@ import os
 import re
 from collections import namedtuple
 from getpass import getuser
+from inspect import isclass
 from itertools import chain
 from pprint import pformat
 from urllib.parse import parse_qs, urljoin, urlsplit
@@ -16,6 +17,7 @@ from openai import OpenAI
 
 from omegaml.backends.genai.index import DocumentIndex
 from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel
+from omegaml.backends.guardrails import GuardrailPolicy
 from omegaml.backends.tracking import NoTrackTracker, OmegaSimpleTracker
 from omegaml.store import OmegaStore
 from omegaml.util import KeepMissing, dict_merge, ensure_dict, ensure_list, raise_, utcnow
@@ -78,18 +80,19 @@ class TextModelBackend(GenAIBaseBackend):
         )
 
     def put(
-        self,
-        obj,
-        name,
-        template=None,
-        prompt=None,
-        pipeline=None,
-        provider=None,
-        tools=None,
-        documents=None,
-        strategy=None,
-        apikey=None,
-        **kwargs,
+            self,
+            obj,
+            name,
+            template=None,
+            prompt=None,
+            pipeline=None,
+            provider=None,
+            guardrails=None,
+            tools=None,
+            documents=None,
+            strategy=None,
+            apikey=None,
+            **kwargs,
     ):
         """save a conversational LLM model served by an OpenAI-compatible /chat/completions or /embeddings endpoints
 
@@ -105,7 +108,8 @@ class TextModelBackend(GenAIBaseBackend):
             pipeline (str): optional, the name of a @virtualobj function stored in om.models
             provider (str): optional, the client to access the <server:port> provider API, defaults to 'openai' (see
                omegaml.genai.textmodel.PROVIDERS)
-            tools (list): optional, the list of tool names stored in om.models
+            tools (list): optional, the list of tool names stored in om.models as 'tools/<name>'
+            guardrails (list): optiona, the list of guardrail names stored in om.models as 'policy/<name>'
             documents (str): optional, the name of a document store stored in om.datasets
             strategy (dict): optional, kwargs to various parts of the pipeline ('retrieve', 'complete', 'agentic')
             apikey (str): optional, the api key to use, if <credentials> is not part of the URL
@@ -149,7 +153,8 @@ class TextModelBackend(GenAIBaseBackend):
             'prompt': prompt or query.get('prompt'),
             'template': template or query.get('template'),
             'pipeline': pipeline or None,
-            'tools': tools or [],
+            'tools': ensure_list(tools or []),
+            'guardrails': ensure_list(guardrails or []),
             'documents': documents or [],
             'strategy': strategy or {},
         }
@@ -158,18 +163,19 @@ class TextModelBackend(GenAIBaseBackend):
         return meta.save()
 
     def get(
-        self,
-        name,
-        prompt=None,
-        template=None,
-        data_store=None,
-        pipeline=None,
-        tools=None,
-        documents=None,
-        strategy=None,
-        tracking=None,
-        secrets=None,
-        **kwargs,
+            self,
+            name,
+            prompt=None,
+            template=None,
+            data_store=None,
+            pipeline=None,
+            tools=None,
+            guardrails=None,
+            documents=None,
+            strategy=None,
+            tracking=None,
+            secrets=None,
+            **kwargs,
     ):
         """get a TextModel
 
@@ -181,6 +187,7 @@ class TextModelBackend(GenAIBaseBackend):
             pipeline (str): optional, the name of the @virtualobj pipeline stored in om.models, defaults to
                metadata.attributes.pipeline
             tools (list): optional, the list of tool names stored in om.models
+            guardrails (list): optional, the list of policy names stored in om.models
             documents (str): optional, the list of document stores in om.datasets, if specified requires passing
                of data_store=, defaults to metadata.attributes.tools
             strategy (dict): optional, see .put()
@@ -205,7 +212,8 @@ class TextModelBackend(GenAIBaseBackend):
         # setup from attributes
         model = meta.attributes.get('model') or model
         pipeline = pipeline or meta.attributes.get('pipeline')
-        tools = tools or meta.attributes.get('tools') or []
+        tools = ensure_list(tools or meta.attributes.get('tools') or [])
+        guardrails = ensure_list(guardrails or meta.attributes.get('guardrails') or [])
         documents = documents or meta.attributes.get('documents')
         template = template or query.get('template') or meta.attributes.get('template')
         prompt = prompt or query.get('prompt') or meta.attributes.get('prompt')
@@ -214,7 +222,8 @@ class TextModelBackend(GenAIBaseBackend):
         data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
-        tools = self._load_tools(tools)
+        tools = self._load_tools(tools, 'tools')
+        guardrails = self._load_guardrails(guardrails, 'policy', instance=True)
         base_url = self._resolve_placeholders(base_url, secrets)
         creds = self._resolve_placeholders(creds, secrets)
         self.tracking = tracking or self.tracking or self._ensure_tracking(meta)
@@ -230,6 +239,7 @@ class TextModelBackend(GenAIBaseBackend):
                         data_store=data_store,
                         pipeline=pipeline,
                         tools=tools,
+                        guardrails=guardrails,
                         documents=documents,
                         strategy=strategy,
                         tracking=self.tracking,
@@ -250,6 +260,7 @@ class TextModelBackend(GenAIBaseBackend):
                         data_store=data_store,
                         pipeline=pipeline,
                         tools=tools,
+                        guardrails=guardrails,
                         tracking=self.tracking,
                         provider=provider,
                         documents=documents,
@@ -265,12 +276,25 @@ class TextModelBackend(GenAIBaseBackend):
         data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
         return self.model_store._drop(name, force=force, **kwargs)
 
-    def _load_tools(self, tools):
-        barename = lambda v: 'tools/{v}'.format(v=str(v).replace('tools/', ''))  # works with or without tools/ prefix
-        verify = lambda t, fn: callable(fn) or raise_(ValueError(f'tool >{t}< is not a callable, got {fn}'))
-        tool_fns = [tool if callable(tool) else self.model_store.get(f'{barename(tool)}') for tool in tools]
-        tool_fns = [fn for tool, fn in zip(tools, tool_fns) if verify(tool, fn)]
-        return tool_fns
+    def _load_tools(self, tools, kind, instance=False):
+        # works with or without prefix
+        barename = lambda v: '{kind}/{v}'.format(kind=kind, v=str(v).replace(f'{kind}/', ''))
+        verify = lambda t, fn: callable(fn) or raise_(ValueError(f'{t} is not a callable, got {fn}'))
+        tool_fns = (tool if callable(tool) else self.model_store.get(f'{barename(tool)}') for tool in tools)
+        tool_fns = (fn for tool, fn in zip(tools, tool_fns) if verify(tool, fn))
+        tool_fns = (fn(self) if isclass(fn) and instance else fn for fn in tool_fns)
+        return list(tool_fns)
+
+    def _load_guardrails(self, tools, kind, instance=False):
+        # load guardrails from policy, and load scanners to any GuardrailPolicy instances
+        rails_fns = self._load_tools(tools, kind, instance=instance)
+        for rails in rails_fns:
+            # autoload scanners
+            if isinstance(rails, GuardrailPolicy) and not rails.scanners:
+                path = f'{kind}/scanners'
+                scanners = self.model_store.list(path + '/*')
+                rails.scanners = self._load_tools(scanners, path, instance=False)
+        return rails_fns
 
     def _load_documents(self, documents):
         documents = (
@@ -384,24 +408,41 @@ class TextModel(GenAIModel):
         the ./openai/messages dataset has been replaced by standard experiment tracking
         (use om.datasets to access prior conversations)
 
+    .. versionchanged:: NEXT
+        Specify guardrails=list[str] as the name of guardrail functions or GuardrailPolicy objects stored
+        in om.models as 'policy/<name>'. Guardrails are evaluated for steps 'prompt', 'input', 'output', 'action',
+        'response' and output steps. See GuardrailPolicy for details. Guardrails are evaluated after pipeline hooks
+        have completed.
+
+    .. versionchanged:: NEXT
+        pipeline functions are now consistently called for all phases of either chat() or complete(), including
+        method='retrieve' for document retrieval.
+
+    .. versionchanged:: NEXT
+        tool calls are now executed at the end of the core loop, enabling basic agentic behavior,
+        see TextModel.complete() for details.
+
+    .. versionchanged:: NEXT
+        all logged events are equivalent for .chat() and .complete(). Previously only .chat() logged all conversations.
     """
 
     def __init__(
-        self,
-        base_url,
-        model,
-        api_key=None,
-        template=None,
-        prompt=None,
-        data_store=None,
-        tracking=None,
-        pipeline=None,
-        provider='openai',
-        tools=None,
-        documents=None,
-        strategy=None,
-        trace=None,
-        **kwargs,
+            self,
+            base_url,
+            model,
+            api_key=None,
+            template=None,
+            prompt=None,
+            data_store=None,
+            tracking=None,
+            pipeline=None,
+            provider='openai',
+            tools=None,
+            guardrails=None,
+            documents=None,
+            strategy=None,
+            trace=None,
+            **kwargs,
     ):
         super().__init__()
         self.base_url = base_url
@@ -418,16 +459,23 @@ class TextModel(GenAIModel):
         self.pipeline_fn = pipeline or (lambda *args, **kwargs: None)
         self.trace_fn = trace
         self.tools = tools or []
+        self.guardrails = guardrails or []
         self.documents = documents
         self.strategy = {
             # defaults
             **{
                 # kwargs to pass to DocumentIndex.retrieve()
                 'retrieve': {'top': 1},
-                # system role
+                # system role: 'system|developer'
                 'system_role': 'developer',
-                # agentic behavior
+                # agentic behavior: if True, will continue in a loop until no more tool calls
                 'agentic': False,
+                # guardrails applicability (all is the only supported value)
+                'guardrails': 'all',
+                # choice of tools
+                'tool_choice': 'auto',
+                # provider.complete() kwargs
+                'complete': {},
             },
             # override by user provided
             **(strategy or {}),
@@ -440,7 +488,7 @@ class TextModel(GenAIModel):
     def _default_template(self):
         return """
         {% if documents -%} 
-            documents found: {{ documents }} 
+            consider these documents: {{ documents }} 
         {%- endif %} 
         {{ prompt }}
         """
@@ -477,19 +525,19 @@ class TextModel(GenAIModel):
         return response if raw else list(transformed)
 
     def complete(
-        self,
-        prompt,
-        messages=None,
-        conversation_id=None,
-        raw=False,
-        data=None,
-        chat=False,
-        stream=False,
-        use_tools=True,
-        trace=None,
-        agentic=False,
-        tools=None,
-        **kwargs,
+            self,
+            prompt,
+            messages=None,
+            conversation_id=None,
+            raw=False,
+            data=None,
+            chat=False,
+            stream=False,
+            use_tools=True,
+            trace=None,
+            agentic=False,
+            tools=None,
+            **kwargs,
     ):
         """complete a prompt
 
@@ -575,28 +623,34 @@ class TextModel(GenAIModel):
         def generate_response_loop(prompt, messages, use_tools):
             turn_prompt = prompt
             intermediate_results = None
+            turn_count = 0
             while True:
                 response = None
                 tool_calls = None
+                turn_count += 1
                 # the stream may contain multiple partial toolcall messages
                 # -- first, generate the full stream until it stops
                 # -- then, check for tool calls across the consolidate stream
-                for response in generate_response_stream_once(turn_prompt, messages, use_tools=True):
-                    try:
+                # -- use_tools=True triggers tool choices, actual decision to run below
+                try:
+                    for response in generate_response_stream_once(turn_prompt, messages, use_tools=True):
                         if not raw and intermediate_results:
                             # FIXME move to conversation state
                             response.setdefault('intermediate_results', []).append(intermediate_results)
                             intermediate_results = None
                         yield response
-                        tool_calls = self._has_tool_calls(response)
-                    except Exception as e:
-                        logger.warning(f'could not process response due to {e} in {conversation_id=}', exc_info=True)
+                        tool_calls = self._has_tool_calls(response, implicit=not raw)
+                except Exception as e:
+                    logger.warning(f'could not process response due to {e} in {conversation_id=}', exc_info=True)
+                    response = {"error": {"message": f"could not process response in {conversation_id=}"}}
+                    yield response
+                    break
                 if response and tool_calls and (agentic or use_tools):
                     intermediate_results, tool_prompts = self._handle_toolcalls(response, tool_calls, conversation_id)
                     turn_prompt = tool_prompts
                     continue
-                else:
-                    break
+                # abort if no more tool calls, or not agentic
+                break
 
         response_gen = generate_response_loop(prompt, messages, use_tools)
         return response_gen if stream else [response for response in response_gen][-1]
@@ -633,7 +687,8 @@ class TextModel(GenAIModel):
         return response_gen if stream else [response for response in response_gen][-1]
 
     def _do_chat(
-        self, prompt, messages=None, conversation_id=None, data=None, use_tools=False, raw=False, stream=False, **kwargs
+            self, prompt, messages=None, conversation_id=None, data=None, use_tools=False, raw=False, stream=False,
+            **kwargs
     ):
         assert self.data_store, "chat requires a data_store, specify data_store=om.datasets"
         assert self.tracking, "chat requires a tracking instance, use with om.runtime.experiment(): ... "
@@ -665,17 +720,17 @@ class TextModel(GenAIModel):
     def _handle_toolcalls(self, response, tool_calls, conversation_id):
         results, tool_prompts = self._call_tools(tool_calls, conversation_id)
         tool_prompts = (
-            self.pipeline(
-                method='toolcall',
-                prompt_message=None,  # FIXME
-                response_message=response,
-                messages=None,  # FIXME
-                tool_prompts=tool_prompts,
-                tool_results=results,
-                template=None,  # FIXME
-                conversation_id=conversation_id,
-            )
-            or tool_prompts
+                self.pipeline(
+                    method='toolcall',
+                    prompt_message=None,  # FIXME
+                    response_message=response,
+                    messages=None,  # FIXME
+                    tool_prompts=tool_prompts,
+                    tool_results=results,
+                    template=None,  # FIXME
+                    conversation_id=conversation_id,
+                )
+                or tool_prompts
         )
         return results, tool_prompts
 
@@ -685,9 +740,10 @@ class TextModel(GenAIModel):
         tool_prompts = []
         for tool_call in tool_calls:
             tool_specs_callables = zip(self.tools_specs(self.tools), self.tools)
-            tool_name = tool_call['function'].get('name')
-            tool_id = tool_call.get('id')
-            tool_args = tool_call['function'].get('arguments', '')
+            tool_func = tool_call.get('function', {})
+            tool_name = tool_func.get('name')
+            tool_id = tool_call.get('id', 'invalid_id')
+            tool_args = tool_func.get('arguments', '')
             matched_tool = [(ts, tf) for ts, tf in tool_specs_callables if tf.__name__ == tool_name]
             if matched_tool:
                 tool, tool_func = matched_tool[0]
@@ -765,6 +821,7 @@ class TextModel(GenAIModel):
 
     def pipeline(self, *args, **kwargs):
         self.trace_fn(*args, **kwargs) if callable(self.trace_fn) else None
+        kwargs['model'] = self
         return self.pipeline_fn(*args, **kwargs) or False
 
     def tools_specs(self, tools):
@@ -778,7 +835,8 @@ class TextModel(GenAIModel):
         }
 
     def _do_complete(
-        self, prompt, messages=None, conversation_id=None, data=None, stream=False, use_tools=False, raw=False, **kwargs
+            self, prompt, messages=None, conversation_id=None, data=None, stream=False, use_tools=False, raw=False,
+            **kwargs
     ):
         conversation_id = conversation_id or uuid4().hex
         messages = messages or []
@@ -786,20 +844,21 @@ class TextModel(GenAIModel):
         kwargs.update(stream=stream)
         # prepare tools
         if self.tools:
-            kwargs.update(tools=self.tools_specs(self.tools), tool_choice='auto')
+            kwargs.update(tools=self.tools_specs(self.tools), tool_choice=self.strategy.get('tool_choice', 'auto'))
         # prepare template
         _template = self._prepare_template(self.template, data=data)
         template = (
-            self.pipeline(
-                method='template',
-                prompt_message=prompt,
-                messages=messages,
-                template=self.template,
-                conversation_id=conversation_id,
-                **kwargs,
-            )
-            or _template
+                self.pipeline(
+                    method='template',
+                    prompt_message=prompt,
+                    messages=messages,
+                    template=self.template,
+                    conversation_id=conversation_id,
+                    **kwargs,
+                )
+                or _template
         )
+        self.eval_guardrails(messages, 'prompt', conversation_id=conversation_id)
         if prompt and isinstance(prompt, str):
             # support direct text input
             prompt_message = {"role": "user", "content": prompt, "conversation_id": conversation_id}
@@ -832,16 +891,17 @@ class TextModel(GenAIModel):
         # prepare messages
         _default_messages = messages
         messages = (
-            self.pipeline(
-                method='prepare',
-                prompt_message=prompt_message,
-                messages=messages,
-                template=template,
-                conversation_id=conversation_id,
-                **kwargs,
-            )
-            or _default_messages
+                self.pipeline(
+                    method='prepare',
+                    prompt_message=prompt_message,
+                    messages=messages,
+                    template=template,
+                    conversation_id=conversation_id,
+                    **kwargs,
+                )
+                or _default_messages
         )
+        self.eval_guardrails(messages, 'input', conversation_id=conversation_id)
         # produce a response by calling the pipeline or the model
         response = self.pipeline(
             method='complete',
@@ -856,7 +916,7 @@ class TextModel(GenAIModel):
         response = response or self.provider.complete(messages=messages, model=self.model, **kwargs)
 
         def capture_tool_calls(
-            response, prompt_message, response_message, use_tools=False, as_delta=False, chunks=None
+                response, prompt_message, response_message, use_tools=False, as_delta=False, chunks=None
         ):
             """capture toolcalls across stream messages to consolidate into a single, fully formatted toolcall
 
@@ -868,7 +928,7 @@ class TextModel(GenAIModel):
                 - https://www.perplexity.ai/search/718b5969-fce4-4ad6-bd4b-e1fe66de9d8e
             """
             tool_message = self._get_response_message(response_message)
-            should_call = response['choices'][0].get('finish_reason') == 'tool_calls'
+            should_call = self._get_finish_reason(response) == 'tool_calls'
             if should_call and self.tools:
                 if chunks:
                     # consolidate previous chunks, if any
@@ -888,19 +948,20 @@ class TextModel(GenAIModel):
                     tool_calls = tool_message.get('tool_calls')
                 if use_tools and tool_calls:
                     tool_calls = (
-                        self.pipeline(
-                            method='toolprepare',
-                            prompt_message=prompt_message,
-                            response_message=response_message,
-                            messages=messages,
-                            tool_calls=tool_calls,
-                            template=template,
-                            conversation_id=conversation_id,
-                            **kwargs,
-                        )
-                        or tool_calls
+                            self.pipeline(
+                                method='toolprepare',
+                                prompt_message=prompt_message,
+                                response_message=response_message,
+                                messages=messages,
+                                tool_calls=tool_calls,
+                                template=template,
+                                conversation_id=conversation_id,
+                                **kwargs,
+                            )
+                            or tool_calls
                     )
                     response_message['tool_calls'] = tool_calls
+                    self.eval_guardrails(messages + [response_message], 'action', conversation_id=conversation_id)
             return response, prompt_message, response_message
 
         def resolve_response(response, prompt_message, use_tools=False):
@@ -921,22 +982,24 @@ class TextModel(GenAIModel):
                     raw_response,
                 )
             response_message = response['choices'][0]['message']
+            self.eval_guardrails(messages + [response_message], 'response', conversation_id=conversation_id)
             response_message.setdefault('conversation_id', conversation_id)
             response, prompt_message, response_message = capture_tool_calls(
                 response, prompt_message, response_message, use_tools=use_tools
             )
             response_message = (
-                self.pipeline(
-                    method='process',
-                    response_message=response_message,
-                    prompt_message=prompt_message,
-                    messages=messages,
-                    template=template,
-                    conversation_id=conversation_id,
-                    **kwargs,
-                )
-                or response_message
+                    self.pipeline(
+                        method='process',
+                        response_message=response_message,
+                        prompt_message=prompt_message,
+                        messages=messages,
+                        template=template,
+                        conversation_id=conversation_id,
+                        **kwargs,
+                    )
+                    or response_message
             )
+            self.eval_guardrails(messages + [response_message], 'output', conversation_id=conversation_id)
             return response, prompt_message, response_message, raw_response
 
         def resolve_chunk(response, chunk, chunks, prompt_message, consolidated_response, use_tools=False):
@@ -989,17 +1052,18 @@ class TextModel(GenAIModel):
                     chunk, prompt_message, response_message, use_tools=use_tools, as_delta=True, chunks=chunks
                 )
                 response_message = (
-                    self.pipeline(
-                        method='process',
-                        response_message=response_message,
-                        prompt_message=prompt_message,
-                        messages=messages,
-                        template=template,
-                        conversation_id=conversation_id,
-                        **kwargs,
-                    )
-                    or response_message
+                        self.pipeline(
+                            method='process',
+                            response_message=response_message,
+                            prompt_message=prompt_message,
+                            messages=messages,
+                            template=template,
+                            conversation_id=conversation_id,
+                            **kwargs,
+                        )
+                        or response_message
                 )
+                self.eval_guardrails(messages, 'response', conversation_id=conversation_id)
             else:
                 content = ''
             # consolidate response
@@ -1024,10 +1088,18 @@ class TextModel(GenAIModel):
                         self._log_events(
                             'error', conversation_id, f'could not process stream chunk due to {e} {chunk=}'
                         )
-                        response_message = {'error': f'could not process stream chunk for {conversation_id=}'}
+                        response_message = {
+                            'error': {'message': f'could not process stream chunk for {conversation_id=}'}
+                        }
                         consolidated_response.update(response_message)
+                        self.eval_guardrails(
+                            messages + [consolidated_response], 'output', conversation_id=conversation_id
+                        )
                         yield response, prompt_message, response_message, response_message
                     else:
+                        self.eval_guardrails(
+                            messages + [consolidated_response], 'output', conversation_id=conversation_id
+                        )
                         yield resolved
             finally:
                 # log consolidated response only
@@ -1040,8 +1112,24 @@ class TextModel(GenAIModel):
             except Exception as e:
                 logger.warning(f"Could not process chunk {response.get('id')} due to {e}")
                 self._log_events('error', conversation_id, [response])
+                response_message = {'error': {"message": f'could not process chunk for {conversation_id=}'}}
+                self.eval_guardrails(messages + [response_message], 'output', conversation_id=conversation_id)
+                yield response, prompt_message, response_message, response_message
             finally:
                 self._log_events('conversation', conversation_id, self._get_response_message(response))
+
+    def eval_guardrails(self, messages, step, conversation_id=None):
+        try:
+            for rails in self.guardrails:
+                eval_fn = getattr(rails, 'eval', rails)
+                result = eval_fn(messages, step=step, model=self)
+                result = getattr(rails, 'data', result)
+        except Exception as e:
+            result = {'error': {'message': str(e)}}
+            raise e
+        finally:
+            if self.guardrails:
+                self._log_events('guardrails', conversation_id, result)
 
     def _parsed_completion(self, response):
         return response['choices'][0]['message'].get('content')
@@ -1052,7 +1140,7 @@ class TextModel(GenAIModel):
 
     def _get_response_message(self, response):
         # return the current response message or chunk
-        if 'role' in response:
+        if 'role' in response or 'error' in response:
             # that's already a message
             return response
         if 'delta' in response['choices'][0]:
@@ -1061,9 +1149,14 @@ class TextModel(GenAIModel):
             message = response['choices'][0]['message']
         return message
 
-    def _has_tool_calls(self, response):
+    def _get_finish_reason(self, response):
+        return response.get('choices', [{}])[-1].get('finish_reason')
+
+    def _has_tool_calls(self, response, implicit=False):
         message = self._get_response_message(response)
-        return message.get('tool_calls') or []
+        finish_reason = self._get_finish_reason(response)
+        tool_calls = message.get('tool_calls', [])
+        return tool_calls if (finish_reason == 'tool_calls' or implicit) else False
 
     def _get_function_spec(self, func):
         """
@@ -1120,12 +1213,27 @@ class TextModel(GenAIModel):
             context = dict(prompt=prompt, query=query, documents=None, datetime=utcnow())
             return self._resolve_template(template, **context)
         retrieve_kwargs = self.strategy.get('retrieve', {})
-        docs = documents.retrieve(query, **retrieve_kwargs)
-        if docs:
-            documents = '\n\n'.join(d.get('text') for d in docs)
+        if documents:
+            docs = documents.retrieve(query, **retrieve_kwargs)
         else:
-            documents = '(no documents found)'
-        context = dict(prompt=prompt, query=query, documents=documents, datetime=utcnow())
+            docs = []
+        docs = (
+                self.pipeline(
+                    method='retrieve',
+                    prompt_message=prompt,
+                    messages=None,  # FIXME
+                    docs=docs,
+                    template=template,
+                )
+                or docs
+        )
+        if docs:
+            retrieved = '\n\n'.join(str(d.get('text') if isinstance(d, dict) else d) for d in docs)
+        elif documents:
+            retrieved = '(no documents found)'
+        else:
+            retrieved = None
+        context = dict(prompt=prompt, query=query, documents=retrieved, datetime=utcnow())
         return self._resolve_template(template, **context)
 
     def _resolve_template(self, template, **context):
