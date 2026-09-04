@@ -22,7 +22,7 @@ class BaseDataBackend(BackendBaseCommon):
         """
         return False
 
-    def put(self, obj, name, attributes=None, **kwargs):
+    def put(self, obj, name, /, attributes=None, **kwargs):
         """
         put an obj
 
