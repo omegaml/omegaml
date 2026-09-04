@@ -395,6 +395,20 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         data = result.get()
         assert_array_almost_equal(df['y'].values, data[:, 0])
 
+    @unittest.skip("fails due to script not working with sequenced callback")
+    def test_task_sequence_chained(self):
+        om = Omega()
+        @virtualobj
+        def myfunc(data=None, **kwargs):
+            print(data, kwargs)
+            return data
+        om.scripts.put(myfunc, 'myfunc')
+        with om.runtime.sequence() as ctr:
+            for i in range(3):
+                ctr.script('myfunc').run(i, chained=i > 0, as_callback=i > 0)
+            result = ctr.run()
+        data = result.get()
+
     def test_task_parallel(self):
         om = Omega()
         df = pd.DataFrame({'x': range(1, 10),
