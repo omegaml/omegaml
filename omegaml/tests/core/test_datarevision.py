@@ -1,11 +1,10 @@
 import pandas as pd
 import unittest
 from datetime import datetime
-from pandas._testing import assert_frame_equal
-
 from omegaml import Omega
 from omegaml.mixins.store.datarevision import DataRevisionMixin
 from omegaml.tests.util import OmegaTestMixin
+from pandas._testing import assert_frame_equal
 
 
 class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):

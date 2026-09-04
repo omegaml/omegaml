@@ -206,10 +206,7 @@ OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', Tr
 #: enable request caching for metadata
 OMEGA_STORE_CACHE = truefalse(os.environ.get('OMEGA_STORE_CACHE', False))
 #: runtimes mixins
-OMEGA_RUNTIME_MIXINS = [
-    'omegaml.runtimes.mixins.ModelMixin',
-    'omegaml.runtimes.mixins.GridSearchMixin',
-]
+OMEGA_RUNTIME_MIXINS = ['omegaml.runtimes.mixins.ModelMixin', 'omegaml.runtimes.mixins.GridSearchMixin']
 #: mdataframe mixins
 OMEGA_MDF_MIXINS = [
     ('omegaml.mixins.mdf.ApplyMixin', 'MDataFrame,MSeries'),
@@ -467,8 +464,9 @@ def load_user_extensions(vars=globals()):
         except:
             omvar_type = type(omvar)
             k_type = type(v)
-            msg = ('user extensions error: cannot apply {k} to {omvar}, '
-                   'expected type {omvar_type} got {k_type}').format(**locals())
+            msg = (
+                'user extensions error: cannot apply {k} to {omvar}, expected type {omvar_type} got {k_type}'
+            ).format(**locals())
             raise ValueError(msg)
 
 
@@ -490,8 +488,10 @@ def load_framework_support(vars=globals()):
         os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', "3")
         os.environ.setdefault('TF_ENABLE_ONEDNN_OPTS', "0")
         if module_available('keras') and not os.environ.get("TF_USE_LEGACY_KERAS") == "1":
-            warnings.warn('transformers requires keras < 3. Set env variable TF_USE_LEGACY_KERAS=1. See'
-                          ' https://github.com/huggingface/transformers/issues/34761 for details')
+            warnings.warn(
+                'transformers requires keras < 3. Set env variable TF_USE_LEGACY_KERAS=1. See'
+                ' https://github.com/huggingface/transformers/issues/34761 for details'
+            )
     if tensorflow_available(max='2.15', py_max='3.11'):
         #: tensorflow backend
         # https://stackoverflow.com/a/38645250
