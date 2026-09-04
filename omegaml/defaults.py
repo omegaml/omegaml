@@ -1,13 +1,12 @@
 from __future__ import absolute_import
 
-from os.path import basename
-from pathlib import Path
-
 import logging
 import os
 import shutil
 import sys
 import warnings
+from os.path import basename
+from pathlib import Path
 
 from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 
@@ -28,9 +27,9 @@ OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
 OMEGA_TMP = os.environ.get('OMEGA_TMP', '/tmp')
 #: the fully qualified mongodb database URL, including the database name
 OMEGA_MONGO_URL = (
-    os.environ.get('OMEGA_MONGO_URL')  # default URL
-    or os.environ.get('MONGO_URL')  # typical mongo URL in paas denvironments
-    or 'mongodb://admin:foobar@localhost:27017/omega'  # fallback default
+        os.environ.get('OMEGA_MONGO_URL')  # default URL
+        or os.environ.get('MONGO_URL')  # typical mongo URL in paas denvironments
+        or 'mongodb://admin:foobar@localhost:27017/omega'  # fallback default
 )
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
@@ -55,9 +54,9 @@ OMEGA_MONGO_SSL_KWARGS = {
 OMEGA_LOCAL_RUNTIME = truefalse(os.environ.get('OMEGA_LOCAL_RUNTIME', False))
 #: the celery broker name or URL
 OMEGA_BROKER = (
-    os.environ.get('OMEGA_BROKER')  # omega broker url
-    or os.environ.get('RABBITMQ_URL')  # typical rabbitmq url in paas
-    or 'amqp://admin:foobar@localhost:5672//'  # default fallback url
+        os.environ.get('OMEGA_BROKER')  # omega broker url
+        or os.environ.get('RABBITMQ_URL')  # typical rabbitmq url in paas
+        or 'amqp://admin:foobar@localhost:5672//'  # default fallback url
 )
 #: is the worker considered inside the same cluster as the client
 OMEGA_SERVICES_INCLUSTER = truefalse(os.environ.get('OMEGA_SERVICES_INCLUSTER', False))
@@ -163,10 +162,11 @@ OMEGA_STORE_BACKENDS_R = {
     'package.r': 'omegaml.backends.rsystem.rscripts.RPackageData',
 }
 OMEGA_STORE_BACKENDS_OPENAI = {
-    'genai.llm': 'omegaml.backends.genai.models.GenAIBaseBackend',
-    'genai.text': 'omegaml.backends.genai.textmodel.TextModelBackend',
-    'pgvector.conx': 'omegaml.backends.genai.pgvector.PGVectorBackend',
-    'vector.conx': 'omegaml.backends.genai.mongovector.MongoDBVectorStore',
+    'genai.llm': 'omegaml.backends.genai.GenAIBaseBackend',
+    'genai.convs': 'omegaml.backends.genai.models.ConversationModelBackend',
+    'genai.text': 'omegaml.backends.genai.models.TextModelBackend',
+    'pgvector.conx': 'omegaml.backends.genai.retrieval.PGVectorBackend',
+    'vector.conx': 'omegaml.backends.genai.retrieval.MongoDBVectorStore',
 }
 OMEGA_STORE_BACKENDS_OPTIONAL = {  #
     'pytorch': {'pytorch.pth', 'omegaml.backends.pytorch.PytorchModelBackend'}

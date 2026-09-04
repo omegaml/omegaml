@@ -1,14 +1,14 @@
-from unittest import TestCase, mock
-
 from contextlib import contextmanager
 from io import BytesIO
-from sklearn.exceptions import NotFittedError
+from unittest import TestCase, mock
 from unittest.mock import MagicMock
 
-from omegaml.backends.genai.dbmigrate import DatabaseMigrator
-from omegaml.backends.genai.embedding import SimpleEmbeddingModel
-from omegaml.backends.genai.index import DocumentIndex
-from omegaml.backends.genai.pgvector import PGVectorBackend
+from sklearn.exceptions import NotFittedError
+
+from omegaml.backends.genai.retrieval.dbmigrate import DatabaseMigrator
+from omegaml.backends.genai.retrieval.embedding import SimpleEmbeddingModel
+from omegaml.backends.genai.retrieval.index import DocumentIndex
+from omegaml.backends.genai.retrieval.pgvector import PGVectorBackend
 from omegaml.client.util import subdict
 from omegaml.tasks import omega_indexdocuments
 from omegaml.tests.util import OmegaTestMixin
@@ -22,7 +22,7 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         self.om.models.register_backend(self._vectordb_cls.KIND, self._vectordb_cls)
         self.clean()
         # uncomment to get debug logging for the PGVector backend
-        # logging.getLogger('omegaml.backends.genai.pgvector').setLevel(logging.DEBUG)
+        # logging.getLogger('omegaml.backends.genai.retrieval.pgvector').setLevel(logging.DEBUG)
         # logging.info('Running PGVectorDBTests with mocked backend')
 
     def initparams(self):
@@ -47,9 +47,9 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         # -- docker run -e POSTGRES_PASSWORD=test -p 5432:5432 pgvector/pgvector:pg16
         om = self.om
         meta = om.datasets.put(self._cnx_str, 'mydocs',
-                               replace=True,
-                               collection='test',
-                               vector_size=3)
+            replace=True,
+            collection='test',
+            vector_size=3)
         self.assertEqual(meta.kind, self._vectordb_cls.KIND)
         self.assertEqual(meta.kind_meta['connection'], self._cnx_str)
         documents = [
@@ -75,9 +75,9 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
     def test_document_list(self):
         om = self.om
         meta = om.datasets.put(self._cnx_str, 'mydocs',
-                               replace=True,
-                               collection='test',
-                               vector_size=3)
+            replace=True,
+            collection='test',
+            vector_size=3)
         documents = [
             ('my text', [1, 2, 3]),
             ('my other text', [99, 100, 200]),
@@ -86,15 +86,15 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         index = om.datasets.get('mydocs')
         documents = index.list()
         self.assertEqual([subdict(doc, ['source', 'attributes']) for doc in documents],
-                         [{'source': '', 'attributes': {'tags': [], 'source': ''}},
-                          {'source': '', 'attributes': {'tags': [], 'source': ''}}])
+            [{'source': '', 'attributes': {'tags': [], 'source': ''}},
+             {'source': '', 'attributes': {'tags': [], 'source': ''}}])
 
     def test_delete_index(self):
         om = self.om
         meta = om.datasets.put(self._cnx_str, 'mydocs',
-                               replace=True,
-                               collection='test',
-                               vector_size=3)
+            replace=True,
+            collection='test',
+            vector_size=3)
         documents = [
             ('my text', [1, 2, 3]),
             ('my other text', [99, 100, 200]),
@@ -108,9 +108,9 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
     def test_delete_document(self):
         om = self.om
         meta = om.datasets.put(self._cnx_str, 'mydocs',
-                               replace=True,
-                               collection='test',
-                               vector_size=3)
+            replace=True,
+            collection='test',
+            vector_size=3)
         documents = [
             ('my text', [1, 2, 3]),
             ('my other text', [99, 100, 200]),
@@ -135,10 +135,10 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         embedding_model.fit(documents)
         om.models.put(embedding_model, 'embedding')
         meta = om.datasets.put(self._cnx_str, 'mydocs',
-                               embedding_model='embedding',
-                               collection='test3',
-                               vector_size=8,
-                               replace=True)
+            embedding_model='embedding',
+            collection='test3',
+            vector_size=8,
+            replace=True)
         # check index is stored as expected
         self.assertEqual(meta.kind_meta['collections']['test3']['embedding_model'], 'embedding')
         mydocs = om.datasets.get('mydocs', model_store=om.models)
@@ -163,10 +163,10 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         embedding_model.fit(list(doc for doc, attributes in documents))
         om.models.put(embedding_model, 'embedding')
         meta = om.datasets.put(self._cnx_str, 'mydocs',
-                               embedding_model='embedding',
-                               collection='test3',
-                               vector_size=embedding_model.dimensions,
-                               replace=True)
+            embedding_model='embedding',
+            collection='test3',
+            vector_size=embedding_model.dimensions,
+            replace=True)
         # check index is stored as expected
         self.assertEqual(meta.kind_meta['collections']['test3']['embedding_model'], 'embedding')
         mydocs = om.datasets.get('mydocs', model_store=om.models)
@@ -180,28 +180,28 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
             self.assertTrue(docs[0]['text'] == doc)
         # test there is never a document with the wrong tags
         docs = om.datasets.get('mydocs', document='quick brown',
-                               model_store=om.models,
-                               tags=['nonexistent'])
+            model_store=om.models,
+            tags=['nonexistent'])
         self.assertEqual(len(docs), 0)
         # note that giving a tag that exists will return documents but give a large distance
         docs = om.datasets.get('mydocs', document='quick brown',
-                               model_store=om.models,
-                               tags=['vehicle'])
+            model_store=om.models,
+            tags=['vehicle'])
         self.assertEqual(len(docs), 1)
         self.assertTrue(docs[0]['text'] == 'A fast car zooms by')
         self.assertTrue(docs[0]['distance'] > 0.5)  # assuming a distance threshold
         # filter by max_distance
         docs = om.datasets.get('mydocs', document='quick brown',
-                               model_store=om.models,
-                               tags=['vehicle'],
-                               max_distance=0.1)
+            model_store=om.models,
+            tags=['vehicle'],
+            max_distance=0.1)
         self.assertEqual(len(docs), 0)
         # get all tags
         index = om.datasets.get('mydocs')
         self.assertIsInstance(index, DocumentIndex)
         tags = index.attributes()
         self.assertEqual(tags,
-                         {'labels': {'lazy': 1}, 'tags': {'animal': 2, 'lazy': 1, 'vehicle': 1}, 'source': {'': 3}})
+            {'labels': {'lazy': 1}, 'tags': {'animal': 2, 'lazy': 1, 'vehicle': 1}, 'source': {'': 3}})
         tags = index.attributes(key='tags')
         self.assertEqual(tags, {'tags': {'animal': 2, 'lazy': 1, 'vehicle': 1}})
         labels = index.attributes(key='labels')
@@ -217,10 +217,10 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         embedding_model.fit(documents)
         om.models.put(embedding_model, 'embedding')
         om.datasets.put(self._cnx_str, 'myindex',
-                        embedding_model='embedding',
-                        replace=True,
-                        collection='test',
-                        vector_size=embedding_model.dimensions)
+            embedding_model='embedding',
+            replace=True,
+            collection='test',
+            vector_size=embedding_model.dimensions)
 
         # simulate upload and background indexing
         def simulate_upload_file(fn, index):
