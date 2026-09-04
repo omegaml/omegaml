@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import logging
 import sys
 import warnings
@@ -10,7 +8,7 @@ from omegaml.util import is_dataframe, is_ndarray, is_series
 logger = logging.getLogger(__file__)
 
 
-class ModelMixin(object):
+class ModelMixin:
     """mixin methods to OmegaModelProxy"""
 
     def fit(self, Xname, Yname=None, **kwargs):
@@ -141,6 +139,16 @@ class ModelMixin(object):
         Xname = self._ensure_data_is_stored(Xname)
         return omega_complete.delay(self.modelname, Xname, rName=rName, **kwargs)
 
+    def transcribe(self, Xname, rName=None, **kwargs):
+        omega_transcribe = self.task('omegaml.tasks.omega_transcribe')
+        Xname = self._ensure_data_is_stored(Xname)
+        return omega_transcribe.delay(self.modelname, Xname=Xname, rName=rName, **kwargs)
+
+    def speech(self, Xname, rName=None, **kwargs):
+        omega_speech = self.task('omegaml.tasks.omega_speech')
+        Xname = self._ensure_data_is_stored(Xname)
+        return omega_speech.delay(self.modelname, Xname=Xname, rName=rName, **kwargs)
+
     def embed(self, Xname, rName=None, **kwargs):
         """
         embed
@@ -213,10 +221,7 @@ class ModelMixin(object):
                 )
                 name = '%s_%s' % (prefix, uuid4().hex)
                 self.runtime.omega.datasets.put(name_or_data, name)
-        elif is_dataframe(name_or_data) or is_series(name_or_data):
-            name = '%s_%s' % (prefix, uuid4().hex)
-            self.runtime.omega.datasets.put(name_or_data, name)
-        elif is_ndarray(name_or_data):
+        elif is_dataframe(name_or_data) or is_series(name_or_data) or is_ndarray(name_or_data):
             name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         else:

@@ -1,7 +1,9 @@
 from uuid import uuid4
 
+from omegaml.backends.genai.strategy.mixinbase import ConversationModelMixinBase
 
-class EmbeddingsMixin:
+
+class EmbeddingsMixin(ConversationModelMixinBase):
     def embed(self, documents, dimensions=None, raw=False, conversation_id=None, **kwargs):
         dimensions = dimensions or self.kwargs.get('dimensions', 256)
         response = self.provider.embed(documents, dimensions=dimensions, model=self.model, **kwargs)

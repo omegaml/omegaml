@@ -10,7 +10,7 @@ from http import HTTPStatus
 import celery
 import flask
 from celery.result import AsyncResult, EagerResult
-from flask import make_response, request
+from flask import request
 from werkzeug.exceptions import NotFound
 
 EAGER_RESULTS = {}
@@ -120,25 +120,8 @@ class AsyncResponseMixin:
                 'task_id': result.id,
             })
             status = status or HTTPStatus.ACCEPTED
-        elif isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
-            body, status = result
-            headers = headers or {}
-        elif isinstance(result, tuple) and len(result) == 3 and isinstance(result[1], int):
-            body, status, headers = result
-        elif isinstance(result, tuple) and len(result) == 4 and isinstance(result[1], int):
-            body, status, headers, cookies = result
-        else:
-            body, status, headers = result, status or HTTPStatus.OK, {}
-        return self.response(body, int(status), headers, cookies, request=request)
-
-    def response(self, body, status, headers, cookies, request=None):
-        # request may be required in subclasses of AsyncResponseMixin, e.g. Django tastypie Resource.create_response
-        if not cookies:
-            return body, status, headers
-        resp = make_response((body, status, headers))
-        for k, v in (cookies or {}).items():
-            resp.set_cookie(k, str(v))
-        return resp
+            return self.response(body, int(status), headers, cookies, request=request)
+        return self.create_sync_response(result, status=status, headers=headers, cookies=cookies, request=request)
 
 
 class AsyncTaskResourceMixin:
@@ -218,9 +201,9 @@ class AsyncTaskResourceMixin:
 
         """
         promise = self.get_async_result(taskid, context)
-        action_meth = getattr(self, 'get_task_{}'.format(action), None)
+        action_meth = getattr(self, f'get_task_{action}', None)
         if action_meth is None:
-            raise ValueError('unknown action {} on task {}'.format(action, taskid))
+            raise ValueError(f'unknown action {action} on task {taskid}')
         try:
             value = action_meth(promise, taskid, context)
             status = HTTPStatus.OK
@@ -253,7 +236,7 @@ class AsyncTaskResourceMixin:
     def get_async_result(self, task_id, context):
         # from a given task id return a AsyncResource as promise
         # hack to allow local testing
-        if not getattr(self.celeryapp.conf, 'CELERY_ALWAYS_EAGER'):
+        if not self.celeryapp.conf.CELERY_ALWAYS_EAGER:
             promise = self.celeryapp.AsyncResult(task_id)
         else:
             promise = EAGER_RESULTS[task_id]
@@ -289,4 +272,4 @@ def resolve(uri, method='GET,PUT,POST,DELETE,PATCH'):
             pass
         else:
             return result
-    raise NotFound("path {} not found".format(uri))
+    raise NotFound(f"path {uri} not found")

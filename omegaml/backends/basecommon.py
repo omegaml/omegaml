@@ -215,7 +215,7 @@ class BackendBaseCommon:
         pre_call = getattr(self._call_handler, f"_pre_{method}", pre_nop)
         post_call = getattr(self._call_handler, f"_post_{method}", post_nop)
         common_kwargs = dict(
-            data_store=getattr(self, "data_store"),  # fmt:asis
+            data_store=getattr(self, "data_store"),
             model_store=getattr(self, "model_store"),
         )
         args, kwargs = pre_call(*args, **kwargs)

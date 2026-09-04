@@ -1,7 +1,11 @@
 import getpass
+import inspect
 import sys
-from celery import Task
 from contextlib import contextmanager
+from traceback import format_exc
+
+from celery import Task
+from celery.utils.log import task_logger
 from kombu.serialization import registry
 from kombu.utils import cached_property
 
@@ -294,6 +298,26 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         finally:
             super().on_success(retval, task_id, args, kwargs)
             self.reset()
+
+    def maybe_stream(self, result, stream=False):
+        if stream and (inspect.isgenerator(result) or isinstance(result, list)):
+            stream = self.om.streams.get(f'.system/complete/{self.request.id}')
+            chunk = None
+            try:
+                for chunk in result:
+                    task_logger.debug('streaming chunk %s in %s', chunk, self.request.id)
+                    stream.append(chunk)
+            except Exception as e:
+                task_logger.error('error streaming %s due to %s', self.request.id, format_exc())
+                chunk = {'message': repr(e), 'stream_complete': 'error'}
+                stream.append(chunk)
+            else:
+                task_logger.debug('finalized streaming %s', self.request.id)
+                stream.append(
+                    {'stream_complete': 'stop'},
+                )
+            result = {'result': chunk}
+        return result
 
 
 def get_dataset_representations(items):

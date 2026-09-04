@@ -6,8 +6,8 @@ from numpy.testing import assert_almost_equal
 from sklearn.linear_model import LinearRegression
 
 from omegaml import Omega
-from omegaml.server import restapi
 from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.server import restapi
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
 

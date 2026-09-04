@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import importlib
 import json
 import logging
@@ -10,6 +8,7 @@ import threading
 import uuid
 import warnings
 from base64 import b64encode
+from collections.abc import Iterator
 from copy import deepcopy
 from datetime import date, datetime, timezone
 from hashlib import sha256
@@ -17,7 +16,7 @@ from importlib import import_module
 from importlib.util import find_spec
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Iterator
+from typing import Any
 
 import validators
 from bson import ObjectId
@@ -113,8 +112,8 @@ def settings(reload=False):
         from django.conf import settings as djsettings  # @UnresolvedImport
 
         try:
-            getattr(djsettings, 'SECRET_KEY')
-        except Exception as e:
+            djsettings.SECRET_KEY
+        except Exception:
             from warnings import warn
 
             warn(
@@ -125,7 +124,7 @@ def settings(reload=False):
             raise
         else:
             defaults = djsettings
-    except Exception as e:
+    except Exception:
         # django failed to initialize, use omega defaults
         defaults = omdefaults
     else:
@@ -150,10 +149,10 @@ def override_settings(**kwargs):
         setattr(cfgvars, k, v)
     # -- OMEGA_CELERY_CONFIG updates
     celery_config = getattr(cfgvars, 'OMEGA_CELERY_CONFIG', {})
-    for k in [k for k in kwargs.keys() if k.startswith('OMEGA_CELERY')]:
+    for k in [k for k in kwargs if k.startswith('OMEGA_CELERY')]:
         celery_k = k.replace('OMEGA_', '')
         celery_config[celery_k] = kwargs[k]
-    setattr(cfgvars, 'OMEGA_CELERY_CONFIG', celery_config)
+    cfgvars.OMEGA_CELERY_CONFIG = celery_config
 
 
 def delete_database():
@@ -290,7 +289,7 @@ def unravel_index(df, row_count=0):
     # remember original names
     idx_meta = {'names': df.index.names}
     # convert index names so we can restore them later
-    store_idxnames = ['_idx#{}_{}'.format(i, name or i) for i, name in enumerate(idx_meta['names'])]
+    store_idxnames = [f'_idx#{i}_{name or i}' for i, name in enumerate(idx_meta['names'])]
     df.index.names = store_idxnames
     unravelled_df, idx_meta = df.reset_index(), idx_meta
     # store row ids
@@ -298,9 +297,8 @@ def unravel_index(df, row_count=0):
     # restore index names on original dataframe
     df.index.names = idx_meta['names']
     # treat particular index types
-    if isinstance(df.index, pd.DatetimeIndex):
-        if getattr(df.index, 'freq') is not None:
-            idx_meta['freq'] = getattr(df.index.freq, 'name', None)
+    if isinstance(df.index, pd.DatetimeIndex) and df.index.freq is not None:
+        idx_meta['freq'] = getattr(df.index.freq, 'name', None)
     return unravelled_df, idx_meta
 
 
@@ -477,9 +475,8 @@ def gsreshaped(data):
     if isinstance(data, (pd.Series, pd.DataFrame)):
         if len(data.shape) == 2 and data.shape[1] == 1:
             data = data.values.reshape(-1)
-    elif isinstance(data, np.ndarray):
-        if len(data.shape) == 2 and data.shape[1] == 1:
-            data = data.reshape(-1)
+    elif isinstance(data, np.ndarray) and len(data.shape) == 2 and data.shape[1] == 1:
+        data = data.reshape(-1)
     return data
 
 
@@ -508,7 +505,7 @@ def convert_dtypes(df, dtypes):
     return df
 
 
-class PickableCollection(object):
+class PickableCollection:
     """
     A pickable pymongo.Collection
 
@@ -529,7 +526,7 @@ class PickableCollection(object):
     """
 
     def __init__(self, collection):
-        super(PickableCollection, self).__setattr__('collection', collection)
+        super().__setattr__('collection', collection)
         self._pkl_cloned = False
 
     def __getattr__(self, k):
@@ -585,11 +582,11 @@ class PickableCollection(object):
         client = MongoClient(url, authSource=state['credentials']['source'], uuidRepresentation='standard', **options)
         db = client.get_database()
         collection = db[state['name']]
-        super(PickableCollection, self).__setattr__('collection', collection)
+        super().__setattr__('collection', collection)
         self._pkl_cloned = True
 
     def __repr__(self):
-        return 'PickableCollection({})'.format(repr(self.collection))
+        return f'PickableCollection({self.collection!r})'
 
 
 def extend_instance(obj, cls, *args, conditional=None, **kwargs):
@@ -621,7 +618,7 @@ def remove_temp_filename(fn, dir=True):
         if dirname.startswith('/tmp/') and len(dirname.split('/')) > 1:
             rmtree(dirname)
         else:
-            warnings.warn('will not remove directory {} as it is outside of /tmp'.format(fn))
+            warnings.warn(f'will not remove directory {fn} as it is outside of /tmp')
 
 
 def ensure_python_array(arr, dtype):
@@ -659,7 +656,7 @@ def module_available(modname, min=None, max=None, load=True, py_min=None, py_max
             import_module(modname)
         elif importlib.util.find_spec(modname) is None:
             raise ModuleNotFoundError(modname)
-    except (TypeError, ModuleNotFoundError) as e:
+    except (TypeError, ModuleNotFoundError):
         return False
     if py_min or py_max or min or max:
         try:
@@ -679,10 +676,8 @@ def module_available(modname, min=None, max=None, load=True, py_min=None, py_max
             py_max = py_max or 'any'
             if any(bool(v) is False for v in (min_ok, max_ok, py_min_ok, py_max_ok)):
                 logger.warning(
-                    (
-                        f'require {modname}>={min},<={max}, have {modname}=={mod_version} Python=={py_version}.'
-                        f'Use a model helper for {modname} models.'
-                    )
+                    f'require {modname}>={min},<={max}, have {modname}=={mod_version} Python=={py_version}.'
+                    f'Use a model helper for {modname} models.'
                 )
             return all(v for v in (min_ok, max_ok, py_min_ok, py_max_ok))
     return True
@@ -759,7 +754,7 @@ def calltrace(obj):
     return obj
 
 
-class DefaultsContext(object):
+class DefaultsContext:
     """
     om.defaults as set for a particular Omega() instance
 
@@ -810,7 +805,7 @@ class DefaultsContext(object):
 
     def __repr__(self):
         d = {k: self[k] for k in self.keys()}
-        return 'DefaultsContext({})'.format(repr(d))
+        return f'DefaultsContext({d!r})'
 
 
 def ensure_json_serializable(v):
@@ -956,7 +951,7 @@ def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None
                 return data
         # nothing worked so far
         actions = {
-            'fail': lambda: throw(ValueError("Reading {} caused exceptions {}".format(file_or_str, exceptions))),
+            'fail': lambda: throw(ValueError(f"Reading {file_or_str} caused exceptions {exceptions}")),
             'warn': lambda: logging.warning(msg.format(file_or_str)) or default,
             'silent': lambda: default,
         }
@@ -971,9 +966,9 @@ def raises(fn, wanted_ex):
     try:
         fn()
     except Exception as e:
-        assert isinstance(e, wanted_ex), "expected {}, raised {} instead".format(wanted_ex, e)
+        assert isinstance(e, wanted_ex), f"expected {wanted_ex}, raised {e} instead"
     else:
-        raise ValueError("did not raise {}".format(wanted_ex))
+        raise ValueError(f"did not raise {wanted_ex}")
     return True
 
 
@@ -1114,13 +1109,9 @@ class MongoEncoder(json.JSONEncoder):
             return obj.to_dict(orient='records')
         elif isinstance(obj, pd.Series):
             return obj.tolist()
-        elif is_array_like(obj) and is_integer_dtype(obj):
+        elif is_array_like(obj) and is_integer_dtype(obj) or is_array_like(obj) and is_float_dtype(obj):
             return pd.to_numeric(obj, downcast='float')
-        elif is_array_like(obj) and is_float_dtype(obj):
-            return pd.to_numeric(obj, downcast='float')
-        elif isinstance(obj, (datetime, pd.Timestamp)):
-            return obj.isoformat()
-        elif isinstance(obj, date):
+        elif isinstance(obj, (datetime, pd.Timestamp)) or isinstance(obj, date):
             return obj.isoformat()
         elif isinstance(obj, pd.Timedelta):
             return obj.value
@@ -1137,7 +1128,6 @@ class MongoEncoder(json.JSONEncoder):
             # ignore exception in favor of string repr
             msg = f'Could not encode value of {type(obj)} natively due to {e}, resolved to str(obj)'
             warnings.warn(msg)
-            pass
         return str(obj)
 
 
@@ -1188,7 +1178,7 @@ class IterableJsonDump(list):
         return buffer.getvalue()
 
 
-isTrue = lambda v: v if isinstance(v, bool) else (v.lower() in ['yes', 'y', 't', 'true', '1'])
+isTrue = lambda v: v if isinstance(v, bool) else (str(v).lower() in ['yes', 'y', 't', 'true', '1'])
 
 
 class SystemPosixPath(type(Path()), Path):
@@ -1462,7 +1452,7 @@ def failsafe_yaspin(mock=False):
 
         @contextmanager
         def yaspin(*args, text=None, **kwargs):
-            setattr(yaspin, 'text', text)
+            yaspin.text = text
             logger.debug(getattr(yaspin, 'text', '...'))
             yield
 
