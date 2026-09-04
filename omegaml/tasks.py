@@ -27,6 +27,12 @@ def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=
 
 
 @shared_task(base=OmegamlTask, bind=True)
+def omega_invoke(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
+    result = self.get_delegate(modelname).perform('invoke', *self.delegate_args, **self.delegate_kwargs)
+    return sanitized(self.maybe_stream(result, stream=stream))
+
+
+@shared_task(base=OmegamlTask, bind=True)
 def omega_transcribe(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
     default_kwargs = {
         'as_dict': True,

@@ -9,6 +9,7 @@ $(function () {
     availablePipelines: window.context.availablePipelines || [],
     availableDocuments: window.context.availableDocuments || [],
     availableGuardrails: window.context.availableGuardrails || [],
+    availableTools: window.context.availableTools || [],
     isNew: window.context.isNew || false,
   });
   assistantFormView.render();
@@ -28,7 +29,7 @@ $(function () {
       },
       error: function (xhr) {
         alert(
-          "error saving prompt Status" + xhr.status + ": " + xhr.statusText
+          "error saving prompt Status" + xhr.status + ": " + xhr.statusText,
         );
       },
     });

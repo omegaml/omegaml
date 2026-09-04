@@ -83,3 +83,4 @@ class dotable(dict):
 
 
 subdict = lambda d, keys: {k: d[k] for k in keys if k in d}
+subdict_except = lambda d, keys: subdict(d, (k for k in d if k not in keys))
