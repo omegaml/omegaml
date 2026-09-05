@@ -2,8 +2,8 @@ import json
 import unittest
 
 from omegaml import Omega
-from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModelHandler
-from omegaml.backends.genai.textmodel import TextModelBackend
+from omegaml.backends.genai import GenAIBaseBackend, GenAIModelHandler
+from omegaml.backends.genai.models.conversation import ConversationModelBackend
 from omegaml.client.auth import OmegaRestApiAuth
 from omegaml.server import restapi
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
@@ -18,7 +18,7 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
         self.auth = OmegaRestApiAuth('user', 'pass')
         self.clean()
         self.om.models.register_backend(GenAIBaseBackend.KIND, GenAIBaseBackend)
-        self.om.models.register_backend(TextModelBackend.KIND, TextModelBackend)
+        self.om.models.register_backend(ConversationModelBackend.KIND, ConversationModelBackend)
 
     @property
     def _headers(self):
@@ -50,13 +50,13 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
         # -- data: { ... } # every streamed response is a json object
         # -- https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
         data = list(map(lambda d: json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d,
-                        resp.iter_encoded()))
+            resp.iter_encoded()))
         self.assertEqual(len(data), len('hello'))
         # FIXME the 'result' should really be 'content' (for consistency with OpenAI?)
         self.assertEqual(data[-1],
-                         {'model': 'mymodel',
-                          'result': {'content': 'hello', 'delta': 'o', 'model': 'mymodel'},
-                          'resource_uri': 'mymodel'})
+            {'model': 'mymodel',
+             'result': {'content': 'hello', 'delta': 'o', 'model': 'mymodel'},
+             'resource_uri': 'mymodel'})
 
     def test_model_embedding(self):
         """ Test the /v1/model/embed API endpoint."""
@@ -119,7 +119,7 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers['Content-Type'], 'text/event-stream')
         data = list(map(lambda d: json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d,
-                        resp.iter_encoded()))
+            resp.iter_encoded()))
         self.assertEqual(len(data[-1]['content']), len('hello'))
         self.assertEqual(data[-1], {
             'model': 'mymodel',

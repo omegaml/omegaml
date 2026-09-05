@@ -1,4 +1,4 @@
-from omegaml.backends.genai.inmemory import InMemoryVectorStore
+from omegaml.backends.genai.retrieval.inmemory import InMemoryVectorStore
 from omegaml.tests.genai.test_pgvector import PGVectorDBTests
 
 

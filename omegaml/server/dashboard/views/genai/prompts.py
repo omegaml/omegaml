@@ -1,5 +1,6 @@
 from flask import render_template
 
+from omegaml.backends.genai.models import ConversationModelBackend
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
 
@@ -43,7 +44,7 @@ class AIPromptsView(AIRepositoryView):
         )
         kind = ['genai.text', 'genai.llm']
         items = [m for m in self.store.list('prompts/*',
-                                            kind=kind, raw=True) if not any(e(m) for e in excludes)]
+            kind=kind, raw=True) if not any(e(m) for e in excludes)]
         return items
 
     @fv.route('/{self.segment}/new')
@@ -57,10 +58,10 @@ class AIPromptsView(AIRepositoryView):
         data.update(self.detail_data(name, data=data, meta=meta))
         context = self.context_data(isNew=True)
         return render_template(f"dashboard/{template}",
-                               segment=self.segment,
-                               buckets=self.buckets,
-                               context=context,
-                               data=data, **data)
+            segment=self.segment,
+            buckets=self.buckets,
+            context=context,
+            data=data, **data)
 
     @fv.route('/{self.segment}/<path:name>/save', methods=['POST'])
     def api_save_prompt(self, name):
@@ -72,13 +73,12 @@ class AIPromptsView(AIRepositoryView):
         meta = om.models.metadata(name)
         if meta is None:
             # create a new instance
-            from omegaml.backends.genai.textmodel import TextModelBackend
             model_meta = om.models.metadata(model, data_store=om.datasets)
-            model_meta.kind_meta['base_url'] = TextModelBackend.STORED_MODEL_URL
+            model_meta.kind_meta['base_url'] = ConversationModelBackend.STORED_MODEL_URL
             meta = om.models._make_metadata(name=name, kind=model_meta.kind,
-                                            bucket=self.bucket,
-                                            attributes=model_meta.attributes,
-                                            kind_meta=model_meta.kind_meta)
+                bucket=self.bucket,
+                attributes=model_meta.attributes,
+                kind_meta=model_meta.kind_meta)
             meta.save()
             meta = om.models.link_experiment(name, name, label=om.runtime._default_label)
         meta.attributes.update(data)
