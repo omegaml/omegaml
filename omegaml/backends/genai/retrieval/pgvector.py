@@ -1,16 +1,16 @@
-from collections import Counter
-
 import json
 import logging
 import re
+from collections import Counter
+
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Column, Integer, String, text, ForeignKey, select, Index, LargeBinary, and_
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.engine import RowMapping
 from sqlalchemy.orm import Session, relationship, declarative_base
 
-from omegaml.backends.genai.dbmigrate import DatabaseMigrator
-from omegaml.backends.genai.index import VectorStoreBackend
+from omegaml.backends.genai.retrieval.dbmigrate import DatabaseMigrator
+from omegaml.backends.genai.retrieval.index import VectorStoreBackend
 from omegaml.util import tryOr
 
 logger = logging.getLogger(__name__)
@@ -55,8 +55,8 @@ class PGVectorBackend(VectorStoreBackend):
         data = []
         with Session as session:
             query = (select(Document.id,
-                            Document.source,
-                            Document.attributes)
+                Document.source,
+                Document.attributes)
                      .order_by(Document.source))
             result = session.execute(query)
             data = list(result.mappings().all())
@@ -93,10 +93,10 @@ class PGVectorBackend(VectorStoreBackend):
         with Session as session:
             distance_fn = METRIC_MAP[metric]
             query = (select(Document.id,
-                            Document.source,
-                            Document.attributes,
-                            Chunk.text,
-                            distance_fn(obj).label('distance'))
+                Document.source,
+                Document.attributes,
+                Chunk.text,
+                distance_fn(obj).label('distance'))
                      .join(Chunk.document))
             attributes_filter = filter.get('attributes', None)
             attributes_filter = attributes_filter or {k: v for k, v in (filter or {}).items() if
@@ -132,10 +132,10 @@ class PGVectorBackend(VectorStoreBackend):
         data = []
         with Session as session:
             query = (select(Chunk.id,
-                            Chunk.text,
-                            Chunk.embedding,
-                            Document.source,
-                            Document.attributes)
+                Chunk.text,
+                Chunk.embedding,
+                Document.source,
+                Document.attributes)
                      .join(Chunk.document)
                      .order_by(Document.source))
             result = session.execute(query)

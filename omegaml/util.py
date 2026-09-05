@@ -1487,3 +1487,8 @@ def silence():
         # Restore the original Python stream object
         sys.stderr.close()  # close the temporary /dev/null file
         sys.stderr = original_stderr
+
+
+class safeformat(dict):
+    def __missing__(self, key):
+        return f"{{{key}}}"  # return "{<key>}"

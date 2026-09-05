@@ -3,7 +3,7 @@ from collections import Counter
 import re
 from bson import ObjectId
 
-from omegaml.backends.genai.index import VectorStoreBackend
+from omegaml.backends.genai.retrieval.index import VectorStoreBackend
 from omegaml.util import mongo_compatible
 
 
@@ -29,7 +29,7 @@ class MongoDBVectorStore(VectorStoreBackend):
         List all documents inside a collection.
         """
         docs = self._documents(name).find({},
-                                          {'_id': 1, 'source': 1, 'attributes': 1})
+            {'_id': 1, 'source': 1, 'attributes': 1})
         return [{'id': str(doc['_id']),
                  'source': doc.get('source', ''),
                  'attributes': doc.get('attributes', {})}

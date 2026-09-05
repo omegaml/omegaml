@@ -1,4 +1,4 @@
-from omegaml.backends.genai.mongovector import MongoDBVectorStore
+from omegaml.backends.genai.retrieval.mongovector import MongoDBVectorStore
 from omegaml.tests.genai.test_pgvector import PGVectorDBTests
 
 

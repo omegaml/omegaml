@@ -1,8 +1,10 @@
-import numpy as np
 import unittest
+
+import numpy as np
 from numpy.testing import assert_allclose
-from omegaml.backends.genai.embedding import SimpleEmbeddingModel
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+from omegaml.backends.genai.retrieval.embedding import SimpleEmbeddingModel
 
 
 class TestSimpleEmbeddingModel(unittest.TestCase):
