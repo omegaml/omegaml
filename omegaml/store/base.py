@@ -430,7 +430,7 @@ class OmegaStore(object):
                 backend = self.get_backend(name)
                 drop = backend.drop if hasattr(backend, 'drop') else self._drop
                 result = drop(name, force=force, version=version, **kwargs)
-            except Exception as e:
+            except Exception:
                 result = False
                 if not force and not is_pattern:
                     raise
@@ -470,7 +470,7 @@ class OmegaStore(object):
         """
         try:
             backend_cls = load_class(self.defaults.OMEGA_STORE_BACKENDS[kind])
-        except KeyError as e:
+        except KeyError:
             raise ValueError('backend {kind} does not exist'.format(**locals()))
         model_store = model_store or self
         data_store = data_store or self
@@ -638,6 +638,22 @@ class OmegaStore(object):
     def __iter__(self):
         for f in self.list(include_temp=True):
             yield f
+
+    def __contains__(self, item):
+        """
+
+        Args:
+            item (str|Metadata): the item to be found using OmegaStore.list(pattern=item, include_hidden=True).
+               If the item is a Metadata instance, will use the item.name and item.kind
+
+        Returns:
+            bool: True if item can be found in this store
+        """
+        if isinstance(item, self._Metadata):
+            pattern, kind = item.name, item.kind
+        else:
+            pattern, kind = item, None
+        return item in self.list(pattern, kind=kind, hidden=True, include_temp=True)
 
     @property
     def buckets(self):

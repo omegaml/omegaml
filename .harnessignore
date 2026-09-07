@@ -1,0 +1,49 @@
+# Harness ignore file
+# This file specifies patterns to ignore during harness operations
+
+# Temporary and cache directories
+*.tmp
+*.cache
+__pycache__/
+.env*
+.node_version
+.venv/
+venv/
+env/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+*.pyc
+.pytest_cache/
+
+# Data directories
+data/
+*.log
+*.db
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# CI/CD related
+.gitlab-ci.yml
+.github/workflows/
+.azure-pipelines/
+
+# Development specific
+scripts/initlocal.sh
+scripts/rundev.sh
+test_env/
+
+# Test artifacts
+test-reports/
+coverage.xml
+*.coverage
+
+# Docker artifacts
+.dockerignore
+Dockerfile*

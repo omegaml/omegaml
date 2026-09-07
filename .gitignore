@@ -429,3 +429,4 @@ mlruns/**
 omegaml/tests/**/*.db
 scripts/mongoinit.js
 flask_session
+.test_venv

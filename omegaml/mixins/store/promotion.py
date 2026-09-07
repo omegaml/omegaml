@@ -89,7 +89,7 @@ class PromotionMixin(object):
     def promotion_methods(self, name, other, asname=None, drop=None, get=None, put=None, backend=None, **kwargs):
         # do default promotion, i.e. get()/put()
         PROMOTION_METHODS = {
-            'getput': partial(self._get_put_promotion, name, other, asname=asname, drop=drop),
+            'getput': partial(self._get_put_promotion, name, other, asname=asname, drop=drop, get=get, put=put),
             'data': partial(self._data_promotion, name, other, asname=asname, get=get, put=put, **kwargs),
             'metadata': partial(
                 self._metadata_promotion, name, other, asname=None, drop=False, get=get, put=put, **kwargs

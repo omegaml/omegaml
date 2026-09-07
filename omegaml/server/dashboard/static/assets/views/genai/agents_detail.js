@@ -14,7 +14,7 @@ $(function () {
   assistantFormView.render();
   assistantFormView.on("submit", function (data) {
     $.ajax({
-      url: url_for(".prompts_api_save_prompt", {
+      url: url_for(".agents_api_save_prompt", {
         name: data.assistantName || data.name,
       }),
       type: "POST",
@@ -22,7 +22,7 @@ $(function () {
       data: JSON.stringify(data),
       success: function (response) {
         alert("saved");
-        window.location = url_for(".prompts_view_detail", {
+        window.location = url_for(".agents_view_detail", {
           name: response.name,
         });
       },

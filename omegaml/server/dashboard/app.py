@@ -1,7 +1,7 @@
 from os import abort
 
 import flask
-from flask import Blueprint, app, render_template, render_template_string, url_for
+from flask import Blueprint, app, render_template, url_for, render_template_string
 from werkzeug.utils import redirect
 
 from omegaml.server.dashboard.views import genai
@@ -10,11 +10,12 @@ from omegaml.server.dashboard.views.cards import plotcards
 from omegaml.server.util import debug_only, stripblocks
 
 omega_bp = Blueprint('omega-server', __name__, static_folder='static', template_folder='templates')
+
 omega_ai_bp = Blueprint('omega-ai', __name__, static_folder='static', template_folder='templates')
 
-from omegaml.server.dashboard.views.genai import chatapps, prompts
-from omegaml.server.dashboard.views.respository import dashboard, datasets, jobs, models, scripts
-from omegaml.server.dashboard.views.runtime import streams, summary, tracking
+from omegaml.server.dashboard.views.respository import scripts, datasets, jobs, models, dashboard
+from omegaml.server.dashboard.views.runtime import summary, streams, tracking
+from omegaml.server.dashboard.views.genai import prompts, chatapps, agents
 
 
 def add_common_routes(bp):
@@ -53,7 +54,7 @@ def explain(segment):
     # -- fixed template for all objects in segment
     fixed_segment_template = f'dashboard/explain/{segment}.rst'
     # -- fixed default template for all objects, all segments (this is a catch-all fallback)
-    fixed_default_template = f'dashboard/explain/default.rst'
+    fixed_default_template = 'dashboard/explain/default.rst'
     obj_meta = None
     template_string = ""
     defaults = {}
@@ -123,4 +124,5 @@ plotcards.create_view(omega_bp)
 # -- ai
 genai.create_view(omega_ai_bp)
 prompts.create_view(omega_ai_bp)
+agents.create_view(omega_ai_bp)
 chatapps.create_view(omega_ai_bp)
