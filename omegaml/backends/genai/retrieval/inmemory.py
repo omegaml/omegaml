@@ -3,7 +3,7 @@ from collections import Counter
 import numpy as np
 import re
 
-from omegaml.backends.genai.index import VectorStoreBackend
+from omegaml.backends.genai.retrieval.index import VectorStoreBackend
 
 INMEMORY_VECTOR_STORE = {}
 
@@ -17,7 +17,7 @@ class InMemoryVectorStore(VectorStoreBackend):
 
     def load(self, name, store=None, vector_size=None, embedding_model=None, index_cls=None, **kwargs):
         super().load(name, store=store, vector_size=vector_size, embedding_model=embedding_model,
-                     index_cls=index_cls, **kwargs)
+            index_cls=index_cls, **kwargs)
         store = INMEMORY_VECTOR_STORE.setdefault(name, {})
         self.documents = store.setdefault('documents', {})  # Maps document IDs to their metadata
         self.chunks = store.setdefault('chunks', {})  # Maps document IDs to lists of chunks

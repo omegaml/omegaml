@@ -1,12 +1,13 @@
 import warnings
 from itertools import tee, islice
-from markitdown import MarkItDown
 from pathlib import Path
 from types import GeneratorType, NoneType
 
+from markitdown import MarkItDown
+
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.backends.genai import GenAIModel
-from omegaml.backends.genai.embedding import SimpleEmbeddingModel
+from omegaml.backends.genai.retrieval.embedding import SimpleEmbeddingModel
 
 """
 # create a document index
@@ -33,9 +34,9 @@ class VectorStore:
         index_cls = index_cls or DocumentIndex
         embedding_model = embedding_model if embedding_model is not None else SimpleEmbeddingModel()
         self.index = index_cls(name,
-                               store=store,
-                               vector_size=vector_size,
-                               embedding_model=embedding_model, **kwargs)
+            store=store,
+            vector_size=vector_size,
+            embedding_model=embedding_model, **kwargs)
         return self
 
     def list(self, name):
@@ -71,10 +72,10 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
         else:
             real_embedding_model = embedding_model
         self.vector_store: VectorStore = self.load(name, store=self, vector_size=vector_size,
-                                                   embedding_model=real_embedding_model)
+            embedding_model=real_embedding_model)
         if document is not None:
             data = self.vector_store.index.retrieve(document, top=top, distance=distance, max_distance=max_distance,
-                                                    filter=filter)
+                filter=filter)
             return data
         return self.vector_store.index
 
@@ -106,7 +107,7 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
             url = obj
             collection = collection or self._default_collection(name)
             meta = self._put_as_connection(url, name, collection=collection,
-                                           attributes=attributes, **kwargs)
+                attributes=attributes, **kwargs)
             # update kind_meta to reflect all collections stored through this vectordb
             collections = meta.kind_meta.setdefault('collections', {})
             collections[collection] = {
@@ -121,8 +122,8 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
                 real_embedding_model = embedding_model
                 vector_size = vector_size or getattr(real_embedding_model, 'dimensions', None)
             self._put_via(name, obj, collection=collection,
-                          vector_size=vector_size, embedding_model=real_embedding_model,
-                          loader=loader, chunker=chunker)
+                vector_size=vector_size, embedding_model=real_embedding_model,
+                loader=loader, chunker=chunker)
         else:
             raise ValueError('type {} is not supported by {}'.format(type(obj), self.KIND))
         meta.attributes.update(attributes) if attributes else None
@@ -150,8 +151,8 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
             meta.kind_meta.update(kind_meta)
         else:
             meta = self.data_store.make_metadata(name, self.KIND,
-                                                 kind_meta=kind_meta,
-                                                 attributes=attributes)
+                kind_meta=kind_meta,
+                attributes=attributes)
         return meta.save()
 
     def _put_via(self, name, obj, collection=None, vector_size=None, embedding_model=None, loader=None, chunker=None,
@@ -220,7 +221,7 @@ class DocumentIndex:
             assert self.model is not None, "require embedding model to query by text"
             document = self.model.embed(document)[0]
         return self.store.find_similar(self.name, document,
-                                       top=top, filter=filter, distance=distance, max_distance=max_distance, **kwargs)
+            top=top, filter=filter, distance=distance, max_distance=max_distance, **kwargs)
 
     def clear(self, filter=None, **kwargs):
         self.store.delete(self.name, filter=filter, **kwargs)
@@ -257,12 +258,12 @@ class DocumentIndex:
             'text_tuple': lambda obj: isinstance(obj, (tuple, list)) and len(obj) > 1 and isinstance(probe[1], dict),
             # chunks, embeddings[, attributes]
             'embedded_tuple': lambda obj: isinstance(obj, (list, tuple)) and len(obj) > 1 and isinstance(probe[1],
-                                                                                                         list),
+                list),
             # dict(chunks=, embeddings=, attributes=None)
             'embedded_dict': lambda obj: isinstance(obj, dict) and 'chunks' in obj and 'embeddings' in obj,
             # list, tuple, generator of str|list|tuple|dict
             'documents': lambda obj: isinstance(obj, (list, tuple, GeneratorType)) and isinstance(probe[0],
-                                                                                                  (str, list, tuple)),
+                (str, list, tuple)),
         }
         for k, testfn in TYPES.items():
             if testfn(obj):
@@ -287,7 +288,7 @@ class DocumentIndex:
         elif doc_type == 'embedded_dict':
             # dict(chunks=, embeddings=, attribute=)
             self._index_chunks(document['chunks'], document['embeddings'],
-                               document.get('attributes'))
+                document.get('attributes'))
         elif doc_type == 'text_tuple':
             # (text, attributes)
             assert self.model is not None, "need an embedding model to insert raw text"

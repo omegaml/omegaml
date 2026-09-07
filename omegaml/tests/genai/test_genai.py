@@ -1,14 +1,15 @@
-import sys
-
 import inspect
+import sys
 import warnings
 from types import FunctionType
 from unittest import TestCase, mock, skipUnless
 from unittest.mock import patch
 
-from omegaml.backends.genai import SimpleEmbeddingModel
-from omegaml.backends.genai.models import GenAIBaseBackend, GenAIModel, virtual_genai, GenAIModelHandler
-from omegaml.backends.genai.textmodel import TextModelBackend, TextModel
+from omegaml.backends.genai import GenAIBaseBackend, GenAIModel, GenAIModelHandler, \
+    virtual_genai
+from omegaml.backends.genai.models.conversation import ConversationModel, ConversationModelBackend
+from omegaml.backends.genai.models.textmodel import TextModelBackend
+from omegaml.backends.genai.retrieval import SimpleEmbeddingModel
 from omegaml.client.util import AttrDict, dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
 
@@ -26,7 +27,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
 
         self.om = Omega()
         self.clean()
-        self.om.models.register_backend(TextModelBackend.KIND, TextModelBackend)
+        self.om.models.register_backend(ConversationModelBackend.KIND, ConversationModelBackend)
 
     def test_put_get_model_handler(self):
         # test save and restore
@@ -94,56 +95,56 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
     def test_openai_put_get_default(self):
         # test save and restore
         meta = self.om.models.put('openai+https://localhost/mymodel', 'mymodel')
-        self.assertEqual(meta.kind, TextModelBackend.KIND)
+        self.assertEqual(meta.kind, ConversationModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443')
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
         model = self.om.models.get('mymodel')
-        self.assertIsInstance(model, TextModel)
+        self.assertIsInstance(model, ConversationModel)
         self.assertEqual(model.strategy.get('agentic'), False)
         # default to http
         meta = self.om.models.put('openai+http://localhost;model=mymodel', 'mymodel', replace=True)
-        self.assertEqual(meta.kind, TextModelBackend.KIND)
+        self.assertEqual(meta.kind, ConversationModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'http://localhost:80')
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
         # replace
         meta = self.om.models.put('openai+https://localhost/v1;model=mymodel', 'mymodel', replace=True)
-        self.assertEqual(meta.kind, TextModelBackend.KIND)
+        self.assertEqual(meta.kind, ConversationModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443/v1')
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
 
     def test_placeholders_put_get(self):
         # test save and restore with secrets
         meta = self.om.models.put('openai+https://{OMEGA_LLM_APIKEY}@localhost/mymodel', 'mymodel')
-        self.assertEqual(meta.kind, TextModelBackend.KIND)
+        self.assertEqual(meta.kind, ConversationModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443')
         self.assertEqual(meta.kind_meta['creds'], '{OMEGA_LLM_APIKEY}')
         model = self.om.models.get('mymodel', secrets=dict(OMEGA_LLM_APIKEY='foobar'))
         self.assertEqual(model.api_key, 'foobar')
-        self.assertIsInstance(model, TextModel)
+        self.assertIsInstance(model, ConversationModel)
         # test save and restore with omega defaults
         with patch.object(self.om.defaults, 'OMEGA_USERID', 'testuser', create=True):
             meta = self.om.models.put('openai+https://{OMEGA_USERID}@localhost/mymodel', 'mymodel')
-            self.assertEqual(meta.kind, TextModelBackend.KIND)
+            self.assertEqual(meta.kind, ConversationModelBackend.KIND)
             self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443')
             self.assertEqual(meta.kind_meta['creds'], '{OMEGA_USERID}')
             model = self.om.models.get('mymodel')
             self.assertEqual(model.api_key, 'testuser')
-            self.assertIsInstance(model, TextModel)
+            self.assertIsInstance(model, ConversationModel)
 
     def test_openai_http_scheme(self):
         # test save and restore
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
-        self.assertEqual(meta.kind, TextModelBackend.KIND)
+        self.assertEqual(meta.kind, ConversationModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'http://localhost:80')
         model = self.om.models.get('mymodel')
-        self.assertIsInstance(model, TextModel)
+        self.assertIsInstance(model, ConversationModel)
         # replace
         meta = self.om.models.put('openai+http://localhost:8080/mymodel', 'mymodel', replace=True)
-        self.assertEqual(meta.kind, TextModelBackend.KIND)
+        self.assertEqual(meta.kind, ConversationModelBackend.KIND)
         self.assertEqual(meta.kind_meta['base_url'], 'http://localhost:8080')
         self.assertEqual(meta.kind_meta['model'], 'mymodel')
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_openai_completion(self, OpenAIProvider):
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
         model = self.om.models.get('mymodel')
@@ -175,7 +176,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(result['content'], 'hello how are you')
         self.assertEqual(result['conversation_id'], conversation_id)
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_openai_chat(self, OpenAIProvider):
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
         model = self.om.models.get('mymodel', data_store=self.om.datasets)
@@ -214,7 +215,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(conversation_log[1]['role'], 'user')
         self.assertEqual(conversation_log[2]['role'], 'assistant')
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_openai_stream(self, OpenAIProvider):
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
         model = self.om.models.get('mymodel')
@@ -252,7 +253,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model = kwargs['model']
         self.assertEqual(model, 'mymodel')
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_openai_stream_erronous(self, OpenAIProvider):
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
         model = self.om.models.get('mymodel')
@@ -280,7 +281,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         # check stream completes ok
         self.assertIn('could not process stream chunk', result[-1].get('error'))
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_openai_embedding(self, OpenAIProvider):
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
         model = self.om.models.get('mymodel')
@@ -311,14 +312,14 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(toolfn, FunctionType)
         self.assertEqual(toolfn(), 'sunny')
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_tool_use_notrack(self, OpenAIProvider):
         # use tools/ prefix in attribute['tools']
         self._test_tool_use(OpenAIProvider, tracking=False, prefix='tools/')
         # don't use a prefix in attribute['tools']
         self._test_tool_use(OpenAIProvider, tracking=False, prefix='')
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_tool_use_tracked(self, OpenAIProvider):
         model = self._test_tool_use(OpenAIProvider, tracking=True)
         # check model tracking
@@ -449,7 +450,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         )
         return model
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_documents_use(self, OpenAIProvider):
         om = self.om
         # prepare embedding model
@@ -469,7 +470,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         )
         model = om.models.get('mymodel', data_store=om.datasets)
         # mock model provider response
-        # -- we test our TextModel(GenAIModel), not the provider
+        # -- we test our ConverstaionModel(GenAIModel), not the provider
         model.provider = OpenAIProvider
         model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
             "choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": dotable(kwargs)}}]
@@ -495,7 +496,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
             {'role': 'user', 'content': 'user documents: the quick brown fox jumps over the lazy dog prompt: hello'},
         )
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_system_prompt(self, OpenAIProvider):
         om = self.om
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel', prompt='you are a test assistant')
@@ -512,7 +513,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertEqual(messages[0]['role'], 'developer')
         self.assertEqual(messages[0]['content'], 'you are a test assistant')
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_system_complete_strategy(self, OpenAIProvider):
         # test completion strategy is passed to provider as kwargs
         om = self.om
@@ -531,7 +532,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         provider_kwargs = model.provider.complete.call_args.kwargs
         self.assertIn('extra_body', provider_kwargs)
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_system_template_render(self, OpenAIProvider):
         # test completion strategy is passed to provider as kwargs
         om = self.om
@@ -549,7 +550,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         messages = model.provider.complete.call_args.kwargs.get('messages')
         self.assertIn('Today is', messages[-1].get('content'))
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_messages_raw(self, OpenAIProvider):
         # test prompts/messages passed in from chat client handled correctly
         om = self.om
@@ -605,7 +606,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertTrue(callable(model.tools[0]))
         self.assertTrue(model.tools[0].__name__ == 'weather')
 
-    @mock.patch('omegaml.backends.genai.textmodel.OpenAIProvider')
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_pipeline_basic_steps(self, OpenAIProvider):
         om = self.om
 
@@ -687,3 +688,12 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
                 print('response', content.replace('\n', '; '), flush=True)
 
         print("done")
+
+    def test_textmodel_fallback(self):
+        # test save and restore
+        meta = self.om.models.put('openai+https://localhost/mymodel', 'mymodel', kind='genai.text')
+        self.assertEqual(meta.kind, TextModelBackend.KIND)
+        self.assertEqual(meta.kind_meta['base_url'], 'https://localhost:443')
+        self.assertEqual(meta.kind_meta['model'], 'mymodel')
+        model = self.om.models.get('mymodel')
+        self.assertIsInstance(model, ConversationModel)

@@ -355,7 +355,7 @@ class _DillDip:
         return data
 
     def _dynamic_compile(self, obj, module='__main__'):
-        from omegaml.backends.genai.models import GenAIModelHandler, virtual_genai
+        from omegaml.backends.genai import GenAIModelHandler, virtual_genai
         # re-compile source obj in __main__
         if self.isdipped(obj):
             # FIXME and check python version; if not the same don't load the dill object (it may load but still not be executable)

@@ -11,7 +11,7 @@ tables = ['tables>=3.7']
 graph_deps = ['matplotlib>=3.5', 'seaborn>=0.11']
 dashserve_deps = ['dash>=2.9', 'plotly']
 snowflake_deps = ['snowflake-sqlalchemy']
-jupyter_deps = ['jupyterlab<4.5.3', 'jupyterhub', 'notebook', 'nbclassic']  # jupyterlab since 4.5.3 breaks livetest
+jupyter_deps = ['jupyterlab', 'jupyterhub', 'notebook', 'nbclassic']  # jupyterlab since 4.5.3 breaks livetest
 mlflow_deps = ['mlflow-skinny>=1.2;python_version>"3.11"', "skops"]
 tf_deps = ['tensorflow-cpu>2;python_version<"3.14"']  # due to https://github.com/tensorflow/tensorflow/issues/102890
 dev_deps = [
