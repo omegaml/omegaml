@@ -82,12 +82,17 @@ class VirtualObjectBackend(BaseDataBackend):
     #      to avoid confusion between the two (currently the same class is used for both)
     KIND = 'virtualobj.dill'
     PROMOTE = 'export'
+    TOOLS_PATHS = 'tools/', 'policy/'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         is_virtual = callable(obj) and getattr(obj, '_omega_virtual', False)
-        is_tool = isinstance(obj, types.FunctionType) and name.startswith('tools/')
+        is_tool = self._is_tool_virtualobj(obj, name, **kwargs)
         return is_virtual or is_tool
+
+    @classmethod
+    def _is_tool_virtualobj(self, obj, name, **kwargs):
+        return isinstance(obj, types.FunctionType) and any(name.startswith(v) for v in self.TOOLS_PATHS)
 
     @property
     def _call_handler(self):

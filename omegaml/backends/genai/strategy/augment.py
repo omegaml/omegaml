@@ -11,7 +11,7 @@ class AugmentationMixin:
     def _default_template(self):
         return """
         {% if documents -%} 
-            documents found: {{ documents }} 
+            consider these documents: {{ documents }} 
         {%- endif %} 
         {{ prompt }}
         """
@@ -30,12 +30,27 @@ class AugmentationMixin:
             context = dict(prompt=prompt, query=query, documents=None, datetime=utcnow())
             return self._resolve_template(template, **context)
         retrieve_kwargs = self.strategy.get('retrieve', {})
-        docs = documents.retrieve(query, **retrieve_kwargs)
-        if docs:
-            documents = '\n\n'.join(d.get('text') for d in docs)
+        if documents:
+            docs = documents.retrieve(query, **retrieve_kwargs)
         else:
-            documents = '(no documents found)'
-        context = dict(prompt=prompt, query=query, documents=documents, datetime=utcnow())
+            docs = []
+        docs = (
+            self.pipeline(
+                method='retrieve',
+                prompt_message=prompt,
+                messages=None,  # FIXME
+                docs=docs,
+                template=template,
+            )
+            or docs
+        )
+        if docs:
+            retrieved = '\n\n'.join(str(d.get('text') if isinstance(d, dict) else d) for d in docs)
+        elif documents:
+            retrieved = '(no documents found)'
+        else:
+            retrieved = None
+        context = dict(prompt=prompt, query=query, documents=retrieved, datetime=utcnow())
         return self._resolve_template(template, **context)
 
     def _resolve_template(self, template, **context):

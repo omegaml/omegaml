@@ -201,7 +201,9 @@ class ModelVersionMixin(object):
         return '_versions/{}/{}'.format(name, version_hash)
 
     def _model_version_applies(self, name):
-        return self.prefix.startswith('models/') and not str(name).startswith('tools/')
+        from omegaml.backends.virtualobj import VirtualObjectBackend  # fmt:off
+
+        return self.prefix.startswith('models/') and not VirtualObjectBackend._is_tool_virtualobj(lambda: None, name)
 
     def _ensure_versioned(self, meta):
         if 'versions' not in meta.attributes:

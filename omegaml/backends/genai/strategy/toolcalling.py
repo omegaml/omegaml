@@ -76,9 +76,10 @@ class ToolCallingMixin:
         tool_prompts = []
         for tool_call in tool_calls:
             tool_specs_callables = zip(self.tools_specs(self.tools), self.tools)
-            tool_name = tool_call['function'].get('name')
-            tool_id = tool_call.get('id')
-            tool_args = tool_call['function'].get('arguments', '')
+            tool_func = tool_call.get('function', {})
+            tool_name = tool_func.get('name')
+            tool_id = tool_call.get('id', 'invalid_id')
+            tool_args = tool_func.get('arguments', '')
             matched_tool = [(ts, tf) for ts, tf in tool_specs_callables if tf.__name__ == tool_name]
             if matched_tool:
                 tool, tool_func = matched_tool[0]

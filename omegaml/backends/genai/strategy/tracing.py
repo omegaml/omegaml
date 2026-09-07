@@ -52,7 +52,21 @@ class TracingMixin:
 
     def pipeline(self, *args, **kwargs):
         self.trace_fn(*args, **kwargs) if callable(self.trace_fn) else None
+        kwargs['model'] = self
         return self.pipeline_fn(*args, **kwargs) or False
+
+    def eval_guardrails(self, messages, step, conversation_id=None):
+        try:
+            for rails in self.guardrails:
+                eval_fn = getattr(rails, 'eval', rails)
+                result = eval_fn(messages, step=step, model=self)
+                result = getattr(rails, 'data', result)
+        except Exception as e:
+            result = {'error': {'message': str(e)}}
+            raise e
+        finally:
+            if self.guardrails:
+                self._log_events('guardrails', conversation_id, result)
 
     def _log_events(self, event, conversation_id, data):
         if self.tracking:
