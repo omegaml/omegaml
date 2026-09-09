@@ -1,9 +1,10 @@
 from unittest import TestCase
 
 import pandas as pd
+from pandas.testing import assert_frame_equal
+
 from omegaml import Omega
 from omegaml.tests.util import OmegaTestMixin
-from pandas.testing import assert_frame_equal
 
 
 class ParallelMixinTests(OmegaTestMixin, TestCase):
@@ -17,7 +18,7 @@ class ParallelMixinTests(OmegaTestMixin, TestCase):
         """
         om = self.om
         large = pd.DataFrame({
-            'x': range(1000)
+            'x': range(1000),
         })
 
         def myfunc(df):
@@ -37,7 +38,7 @@ class ParallelMixinTests(OmegaTestMixin, TestCase):
         """
         om = self.om
         large = pd.DataFrame({
-            'x': range(1000)
+            'x': range(1000),
         })
 
         def myfunc(df):
@@ -56,7 +57,7 @@ class ParallelMixinTests(OmegaTestMixin, TestCase):
 
         om = self.om
         large = pd.DataFrame({
-            'x': range(1000)
+            'x': range(1000),
         })
 
         def myfunc(df):
@@ -74,7 +75,7 @@ class ParallelMixinTests(OmegaTestMixin, TestCase):
         """
         om = self.om
         large = pd.DataFrame({
-            'x': range(1000)
+            'x': range(1000),
         })
 
         def myfunc(df):
@@ -94,7 +95,7 @@ class ParallelMixinTests(OmegaTestMixin, TestCase):
         """
         om = self.om
         large = pd.DataFrame({
-            'x': range(1000)
+            'x': range(1000),
         })
 
         def myfunc(mdf):
@@ -116,7 +117,7 @@ class ParallelMixinTests(OmegaTestMixin, TestCase):
         """
         om = self.om
         large = pd.DataFrame({
-            'x': range(100)
+            'x': range(100),
         })
 
         def chunker(mdf, chunksize, maxobs):

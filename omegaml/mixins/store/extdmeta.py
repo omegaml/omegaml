@@ -1,15 +1,17 @@
-import pymongo
 import string
 import warnings
+from copy import deepcopy
+
+import pymongo
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
-from copy import deepcopy
-from marshmallow import fields, Schema
-from omegaml.util import markup, ensure_index
+from marshmallow import Schema, fields
+
+from omegaml.util import ensure_index, markup
 
 
 class SignatureMixin:
-    """ Associate a models corresponding dataset
+    """Associate a models corresponding dataset
 
     This provides methods to record additional metadata on models.
     On runtime-called calls, this additional metadata is used to
@@ -36,7 +38,7 @@ class SignatureMixin:
     # -- "schema" => "schemas" component
 
     def link_docs(self, name, doc_or_ref, **kwargs):
-        """ set or link documentation returned by om.models.help()
+        """set or link documentation returned by om.models.help()
 
         Args:
             name: the model name
@@ -50,10 +52,10 @@ class SignatureMixin:
         meta.attributes['docs'] = doc_or_ref
         return meta.save()
 
-    def link_datatype(self, name, X=None, Y=None, result=None, orient=None,
-                      meta=None, actions=None, errors=None,
-                      **kwargs):
-        """ link a Schema to a model or script
+    def link_datatype(
+        self, name, X=None, Y=None, result=None, orient=None, meta=None, actions=None, errors=None, **kwargs
+    ):
+        """link a Schema to a model or script
 
         Args:
             name (str): the name of the model, script
@@ -89,11 +91,14 @@ class SignatureMixin:
         Xmany, X = (True, many_type(X)) if is_many(X) else (False, X)
         Ymany, Y = (True, many_type(Y)) if is_many(Y) else (False, Y)
         Rmany, result = (True, many_type(result)) if is_many(result) else (False, result)
-        iter_errors = (errors.items() if isinstance(errors, dict)
-                       else ((E, status) for E, status in errors) if isinstance(errors, (list, tuple)) else [])
-        errors = {
-            (True, many_type(E)) if is_many(E) else (False, E): status
-            for E, status in iter_errors}
+        iter_errors = (
+            errors.items()
+            if isinstance(errors, dict)
+            else ((E, status) for E, status in errors)
+            if isinstance(errors, (list, tuple))
+            else []
+        )
+        errors = {(True, many_type(E)) if is_many(E) else (False, E): status for E, status in iter_errors}
         # build signature specification
         is_schema = lambda T: isinstance(T, Schema) or issubclass(T, Schema)
         ExceptionSchema = Schema.from_dict({'message': fields.String()}, name=f'{name}Exception')
@@ -102,32 +107,41 @@ class SignatureMixin:
                 'datatype': f'{X.__module__}.{schema_name(X)}',
                 'schema': self._schema_from_datatype(X),
                 'many': Xmany,
-            } if X is not None else existing.get('X'),
+            }
+            if X is not None
+            else existing.get('X'),
             'Y': {
                 'datatype': f'{Y.__module__}.{schema_name(Y)}',
                 'schema': self._schema_from_datatype(Y),
                 'many': Ymany,
-            } if Y is not None else existing.get('Y'),
+            }
+            if Y is not None
+            else existing.get('Y'),
             'result': {
                 'datatype': f'{result.__module__}.{schema_name(result)}',
                 'schema': self._schema_from_datatype(result),
                 'many': Rmany,
-            } if result is not None else existing.get('result'),
+            }
+            if result is not None
+            else existing.get('result'),
             'errors': {
                 str(status): {
                     'datatype': f'{E.__module__}.{schema_name(E)}',
                     'schema': self._schema_from_datatype(E if is_schema(E) else ExceptionSchema),
                     'many': many,
                     'exception': isinstance(E, Exception) or isinstance(E(), Exception),
-                } for (many, E), status in errors.items()
-            } if errors is not None else existing.get('errors'),
+                }
+                for (many, E), status in errors.items()
+            }
+            if errors is not None
+            else existing.get('errors'),
             'actions': actions,
             'orient': orient,
         }
         return meta.save()
 
     def link_swagger(self, specs, operations=None):
-        """ link swagger specs to operations
+        """link swagger specs to operations
 
         Args:
             specs (dict|filename): the swagger specifications
@@ -305,9 +319,7 @@ class SignatureMixin:
             sdict[prop] = ftype
         # -- finally, create the schema
         schema = Schema.from_dict(sdict, name=name)
-        schema.error_messages = {
-            'type': f'invalid input for schema {name}'
-        }
+        schema.error_messages = {'type': f'invalid input for schema {name}'}
         return schema if not many else schema(many=True)
 
     def _datatype_from_metadata(self, meta, orient='records'):
@@ -336,9 +348,7 @@ class SignatureMixin:
             ftype = TYPE_MAP.get(infer(colType)) or TYPE_MAP.get('default')
             sdict[col] = ftype() if orient == 'records' else fields.List(ftype)
         schema = Schema.from_dict(sdict, name=name)
-        schema.error_messages = {
-            'type': f'invalid input for schema {name}'
-        }
+        schema.error_messages = {'type': f'invalid input for schema {name}'}
         return schema
 
     def _schema_from_datatype(self, datatype):
@@ -361,7 +371,7 @@ class ScriptSignatureMixin(SignatureMixin):
     def _pre_run(self, scriptname, *args, **kwargs):
         validate_kwargs = {
             'X': args[0] if len(args) > 0 else kwargs.get('X'),
-            'Y': args[1] if len(args) > 1 else kwargs.get('Y')
+            'Y': args[1] if len(args) > 1 else kwargs.get('Y'),
         }
         self.validate(scriptname, **validate_kwargs)
         return (scriptname, *args), kwargs
@@ -377,10 +387,23 @@ class ModelSignatureMixin(SignatureMixin):
     def supports(cls, store, **kwargs):
         return store.prefix in ('models/')
 
-    def link_dataset(self, name, Xname=None, Yname=None, Xmeta=None, Ymeta=None,
-                     rName=None, features=None, labels=None, data_store=None,
-                     meta=None, signature=True, actions=None, **kwargs):
-        """ link dataset information to this model
+    def link_dataset(
+        self,
+        name,
+        Xname=None,
+        Yname=None,
+        Xmeta=None,
+        Ymeta=None,
+        rName=None,
+        features=None,
+        labels=None,
+        data_store=None,
+        meta=None,
+        signature=True,
+        actions=None,
+        **kwargs,
+    ):
+        """link dataset information to this model
 
         This sets the 'dataset' entry in metadata.attributes of a model. By default
         this method is called by any .fit() call initiated from the runtime. The 'dataset'
@@ -431,10 +454,12 @@ class ModelSignatureMixin(SignatureMixin):
         meta.attributes.setdefault('dataset', {})
         meta.attributes['dataset'].update(model_attrs)
         if signature:
-            self.link_datatype(name, X=self._datatype_from_metadata(metaX),
-                               meta=meta, actions=actions) if metaX else None
-            self.link_datatype(name, Y=self._datatype_from_metadata(metaY),
-                               meta=meta, actions=actions) if metaY else None
+            self.link_datatype(
+                name, X=self._datatype_from_metadata(metaX), meta=meta, actions=actions
+            ) if metaX else None
+            self.link_datatype(
+                name, Y=self._datatype_from_metadata(metaY), meta=meta, actions=actions
+            ) if metaY else None
         return meta.save()
 
     def link_dependencies(self, name, select=None, **kwargs):
@@ -559,17 +584,9 @@ class DatasetIndexesMixin:
                 "@": pymongo.GEO2D,
                 "*": pymongo.GEOSPHERE,
             }
-            idx_specs = {
-                item[1:]: mapping[item[0]]
-                for item in idx_specs.split(",")
-                if item
-            }
+            idx_specs = {item[1:]: mapping[item[0]] for item in idx_specs.split(",") if item}
         # Normalize to a list of dicts.
-        idx_specs = (
-            idx_specs
-            if isinstance(idx_specs, (list, tuple))
-            else [idx_specs]
-        )
+        idx_specs = idx_specs if isinstance(idx_specs, (list, tuple)) else [idx_specs]
         meta.attributes.setdefault("indexes", [])
         meta.attributes["indexes"].extend(idx_specs)
         return meta.save()
@@ -623,10 +640,7 @@ class DatasetIndexesMixin:
             ``'+field1,-field2'``.
         """
         index_map = {
-            idx["name"]: ",".join(
-                f"+{k}" if v == 1 else f"-{k}"
-                for k, v in idx["key"].items()
-            )
+            idx["name"]: ",".join(f"+{k}" if v == 1 else f"-{k}" for k, v in idx["key"].items())
             for idx in self.collection(name).list_indexes()
         }
         return index_map

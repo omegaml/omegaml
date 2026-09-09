@@ -16,6 +16,7 @@ def MongoClient(*args, **kwargs):
     each and every location
     """
     from omegaml import settings
+
     defaults = settings()
     mongo_kwargs = dict(defaults.OMEGA_MONGO_SSL_KWARGS)
     mongo_kwargs.update(kwargs)
@@ -30,6 +31,7 @@ def patch_mongoengine():
     # a module-global dictionary. here we replace these module-globals with
     # process-global dictionaries, ProcessLocal
     from mongoengine import connection
+
     # There is a fix in mongoengine 18.0 that is supposed to introduce the same
     # behavior using disconnection_all(), however in some cases this is the
     # actual source of the warning due to calling connection.close()
@@ -45,6 +47,7 @@ def patch_mongoengine():
 
 def close_all_clients():
     from mongoengine import disconnect_all
+
     # close mongoengine clients
     try:
         disconnect_all()
@@ -95,7 +98,7 @@ def mongo_url(om, drop_kwargs=None):
             url_kwargs.pop(kw, None)
     url_kwargs = urlencode(url_kwargs)
     url_kwargs = url_kwargs.replace('True', 'true').replace('False', 'false')
-    mongo_url = (om.datasets.mongo_url + '?authSource=admin&' + url_kwargs)
+    mongo_url = om.datasets.mongo_url + '?authSource=admin&' + url_kwargs
     return mongo_url
 
 
@@ -106,6 +109,7 @@ def waitForConnection(client):
         try:
             # The ping command is cheap and does not require auth.
             import pymongo
+
             client.admin.command('ping')
         except (ConnectionFailure, AutoReconnect, AssertionError) as e:
             warnings.warn('Connection to MongoDB failed. Retrying in 0.01s')

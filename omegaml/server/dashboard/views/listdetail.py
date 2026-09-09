@@ -1,5 +1,6 @@
-from flask import render_template
 from textwrap import dedent
+
+from flask import render_template
 
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.base import BaseView, mixin_for
@@ -15,9 +16,7 @@ class ListDetailMixin(mixin_for(BaseView)):
         template = template or self.list_template.format(self=self)
         items = self.members()
         context = self.context_data()
-        return render_template(f"dashboard/{template}",
-                               items=items,
-                               **context)
+        return render_template(f"dashboard/{template}", items=items, **context)
 
     @fv.route('/{self.segment}/<path:name>')
     def view_detail(self, name, template=None):
@@ -27,10 +26,13 @@ class ListDetailMixin(mixin_for(BaseView)):
         data = self._default_detail_data(name, meta=meta)
         data.update(self.detail_data(name, data=data, meta=meta))
         context = self.context_data()
-        return render_template(f"dashboard/{template}",
-                               context=context,
-                               data=data,
-                               **data, **context)
+        return render_template(
+            f"dashboard/{template}",
+            context=context,
+            data=data,
+            **data,
+            **context,
+        )
 
     def _default_detail_data(self, name, meta=None):
         # call this method in subclasses that provide additional detail views (other than list, detail)

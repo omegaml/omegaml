@@ -4,8 +4,11 @@ from unittest import TestSuite, TestLoader, TextTestRunner
 from omegaml.runtimes.rsystem import rhelper
 from omegaml.util import temp_filename, remove_temp_filename
 
-RE_TEST_CASES = ['omegaml.tests.rsystem.test_rmodels.RSystemModelTests',
-                 'omegaml.tests.rsystem.test_rscripts.RSystemScriptTests']
+RE_TEST_CASES = [
+    'omegaml.tests.rsystem.test_rmodels.RSystemModelTests',
+    'omegaml.tests.rsystem.test_rscripts.RSystemScriptTests',
+]
+
 
 def R_unittests():
     # -- build test suite, adopted from https://docs.python.org/3/library/unittest.html#load-tests-protocol
@@ -20,7 +23,7 @@ def R_unittests():
 
 
 def r_source(r_code):
-    """ helper to source given r code and reticulated r session
+    """helper to source given r code and reticulated r session
 
     Args:
             r_code (str): the string of R code, as entered in REPL or R file

@@ -7,9 +7,7 @@ from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(
-    module_available("tensorflow", max='2.15', py_max='3.11'),
-    "keras not available")
+@unittest.skipUnless(module_available("tensorflow", max='2.15', py_max='3.11'), "keras not available")
 class TFCallbackTrackingTestCases(OmegaTestMixin, unittest.TestCase):
     """
     notes on framework versions v.v. tracing
@@ -38,8 +36,7 @@ class TFCallbackTrackingTestCases(OmegaTestMixin, unittest.TestCase):
         # fit via runtime
         om.models.put(model, 'mymodel')
         with om.runtime.experiment('myexp2') as exp:
-            om.runtime.model('mymodel').fit(X, Y, epochs=1,
-                                            batch_size=128).get()
+            om.runtime.model('mymodel').fit(X, Y, epochs=1, batch_size=128).get()
         self.assertIsNotNone(exp.data())
         self.assertGreaterEqual(len(exp.data(key=['acc', 'accuracy'])), 9)
 
@@ -64,12 +61,8 @@ class TFCallbackTrackingTestCases(OmegaTestMixin, unittest.TestCase):
         x_shape = x_train.shape[1:]
         model.add(Dense(10, activation='softmax', input_shape=x_shape))
         sgd = SGD(lr=0.01, momentum=0.9, nesterov=True)
-        model.compile(loss='categorical_crossentropy',
-                      optimizer=sgd,
-                      metrics=['accuracy'])
-        model.fit(x_train, y_train,
-                  epochs=1,
-                  batch_size=128, callbacks=[tracking_cb])
+        model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+        model.fit(x_train, y_train, epochs=1, batch_size=128, callbacks=[tracking_cb])
         return model, x_train, y_train
 
 

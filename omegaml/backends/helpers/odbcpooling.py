@@ -62,9 +62,7 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
             helper_meta.gridfile.seek(0) if hasattr(helper_meta.gridfile, 'seek') else None  # fmt:off
             # --read config
             cfg_prefixes = helper_meta.attributes.get("prefixes", HelperConfig.prefixes)
-            cfg_pool_recycle = helper_meta.attributes.get(
-                "pool_recycle", HelperConfig.pool_recycle
-            )
+            cfg_pool_recycle = helper_meta.attributes.get("pool_recycle", HelperConfig.pool_recycle)
             config = HelperConfig(prefixes=cfg_prefixes, pool_recycle=cfg_pool_recycle)
         else:
             config = HelperConfig()
@@ -91,7 +89,8 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
 
                 pyodbc.pooling = False
                 ENGINE_KWARGS.update(
-                    pool_pre_ping=True, pool_recycle=config.pool_recycle
+                    pool_pre_ping=True,
+                    pool_recycle=config.pool_recycle,
                 )
                 SQLAlchemyBackend._SQLAlchemyBackend__CNX_CACHE.clear()  # noqa
                 # keep-false clears the sqlalchemy engine pool for matching datasets
@@ -99,9 +98,7 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
                 # -- this adds a small delay on initial connections
                 backend.get(meta.name, keep=False, sql="select 1")
             except Exception as e:
-                om.logger.error(
-                    f"reset_connection_pool() failed on attempt {i} due to {e}"
-                )
+                om.logger.error(f"reset_connection_pool() failed on attempt {i} due to {e}")
                 time.sleep(0.001)
             else:
                 break
@@ -113,10 +110,7 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
         [
             kwargs.pop("keep", None)
             for k in dict(kwargs)
-            if k
-            not in "sql,chunksize,raw,sqlvars,secret,index,keep,lazy,table,trusted".split(
-                ","
-            )
+            if k not in "sql,chunksize,raw,sqlvars,secret,index,keep,lazy,table,trusted".split(",")
         ]
         # reset connection pool with retry for this dataset, ensure a new connection can be established
         # since we have a new pool, pre ping is not issued by sqlalchemy, so we do it
@@ -124,9 +118,7 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
             try:
                 backend.get(meta.name, keep=False, sql="select 1")
             except Exception as e:
-                om.logger.error(
-                    f"get with fresh connection() on {meta.name} failed on attempt {i} due to {e}"
-                )
+                om.logger.error(f"get with fresh connection() on {meta.name} failed on attempt {i} due to {e}")
             else:
                 break
 
@@ -134,9 +126,7 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
     reset_connection_pool(config) if should_reset_connection_pool(config) else None
 
     if method == "get":
-        if any(meta.name.startswith(p) for p in config.prefixes) or meta.attributes.get(
-            "sqlalchemy_clear", False
-        ):
+        if any(meta.name.startswith(p) for p in config.prefixes) or meta.attributes.get("sqlalchemy_clear", False):
             dataset_preping()
 
     # returning None triggers the default backend processing
@@ -147,10 +137,4 @@ def install():
     import omegaml as om
 
     # as_source=True ensures this helper works across all Python versions
-    om.datasets.put(
-        helper,
-        ".helpers/odbcpooling",
-        supports="kind:sqlalchemy.*",
-        replace=True,
-        as_source=True,
-    )
+    om.datasets.put(helper, ".helpers/odbcpooling", supports="kind:sqlalchemy.*", replace=True, as_source=True)

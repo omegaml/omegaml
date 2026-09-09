@@ -15,6 +15,7 @@ try:
 except:
     warnings.warn("mlflow not installed")
 else:
+
     @unittest.skipUnless(module_available('mlflow'), 'mlflow projects not available CURRENTLY DISABLED')
     class TestMLFlowProjects(OmegaTestMixin, TestCase):
         def setUp(self):
@@ -25,6 +26,7 @@ else:
 
         def test_mlflow_project_local(self):
             import omegaml
+
             # store a local MLFlow project, use kind=mlflow.project
             project_path = Path(omegaml.__file__).parent / 'example' / 'mlflow' / 'project'
             om = self.om
@@ -41,6 +43,7 @@ else:
 
         def test_mlflow_project_local_prefix(self):
             import omegaml
+
             # store a local MLFlow project, use mlflow:// prefix
             project_path = Path(omegaml.__file__).parent / 'example' / 'mlflow' / 'project'
             om = self.om
@@ -102,4 +105,3 @@ else:
             data = json.loads(result)
             self.assertIn('output', data['result'])
             self.assertIn('succeeded', data['result']['output']['stderr'])
-

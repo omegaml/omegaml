@@ -20,16 +20,14 @@ class CombinedOmegaStoreMixin:
             regexp = regexp.replace(store.prefix) if regexp else None
             pattern = pattern.replace(store.prefix, '', 1)
             # list by name|pattern, return list of Metadata or list of names
-            members = store.list(pattern=pattern,
-                                 regexp=regexp, raw=raw, **kwargs)
+            members = store.list(pattern=pattern, regexp=regexp, raw=raw, **kwargs)
             # either add obj:Metadata as is, or obj:str as 'prefix/name'
             add = lambda obj: f'{store.prefix}{obj}' if not raw else obj
             index.extend(add(obj) for obj in members)
         return index
 
-    def stats(self, pattern=None, regexp=None, summary=True, raw=False, scale=1.0,
-              as_dict=False, **kwargs):
-        """ return summary statistics by store
+    def stats(self, pattern=None, regexp=None, summary=True, raw=False, scale=1.0, as_dict=False, **kwargs):
+        """return summary statistics by store
 
         Args:
             pattern (str): patterns of members to select, see .list() for details
@@ -58,10 +56,12 @@ class CombinedOmegaStoreMixin:
                 # -- member_stats is a dict of {member: {stat: value, ...}, ...}
                 for mk, ms in member_stats.items():
                     for k in ms:
-                        _stats[prefix].update({
-                            # we count the number of members, not their collection size (in rows)
-                            k: _stats[prefix].get(k, 0) + (1 if k == 'count' else ms[k])
-                        })
+                        _stats[prefix].update(
+                            {
+                                # we count the number of members, not their collection size (in rows)
+                                k: _stats[prefix].get(k, 0) + (1 if k == 'count' else ms[k])
+                            },
+                        )
         return _stats if as_dict else self.store_by_prefix('data')._get_stats_dataframe(_stats, scale=scale)
 
     def help(self, name_or_obj):

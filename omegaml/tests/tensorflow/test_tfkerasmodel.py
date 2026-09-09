@@ -8,9 +8,10 @@ from omegaml.tests.util import OmegaTestMixin, tf_perhaps_eager_execution
 from omegaml.util import module_available
 
 
-@unittest.skipUnless(module_available("keras", max='2.0', py_max='3.11') or
-                     module_available("tensorflow", max='2.15', py_max='3.11'),
-                     "tensorflow.keras not available")
+@unittest.skipUnless(
+    module_available("keras", max='2.0', py_max='3.11') or module_available("tensorflow", max='2.15', py_max='3.11'),
+    "tensorflow.keras not available",
+)
 class TensorflowKerasBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
         from omegaml.backends.tensorflow.tfkeras import TensorflowKerasBackend
@@ -25,6 +26,7 @@ class TensorflowKerasBackendTests(OmegaTestMixin, TestCase):
     def _build_model(self, fit=False):
         # build a dummy model for testing. does not need to make sense
         import tensorflow as tf
+
         keras = tf.keras
         Sequential = keras.models.Sequential
         Dense = keras.layers.Dense
@@ -33,6 +35,7 @@ class TensorflowKerasBackendTests(OmegaTestMixin, TestCase):
 
         # Generate dummy data
         import numpy as np
+
         x_train = np.random.random((1000, 20))
         y_train = keras.utils.to_categorical(np.random.randint(10, size=(1000, 1)), num_classes=10)
         x_test = np.random.random((100, 20))
@@ -48,14 +51,10 @@ class TensorflowKerasBackendTests(OmegaTestMixin, TestCase):
         model.add(Dropout(0.5))
         model.add(Dense(10, activation='softmax', name='output'))
         sgd = SGD(lr=0.01, momentum=0.9, nesterov=True)
-        model.compile(loss='categorical_crossentropy',
-                      optimizer=sgd,
-                      metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
         if fit:
-            model.fit(x_train, y_train,
-                      epochs=1,
-                      batch_size=128)
+            model.fit(x_train, y_train, epochs=1, batch_size=128)
         return model
 
     def test_save_load(self):
@@ -67,6 +66,7 @@ class TensorflowKerasBackendTests(OmegaTestMixin, TestCase):
 
     def test_fit(self):
         from tensorflow import keras
+
         om = self.om
         model = self._build_model(fit=False)
         om.models.put(model, 'keras-model')
@@ -79,6 +79,7 @@ class TensorflowKerasBackendTests(OmegaTestMixin, TestCase):
 
     def test_fit_tpu(self):
         from tensorflow import keras
+
         om = self.om
         model = self._build_model(fit=False)
         om.models.put(model, 'keras-model')

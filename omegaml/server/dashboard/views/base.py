@@ -8,7 +8,7 @@ from typing import TypeVar, Type
 
 class OmegaViewMixin:
     def __init__(self, *args, store=None, **kwargs):
-        """ Initialize the view with an optional store """
+        """Initialize the view with an optional store"""
         super().__init__(*args, **kwargs)
         self._store = store
 
@@ -19,6 +19,7 @@ class OmegaViewMixin:
         if self.qualifiers and self.qualifier != current_qualifier:
             self.logger.debug(f'switching qualifier to {self.qualifier}')
             from omegaml import setup
+
             try:
                 flask.current_app.current_om = om = setup(qualifier=self.qualifier)
             except:
@@ -52,6 +53,7 @@ class OmegaViewMixin:
     @property
     def qualifiers(self):
         from flask import current_app
+
         app = current_app
         # force bucket to be set in session
         current = self.qualifier
@@ -68,7 +70,7 @@ class OmegaViewMixin:
 
 
 class BaseView(OmegaViewMixin, FlaskView):
-    """ base class for views
+    """base class for views
 
     This implements the basic logic for creating reusable views
     that are easier to understand and maintain than Flask's views.
@@ -98,6 +100,6 @@ T = TypeVar('T')
 
 
 def mixin_for(baseclass: Type[T]) -> Type[T]:
-    """ use this to decorate a mixin class for typehints, keeping the mixin class a subclass of object """
+    """use this to decorate a mixin class for typehints, keeping the mixin class a subclass of object"""
     # https://github.com/python/typing/issues/246
     return object

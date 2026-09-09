@@ -9,6 +9,7 @@ def protected(kw):
 def get_omega(args, require_config=False):
     from omegaml import setup, _base_config
     from omegaml.client.cloud import setup_from_config
+
     config_file = args.get('--config')
     # deprecated, use --local
     local_runtime = args.get('--local-runtime')
@@ -20,8 +21,9 @@ def get_omega(args, require_config=False):
         try:
             om = setup_from_config(config_file)
         except Exception as e:
-            msg = (f'Config file could not be found due to {e}. Specify as --config or set '
-                   'OMEGA_CONFIG_FILE env variable')
+            msg = (
+                f'Config file could not be found due to {e}. Specify as --config or set OMEGA_CONFIG_FILE env variable'
+            )
             raise ValueError(msg)
     else:
         om = setup()
@@ -40,7 +42,8 @@ class AttrDict(dict):
 
 
 class dotable(dict):
-    """" dot-accessible, recursive dictionary, e.g. d['key'] -> d.key """
+    """ " dot-accessible, recursive dictionary, e.g. d['key'] -> d.key"""
+
     # adopted from: https://stackoverflow.com/a/3031270/890242
     MARKER = object()
 

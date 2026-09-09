@@ -7,7 +7,8 @@ class UtilitiesMixin:
     """
     Add functionality to MDataFrame, MSeries
     """
-    standard_quantiles = [.25, .5, .75]
+
+    standard_quantiles = [0.25, 0.5, 0.75]
 
     @property
     def dtypes(self):
@@ -46,23 +47,33 @@ class UtilitiesMixin:
             dataframe with quantiles
         """
         import numpy as np
+
         dtypes = self.dtypes
         # stats
         stats = ['mean', 'std', 'min', 'max']
-        numcols = [col for col in dtypes.index
-                   if np.issubdtype(dtypes[col], np.number)]
+        numcols = [col for col in dtypes.index if np.issubdtype(dtypes[col], np.number)]
         specs = {col: stats for col in numcols}
         stats_df = self.apply(lambda v: v.agg(**specs)).value
         melted = stats_df.melt()
-        melted['stat'] = (melted['variable']
-                          .str.split('_')
-                          .apply(lambda v: v[-1]))
-        melted['variable'] = (melted['variable']
-                              .str.split('_')
-                              .apply(lambda v: '_'.join(v[:-1])))
-        stats_df = melted.pivot_table(index='stat',
-                                      columns='variable',
-                                      values='value')
+        melted['stat'] = (
+            melted['variable']
+            .str.split('_')
+            .apply(
+                lambda v: v[-1],
+            )
+        )
+        melted['variable'] = (
+            melted['variable']
+            .str.split('_')
+            .apply(
+                lambda v: '_'.join(v[:-1]),
+            )
+        )
+        stats_df = melted.pivot_table(
+            index='stat',
+            columns='variable',
+            values='value',
+        )
         # quantiles
         if quantiles:
             if not isinstance(quantiles, (tuple, list)):

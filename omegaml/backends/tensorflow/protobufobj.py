@@ -10,11 +10,13 @@ class ProtobufDataBackend(BaseDataBackend):
     .. deprecated:: 0.18.0
         Use an object helper or a serializer/loader combination instead.
     """
+
     KIND = 'protobuf.pbf'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         from google.protobuf.message import Message
+
         return isinstance(obj, Message)
 
     def put(self, obj, name, attributes=None, **kwargs):
@@ -22,8 +24,9 @@ class ProtobufDataBackend(BaseDataBackend):
         storekey = self.model_store.object_store_key(name, '.pbf', hashed=True)
         gridfile = self._store_to_file(self.model_store, data, storekey)
         kind_meta = {
-            'protobuf_type': '{module}.{name}'.format(module=obj.DESCRIPTOR._concrete_class.__module__,
-                                                      name=obj.DESCRIPTOR._concrete_class.__name__)
+            'protobuf_type': '{module}.{name}'.format(
+                module=obj.DESCRIPTOR._concrete_class.__module__, name=obj.DESCRIPTOR._concrete_class.__name__
+            )
         }
         return self.model_store._make_metadata(
             name=name,
@@ -32,7 +35,8 @@ class ProtobufDataBackend(BaseDataBackend):
             kind=self.KIND,
             kind_meta=kind_meta,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         meta = self.data_store.metadata(name)

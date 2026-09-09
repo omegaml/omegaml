@@ -17,6 +17,7 @@ from omegaml.tests.util import OmegaTestMixin
 class PGVectorDBTests(OmegaTestMixin, TestCase):
     def setUp(self):
         from omegaml import Omega
+
         self.om = Omega()
         self.initparams()
         self.om.models.register_backend(self._vectordb_cls.KIND, self._vectordb_cls)
@@ -31,8 +32,10 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         self._cnx_str = 'pgvector://postgres:test@localhost:5432/postgres'
 
     def test_put_get_mocked(self):
-        with (mock.patch.object(self._vectordb_cls, '_get_connection', side_effect=self._mocked_get_connection),
-              mock.patch.object(DatabaseMigrator, 'run_migrations', side_effect=lambda *args, **kwargs: None)):
+        with (
+            mock.patch.object(self._vectordb_cls, '_get_connection', side_effect=self._mocked_get_connection),
+            mock.patch.object(DatabaseMigrator, 'run_migrations', side_effect=lambda *args, **kwargs: None),
+        ):
             self._test_put_get()
 
     def test_put_get_pgvector(self):
@@ -46,10 +49,7 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         # -- requires postgres + pgvector to beg running at localhost:5432
         # -- docker run -e POSTGRES_PASSWORD=test -p 5432:5432 pgvector/pgvector:pg16
         om = self.om
-        meta = om.datasets.put(self._cnx_str, 'mydocs',
-            replace=True,
-            collection='test',
-            vector_size=3)
+        meta = om.datasets.put(self._cnx_str, 'mydocs', replace=True, collection='test', vector_size=3)
         self.assertEqual(meta.kind, self._vectordb_cls.KIND)
         self.assertEqual(meta.kind_meta['connection'], self._cnx_str)
         documents = [
@@ -74,31 +74,23 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
 
     def test_document_list(self):
         om = self.om
-        meta = om.datasets.put(self._cnx_str, 'mydocs',
-            replace=True,
-            collection='test',
-            vector_size=3)
-        documents = [
-            ('my text', [1, 2, 3]),
-            ('my other text', [99, 100, 200]),
-        ]
+        meta = om.datasets.put(self._cnx_str, 'mydocs', replace=True, collection='test', vector_size=3)
+        documents = [('my text', [1, 2, 3]), ('my other text', [99, 100, 200])]
         om.datasets.put(documents, 'mydocs')
         index = om.datasets.get('mydocs')
         documents = index.list()
-        self.assertEqual([subdict(doc, ['source', 'attributes']) for doc in documents],
-            [{'source': '', 'attributes': {'tags': [], 'source': ''}},
-             {'source': '', 'attributes': {'tags': [], 'source': ''}}])
+        self.assertEqual(
+            [subdict(doc, ['source', 'attributes']) for doc in documents],
+            [
+                {'source': '', 'attributes': {'tags': [], 'source': ''}},
+                {'source': '', 'attributes': {'tags': [], 'source': ''}},
+            ],
+        )
 
     def test_delete_index(self):
         om = self.om
-        meta = om.datasets.put(self._cnx_str, 'mydocs',
-            replace=True,
-            collection='test',
-            vector_size=3)
-        documents = [
-            ('my text', [1, 2, 3]),
-            ('my other text', [99, 100, 200]),
-        ]
+        meta = om.datasets.put(self._cnx_str, 'mydocs', replace=True, collection='test', vector_size=3)
+        documents = [('my text', [1, 2, 3]), ('my other text', [99, 100, 200])]
         om.datasets.put(documents, 'mydocs')
         index = om.datasets.get('mydocs')
         self.assertEqual(len(index.list()), 2)
@@ -107,14 +99,8 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
 
     def test_delete_document(self):
         om = self.om
-        meta = om.datasets.put(self._cnx_str, 'mydocs',
-            replace=True,
-            collection='test',
-            vector_size=3)
-        documents = [
-            ('my text', [1, 2, 3]),
-            ('my other text', [99, 100, 200]),
-        ]
+        meta = om.datasets.put(self._cnx_str, 'mydocs', replace=True, collection='test', vector_size=3)
+        documents = [('my text', [1, 2, 3]), ('my other text', [99, 100, 200])]
         om.datasets.put(documents, 'mydocs')
         index = om.datasets.get('mydocs')
         self.assertEqual(len(index.list()), 2)
@@ -129,16 +115,12 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
     def test_simple_embedding(self):
         om = self.om
         embedding_model = SimpleEmbeddingModel()
-        documents = [
-            'The quick brown fox jumps over the lazy dog',
-        ]
+        documents = ['The quick brown fox jumps over the lazy dog']
         embedding_model.fit(documents)
         om.models.put(embedding_model, 'embedding')
-        meta = om.datasets.put(self._cnx_str, 'mydocs',
-            embedding_model='embedding',
-            collection='test3',
-            vector_size=8,
-            replace=True)
+        meta = om.datasets.put(
+            self._cnx_str, 'mydocs', embedding_model='embedding', collection='test3', vector_size=8, replace=True
+        )
         # check index is stored as expected
         self.assertEqual(meta.kind_meta['collections']['test3']['embedding_model'], 'embedding')
         mydocs = om.datasets.get('mydocs', model_store=om.models)
@@ -156,17 +138,29 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
         om = self.om
         embedding_model = SimpleEmbeddingModel()
         documents = [
-            ('The quick brown fox jumps over the lazy dog', {'tags': ['animal']}),
-            ('The lazy dog sleeps', {'tags': ['animal', 'lazy'], 'labels': ['lazy']}),
-            ('A fast car zooms by', {'tags': ['vehicle']}),
+            (
+                'The quick brown fox jumps over the lazy dog',
+                {'tags': ['animal']},
+            ),
+            (
+                'The lazy dog sleeps',
+                {'tags': ['animal', 'lazy'], 'labels': ['lazy']},
+            ),
+            (
+                'A fast car zooms by',
+                {'tags': ['vehicle']},
+            ),
         ]
         embedding_model.fit(list(doc for doc, attributes in documents))
         om.models.put(embedding_model, 'embedding')
-        meta = om.datasets.put(self._cnx_str, 'mydocs',
+        meta = om.datasets.put(
+            self._cnx_str,
+            'mydocs',
             embedding_model='embedding',
             collection='test3',
             vector_size=embedding_model.dimensions,
-            replace=True)
+            replace=True,
+        )
         # check index is stored as expected
         self.assertEqual(meta.kind_meta['collections']['test3']['embedding_model'], 'embedding')
         mydocs = om.datasets.get('mydocs', model_store=om.models)
@@ -179,48 +173,51 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
             self.assertTrue(len(docs) > 0)
             self.assertTrue(docs[0]['text'] == doc)
         # test there is never a document with the wrong tags
-        docs = om.datasets.get('mydocs', document='quick brown',
-            model_store=om.models,
-            tags=['nonexistent'])
+        docs = om.datasets.get('mydocs', document='quick brown', model_store=om.models, tags=['nonexistent'])
         self.assertEqual(len(docs), 0)
         # note that giving a tag that exists will return documents but give a large distance
-        docs = om.datasets.get('mydocs', document='quick brown',
-            model_store=om.models,
-            tags=['vehicle'])
+        docs = om.datasets.get('mydocs', document='quick brown', model_store=om.models, tags=['vehicle'])
         self.assertEqual(len(docs), 1)
         self.assertTrue(docs[0]['text'] == 'A fast car zooms by')
         self.assertTrue(docs[0]['distance'] > 0.5)  # assuming a distance threshold
         # filter by max_distance
-        docs = om.datasets.get('mydocs', document='quick brown',
-            model_store=om.models,
-            tags=['vehicle'],
-            max_distance=0.1)
+        docs = om.datasets.get(
+            'mydocs', document='quick brown', model_store=om.models, tags=['vehicle'], max_distance=0.1
+        )
         self.assertEqual(len(docs), 0)
         # get all tags
         index = om.datasets.get('mydocs')
         self.assertIsInstance(index, DocumentIndex)
         tags = index.attributes()
-        self.assertEqual(tags,
-            {'labels': {'lazy': 1}, 'tags': {'animal': 2, 'lazy': 1, 'vehicle': 1}, 'source': {'': 3}})
+        self.assertEqual(
+            tags, {'labels': {'lazy': 1}, 'tags': {'animal': 2, 'lazy': 1, 'vehicle': 1}, 'source': {'': 3}}
+        )
         tags = index.attributes(key='tags')
-        self.assertEqual(tags, {'tags': {'animal': 2, 'lazy': 1, 'vehicle': 1}})
+        self.assertEqual(
+            tags,
+            {'tags': {'animal': 2, 'lazy': 1, 'vehicle': 1}},
+        )
         labels = index.attributes(key='labels')
-        self.assertEqual(labels, {'labels': {'lazy': 1}})
+        self.assertEqual(
+            labels,
+            {'labels': {'lazy': 1}},
+        )
 
     def test_background_indexing(self):
         om = self.om
         # create a document index
         embedding_model = SimpleEmbeddingModel()
-        documents = [
-            'The quick brown fox jumps over the lazy dog',
-        ]
+        documents = ['The quick brown fox jumps over the lazy dog']
         embedding_model.fit(documents)
         om.models.put(embedding_model, 'embedding')
-        om.datasets.put(self._cnx_str, 'myindex',
+        om.datasets.put(
+            self._cnx_str,
+            'myindex',
             embedding_model='embedding',
             replace=True,
             collection='test',
-            vector_size=embedding_model.dimensions)
+            vector_size=embedding_model.dimensions,
+        )
 
         # simulate upload and background indexing
         def simulate_upload_file(fn, index):
@@ -230,9 +227,11 @@ class PGVectorDBTests(OmegaTestMixin, TestCase):
                 """
                 fout.write(text.encode('utf-8'))
                 fout.seek(0)
-                meta = om.datasets.put(fout, fn, attributes={
-                    'index': index
-                })
+                meta = om.datasets.put(
+                    fout,
+                    fn,
+                    attributes={'index': index},
+                )
             return meta
 
         # -- upload

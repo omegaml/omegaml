@@ -28,7 +28,7 @@ class GenericModelResource(StreamableResourceMixin):
                     'created': meta.created,
                     'modified': meta.modified,
                     'bucket': meta.bucket,
-                }
+                },
             }
         else:
             data = {}
@@ -134,21 +134,21 @@ class GenericModelResource(StreamableResourceMixin):
     def models(self, model_id, query, payload):
         # endpoint according to https://platform.openai.com/docs/api-reference/models/
         # same code as AIPromptsView.members
-        excludes = (
-            lambda m: m.name.startswith('_'),
-            lambda m: m.name.startswith('experiments/')
-        )
+        excludes = (lambda m: m.name.startswith('_'), lambda m: m.name.startswith('experiments/'))
         kind = ['genai.text', 'genai.llm']
-        items = (m for m in self.om.models.list('prompts/*',
-                                                kind=kind, raw=True) if not any(e(m) for e in excludes))
+        items = (m for m in self.om.models.list('prompts/*', kind=kind, raw=True) if not any(e(m) for e in excludes))
         models = {
             "object": "list",
-            "data": [{
-                "id": m.name,
-                "object": "model",
-                "created": int(m.created.timestamp()),
-                "owned_by": "omegaml"
-            } for m in items]}
+            "data": [
+                {
+                    "id": m.name,
+                    "object": "model",
+                    "created": int(m.created.timestamp()),
+                    "owned_by": "omegaml",
+                }
+                for m in items
+            ],
+        }
         return models
 
     def _resolve_model_id(self, model_id, payload):

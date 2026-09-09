@@ -81,7 +81,9 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         om.scripts.put(myscript, 'myscript')
         # check myscript is actually deserialized by runtime
         myscript = None
-        result = om.runtime.script('myscript').run({'foo': 'bar'})
+        result = om.runtime.script('myscript').run(
+            {'foo': 'bar'},
+        )
         # expect a runtime error due to missing input
         with self.assertRaises(RuntimeError) as ex:
             om.runtime.script('myscript').run().get()
@@ -112,7 +114,11 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
             return {'data': data, 'method': method}
 
         # working as expected
-        meta = om.models.put(mymodel, 'mymodel', attributes={'foo': 'bar'})
+        meta = om.models.put(
+            mymodel,
+            'mymodel',
+            attributes={'foo': 'bar'},
+        )
         self.assertEqual(meta.attributes.get('foo'), 'bar')
         self.assertIn('versions', meta.attributes)
         other = om['target']
@@ -128,8 +134,7 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
         meta.attributes['fox'] = 'bax'
         meta.save()
         other_meta = om.models.promote('mymodel', other.models, method='getput')
-        self.assertNotEqual(meta.attributes.get('versions'),
-                            other_meta.attributes.get('versions'))
+        self.assertNotEqual(meta.attributes.get('versions'), other_meta.attributes.get('versions'))
         self.assertEqual(meta.attributes['fox'], other_meta.attributes['fox'])
 
 
@@ -142,9 +147,11 @@ def myvirtualfn(data=None, meta=None, method=None, store=None, **kwargs):
         data = store.get(real_data_name)
         return data or 'no data yet'
     if method == 'put':
-        entrymeta = store.put(data, real_data_name, attributes={
-            'virtualobj_ref': meta.name,
-        })
+        entrymeta = store.put(
+            data,
+            real_data_name,
+            attributes={'virtualobj_ref': meta.name},
+        )
         entrylist = meta.attributes.get('real_data', [])
         entrylist.append(datetime.datetime.now())
         meta.attributes['real_data'] = entrylist
@@ -165,9 +172,12 @@ class MyVirtualObjectHandler(VirtualObjectHandler):
 
     def put(self, data=None, meta=None, store=None, **kwargs):
         import datetime
-        entrymeta = store.put(data, self.real_data_name(meta), attributes={
-            'virtualobj_ref': meta.name,
-        })
+
+        entrymeta = store.put(
+            data,
+            self.real_data_name(meta),
+            attributes={'virtualobj_ref': meta.name},
+        )
         entrylist = meta.attributes.get('real_data', [])
         entrylist.append(datetime.datetime.now())
         meta.attributes['real_data'] = entrylist
@@ -182,14 +192,17 @@ class MyVirtualObjectHandler(VirtualObjectHandler):
 @virtualobj
 def myvirtualobjfn_with_basename(data=None, meta=None, method=None, base_name=None, store=None, **kwargs):
     import datetime
+
     real_data_name = base_name
     if method == 'get':
         data = store.get(real_data_name)
         return data or 'no data yet'
     if method == 'put':
-        entrymeta = store.put(data, real_data_name, attributes={
-            'virtualobj_ref': meta.name,
-        })
+        entrymeta = store.put(
+            data,
+            real_data_name,
+            attributes={'virtualobj_ref': meta.name},
+        )
         entrylist = meta.attributes.get('real_data', [])
         entrylist.append(datetime.datetime.now())
         meta.attributes['real_data'] = entrylist

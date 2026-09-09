@@ -18,6 +18,7 @@ class TrackingViewTests(OmegaTestMixin, TestCase):
 
     def url_for(self, endpoint, **kwargs):
         from flask import url_for
+
         with self.app.test_request_context():
             return url_for(endpoint, **kwargs)
 
@@ -27,24 +28,23 @@ class TrackingViewTests(OmegaTestMixin, TestCase):
         for i in range(1, 10):
             with exp:
                 exp.log_metric('accuracy', 0.8)
-        resp = self.client.get(url_for('omega-server.tracking_api_experiment_data',
-                                       name='foo'))
+        resp = self.client.get(url_for('omega-server.tracking_api_experiment_data', name='foo'))
         self.assertEqual(resp.status_code, 200)
-        resp = self.client.get(url_for('omega-server.tracking_api_experiment_data',
-                                       name='foo', start=3, nrows=5))
+        resp = self.client.get(url_for('omega-server.tracking_api_experiment_data', name='foo', start=3, nrows=5))
         self.assertEqual(resp.status_code, 200)
         data = resp.json
         self.assertEqual(len(data['data']), 5)
-        resp = self.client.get(url_for('omega-server.tracking_api_experiment_data',
-                                       name='foo', since='-1d', end='now'))
+        resp = self.client.get(url_for('omega-server.tracking_api_experiment_data', name='foo', since='-1d', end='now'))
         self.assertEqual(resp.status_code, 200)
-        resp = self.client.get(url_for('omega-server.tracking_api_experiment_data',
-                                       name='foo', start=100, nrows=10))
+        resp = self.client.get(url_for('omega-server.tracking_api_experiment_data', name='foo', start=100, nrows=10))
         self.assertEqual(resp.status_code, 200)
         data = resp.json
         self.assertEqual(len(data['data']), 0)
-        resp = self.client.get(url_for('omega-server.tracking_api_experiment_data',
-                                       name='foo', since='-10d', end='now', start=100, nrows=10))
+        resp = self.client.get(
+            url_for(
+                'omega-server.tracking_api_experiment_data', name='foo', since='-10d', end='now', start=100, nrows=10
+            )
+        )
         self.assertEqual(resp.status_code, 200)
         data = resp.json
         self.assertEqual(len(data['data']), 0)
@@ -58,8 +58,7 @@ class TrackingViewTests(OmegaTestMixin, TestCase):
         # test for various runs
         for runs in ('1', '2', '1,2,3', '1,2,3,4', '1,2,3,4,5', '1,2,3,4,5,6', 'all', ''):
             with patch('omegaml.server.util.TestableMock') as mock:
-                resp = self.client.get(url_for('omega-server.tracking_api_plot_metrics',
-                                               name='foo') + f'?runs={runs}')
+                resp = self.client.get(url_for('omega-server.tracking_api_plot_metrics', name='foo') + f'?runs={runs}')
                 self.assertEqual(resp.status_code, 200)
                 plot_fn, plot_args, plot_kwargs = mock.call_args[0]
                 metrics = plot_kwargs.get('data_frame')

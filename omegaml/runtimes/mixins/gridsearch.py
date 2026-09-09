@@ -1,6 +1,6 @@
 class GridSearchMixin(object):
     def gridsearch(self, Xname, Yname=None, parameters=None, pure_python=False, **kwargs):
-        """ run gridsearch on model
+        """run gridsearch on model
 
         Args:
             Xname (str|obj): the name of the X dataset in om.datasets, or

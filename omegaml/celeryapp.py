@@ -15,6 +15,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = ''
 
 try:
     import omegaml as om
+
     # see if we can get an instance from the configuration env
     om = om.setup()
     defaults = om.defaults

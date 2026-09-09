@@ -2,11 +2,12 @@ import base64
 import json
 import logging
 from contextlib import contextmanager
-from flask import current_app, jsonify, url_for
-from functools import wraps, cache
+from functools import cache, wraps
 from pathlib import Path
 from unittest.mock import MagicMock
 from urllib.parse import unquote
+
+from flask import current_app, jsonify, url_for
 from werkzeug.exceptions import abort
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 def configure_database(db, app):
     from flask_migrate import Migrate
+
     db.init_app(app)
     _default_db_path = Path(__file__).absolute().parent / 'db.sqlite3'
     app.config.setdefault('SQLALCHEMY_DATABASE_URI', _default_db_path)
@@ -66,7 +68,7 @@ def json_abort(status_code, message=None, data=None):
 
 
 def js_routes(app):
-    """ return a base64 encoded dict of routes for js use
+    """return a base64 encoded dict of routes for js use
 
     Usage:
         1. Call this in your flask.create_app function:
@@ -103,6 +105,7 @@ def js_routes(app):
 @contextmanager
 def stripblocks(trim_blocks=True, lstrip_blocks=True):
     import flask
+
     app = flask.current_app
     original_trim = app.jinja_env.trim_blocks
     original_lstrip = app.jinja_env.lstrip_blocks
@@ -116,7 +119,7 @@ def stripblocks(trim_blocks=True, lstrip_blocks=True):
 
 
 def testable(fn, *args, **kwargs):
-    """ testable is a decorator to make a callable testable
+    """testable is a decorator to make a callable testable
 
     Usage:
         # in your code
@@ -143,9 +146,9 @@ def testable(fn, *args, **kwargs):
 
 
 def TestableMock(fn, args, kwargs):
-    """ TestableMock is a placeholder for you to mock
-    
-    Usage: 
+    """TestableMock is a placeholder for you to mock
+
+    Usage:
         with mock.patch('omegaml.server.util.TestableMock') as mock:
             # Your test code here
             pass
@@ -191,6 +194,7 @@ def setup_flask_json_encoding(app, encoder=None, json=None):
         - https://stackoverflow.com/a/75666126/890242
     """
     import json as default_json
+
     from flask.json.provider import DefaultJSONProvider
 
     json = json or default_json

@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 class DatabaseMigrator:
-    """ A utility class for performing database schema migrations using SQLAlchemy.
+    """A utility class for performing database schema migrations using SQLAlchemy.
 
     This class allows you to manage schema changes, such as adding or dropping columns,
     based on a given SQLAlchemy model. It can handle both direct SQL execution for
@@ -69,8 +69,11 @@ class DatabaseMigrator:
             self.Session = sessionmaker(bind=self.engine)
             self.session = self.Session()
         else:
-            self.engine = database_url_or_connection.engine if hasattr(database_url_or_connection,
-                                                                       'engine') else database_url_or_connection
+            self.engine = (
+                database_url_or_connection.engine
+                if hasattr(database_url_or_connection, 'engine')
+                else database_url_or_connection
+            )
             self.Session = sessionmaker(bind=self.engine)
             self.session = self.Session()
         return self
@@ -106,17 +109,21 @@ class DatabaseMigrator:
         foreign_keys = [fk for fk in self.model.__table__.foreign_keys]
         if foreign_keys:
             print(
-                f"Warning: Foreign key constraints detected for columns {columns_to_drop}. Cannot drop/recreate the table.")
+                f"Warning: Foreign key constraints detected for columns {columns_to_drop}. Cannot drop/recreate the table."
+            )
             return
             # Handle foreign keys as needed, e.g., by dropping them or adjusting the migration logic
         self.session.execute(
             text(
-                f'CREATE TABLE {new_table_name} ({", ".join([f"{col.name} {col.type.compile()}" for col in new_columns])})'))
+                f'CREATE TABLE {new_table_name} ({", ".join([f"{col.name} {col.type.compile()}" for col in new_columns])})'
+            )
+        )
 
         # Copy data from the old table to the new table
         columns_to_copy = ', '.join([col.name for col in new_columns])
         self.session.execute(
-            text(f'INSERT INTO {new_table_name} ({columns_to_copy}) SELECT {columns_to_copy} FROM {table_name}'))
+            text(f'INSERT INTO {new_table_name} ({columns_to_copy}) SELECT {columns_to_copy} FROM {table_name}')
+        )
 
         # Drop the old table
         try:
@@ -145,11 +152,14 @@ class DatabaseMigrator:
                     current_column_type_str = current_columns[column_name].compile(dialect)
                 if current_column_type_str != column_type_str:
                     print(
-                        f"Altering column: {column_name} in {table_name} from {current_column_type_str} to {column_type_str}")
+                        f"Altering column: {column_name} in {table_name} from {current_column_type_str} to {column_type_str}"
+                    )
                     # Note: Altering column types can be complex and may require additional handling
                     self.session.execute(
                         text(
-                            f'ALTER TABLE {table_name} ALTER COLUMN {column_name} TYPE {column_type_str} USING {column_name}::{column_type_str}'))
+                            f'ALTER TABLE {table_name} ALTER COLUMN {column_name} TYPE {column_type_str} USING {column_name}::{column_type_str}'
+                        )
+                    )
 
             # Determine columns to drop
             columns_to_drop = [column_name for column_name in current_columns if column_name not in model_columns]

@@ -56,17 +56,17 @@ class ToolCallingMixin:
     def _handle_toolcalls(self, response, tool_calls, conversation_id):
         results, tool_prompts = self._call_tools(tool_calls, conversation_id)
         tool_prompts = (
-                self.pipeline(
-                    method='toolcall',
-                    prompt_message=None,  # FIXME
-                    response_message=response,
-                    messages=None,  # FIXME
-                    tool_prompts=tool_prompts,
-                    tool_results=results,
-                    template=None,  # FIXME
-                    conversation_id=conversation_id,
-                )
-                or tool_prompts
+            self.pipeline(
+                method='toolcall',
+                prompt_message=None,  # FIXME
+                response_message=response,
+                messages=None,  # FIXME
+                tool_prompts=tool_prompts,
+                tool_results=results,
+                template=None,  # FIXME
+                conversation_id=conversation_id,
+            )
+            or tool_prompts
         )
         return results, tool_prompts
 

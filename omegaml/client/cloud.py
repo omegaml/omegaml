@@ -71,26 +71,23 @@ class OmegaCloudRuntime(OmegaRuntime):
 
     def build_account_routing(self, label):
         # build the queue
-        account_routing = {
-            'label': '{self.dispatch_label}-{label}'.format(**locals())
-        }
+        account_routing = {'label': '{self.dispatch_label}-{label}'.format(**locals())}
         return account_routing
 
 
-def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None,
-          view=None, make_default=True):
+def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None, view=None, make_default=True):
     import omegaml as om_mod
+
     api_url = ensure_api_url(api_url, om_mod._base_config)
-    view = (view if view is not None
-            else getattr(om_mod._base_config, 'OMEGA_SERVICES_INCLUSTER', False))
+    view = view if view is not None else getattr(om_mod._base_config, 'OMEGA_SERVICES_INCLUSTER', False)
     auth_env = AuthenticationEnv.secure()
-    om = auth_env.get_omega_from_apikey(userid=userid, apikey=apikey,
-                                        api_url=api_url, qualifier=qualifier, view=view)
+    om = auth_env.get_omega_from_apikey(userid=userid, apikey=apikey, api_url=api_url, qualifier=qualifier, view=view)
     # prepare om to be linked to default
     om.Omega = OmegaCloud
-    om.setup = lambda *args, **kwargs: setup(
-        **{**dict(userid=userid, apikey=apikey, qualifier=qualifier, bucket=bucket),
-           **kwargs})
+    om.setup = lambda *args, **kwargs: setup(**{
+        **dict(userid=userid, apikey=apikey, qualifier=qualifier, bucket=bucket),
+        **kwargs,
+    })
     om._om = om
     # ensure link to deferred instance
     om_mod.Omega = OmegaCloud
@@ -99,12 +96,13 @@ def setup(userid=None, apikey=None, api_url=None, qualifier=None, bucket=None,
 
 
 def setup_from_config(config_file=None, fallback=None):
-    """ setup from a cloud configuration file
+    """setup from a cloud configuration file
 
     If the configuration files does not contain OMEGA_USERID and OMEGA_APIKEY,
     will use given fallback.
     """
     from omegaml import _base_config
+
     config_file = config_file or _base_config.OMEGA_CONFIG_FILE
     if isinstance(config_file, str) and os.path.exists(config_file):
         with open(config_file, 'r') as fin:
@@ -112,10 +110,12 @@ def setup_from_config(config_file=None, fallback=None):
             if isinstance(userconfig, dict) and 'OMEGA_USERID' in userconfig:
                 AuthenticationEnv.secure()
                 try:
-                    omega = setup(userid=userconfig['OMEGA_USERID'],
-                                  apikey=userconfig['OMEGA_APIKEY'],
-                                  qualifier=userconfig.get('OMEGA_QUALIFIER'),
-                                  api_url=userconfig.get('OMEGA_RESTAPI_URL'))
+                    omega = setup(
+                        userid=userconfig['OMEGA_USERID'],
+                        apikey=userconfig['OMEGA_APIKEY'],
+                        qualifier=userconfig.get('OMEGA_QUALIFIER'),
+                        api_url=userconfig.get('OMEGA_RESTAPI_URL'),
+                    )
                 except Exception as e:
                     # TODO make this a SystemError so that OmegaDeferredIstance.setup reverts to proper defaults
                     raise SystemError(f'Could not login using config file {config_file}, error={e}')

@@ -1,8 +1,9 @@
-import numpy as np
-import pandas as pd
 import warnings
 from datetime import datetime
 from itertools import pairwise, product
+
+import numpy as np
+import pandas as pd
 
 from omegaml.backends.monitoring.alerting import AlertRule
 from omegaml.backends.monitoring.stats import DriftStats, DriftStatsCalc
@@ -10,8 +11,7 @@ from omegaml.util import dict_merge, tryOr
 
 
 class DriftMonitorBase:
-    def __init__(self, resource=None, store=None, query=None, tracking=None, kind=None,
-                 statscalc=None, **kwargs):
+    def __init__(self, resource=None, store=None, query=None, tracking=None, kind=None, statscalc=None, **kwargs):
         self.store = store
         self._resource = resource
         self._query = query or kwargs
@@ -30,15 +30,15 @@ class DriftMonitorBase:
         return pd.json_normalize(self.data)
 
     def snapshot(self, *args, **kwargs):
-        """ take a snapshot of the data
+        """take a snapshot of the data
 
         This method is called by a monitor job to take a snapshot of the data to monitor.
         The specific implementation is subject to the monitor type, e.g. a DataDriftMonitor
         """
         raise NotImplementedError
 
-    def summary(self, seq=None, d1=None, d2=None, ci=.95, raw=False, column=None, statistic=None):
-        """ Calculate and summarize drift statistics
+    def summary(self, seq=None, d1=None, d2=None, ci=0.95, raw=False, column=None, statistic=None):
+        """Calculate and summarize drift statistics
 
         This effectively calls DriftMonitor.compare() and DriftStats.summary() on the
         drift statistics
@@ -67,8 +67,8 @@ class DriftMonitorBase:
         stats = self.compare(seq=seq, d1=d1, d2=d2, ci=ci, raw=raw)
         return stats if raw else stats.summary(column=column, statistic=statistic)
 
-    def compare(self, seq=None, d1=None, d2=None, ci=.95, baseline=0, raw=False, matcher=None, since=None):
-        """ calculate drift
+    def compare(self, seq=None, d1=None, d2=None, ci=0.95, baseline=0, raw=False, matcher=None, since=None):
+        """calculate drift
 
         Args:
             seq (list|str): a list of snapshot indices to compare in the format [i, i+1, ..., i+n],
@@ -113,12 +113,13 @@ class DriftMonitorBase:
             drifts = [self._calculate_drift(seq=pair, ci=ci, raw=True, since=since) for pair in seq]
         else:
             raise ValueError(
-                f'invalid drift sequence {seq}, must be "recent", "baseline", "series" or a list of snapshot indices.')
+                f'invalid drift sequence {seq}, must be "recent", "baseline", "series" or a list of snapshot indices.'
+            )
         # filter out empty drifts
         drifts = [d for d in drifts if d]
         return DriftStats(drifts, monitor=self) if not raw else drifts
 
-    def _calculate_drift(self, seq=None, d1=None, d2=None, ci=.95, raw=False, matcher=None, since=None):
+    def _calculate_drift(self, seq=None, d1=None, d2=None, ci=0.95, raw=False, matcher=None, since=None):
         # return a single drift
         # -- to calculate a drift history, call this method multiple times for different seq
         since = since.isoformat() if isinstance(since, datetime) else since
@@ -210,7 +211,7 @@ class DriftMonitorBase:
         return FORMATS[format](data) if format in FORMATS else data
 
     def clear(self, force=False):
-        """ clear all data associated with this monitor
+        """clear all data associated with this monitor
 
         All data is removed from the experiment's dataset. This is not recoverable.
 
@@ -248,9 +249,19 @@ class DriftMonitorBase:
         recent = self._most_recent_snapshots(n=n)
         return recent[0]['info']['dt'] if recent else datetime.min
 
-    def _do_snapshot(self, df1: pd.DataFrame, columns=None, name=None, kind=None, info=None, prefix=None,
-                     postfix=None, catcols=None, correlate=False):
-        """ calculate a snapshot of the data
+    def _do_snapshot(
+        self,
+        df1: pd.DataFrame,
+        columns=None,
+        name=None,
+        kind=None,
+        info=None,
+        prefix=None,
+        postfix=None,
+        catcols=None,
+        correlate=False,
+    ):
+        """calculate a snapshot of the data
 
         This method calculates a snapshot for a DataFrame, including statistics and histograms or group frequencies
         for numeric and categorical columns, respectively. Use the _log_snapshot method to log the snapshot to
@@ -310,15 +321,14 @@ class DriftMonitorBase:
         numeric_columns = list(set(df1.select_dtypes(include='number').columns) - set(catcols))
         cat_columns = list(set(df1.columns) - set(numeric_columns))
         snapshot = {}
-        extra_info.update({
-            'len': len(df1),
-        })
+        extra_info.update({'len': len(df1)})
         stats = snapshot.setdefault('stats', {})
         info = snapshot.setdefault('info', self._snapshot_info(name, kind, **extra_info))
         prefixed = lambda col: f'{prefix}_{col}' if prefix else col
         postfixed = lambda col: f'{col}_{postfix}' if postfix else col
-        pre_or_post_fixed = lambda col: (postfixed(prefixed(col)) if isinstance(col, str)
-                                         else [postfixed(prefixed(c)) for c in col])
+        pre_or_post_fixed = lambda col: (
+            postfixed(prefixed(col)) if isinstance(col, str) else [postfixed(prefixed(c)) for c in col]
+        )
         info['num_columns'] = pre_or_post_fixed(numeric_columns)
         info['cat_columns'] = pre_or_post_fixed(cat_columns)
         # calculate numeric statistics
@@ -344,7 +354,7 @@ class DriftMonitorBase:
             s_col = pre_or_post_fixed(col)
             values = df1[col].dropna().values
             bins = 10 if len(values) < 1000 else 100
-            probs = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, .95]
+            probs = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
             stats[s_col] = {
                 'dtype': str(df1.dtypes[col]),
                 'probs': probs,
@@ -358,8 +368,7 @@ class DriftMonitorBase:
                 'min': np.min(values),
                 'max': np.max(values),
                 'percentiles': [np.quantile(values, probs), probs],
-                'corr': {method: tryOr(lambda: correlations[method][col], None)
-                         for method in correlations},
+                'corr': {method: tryOr(lambda: correlations[method][col], None) for method in correlations},
                 'missing': len(df1) - len(values),
             }
         # calculate categorical statistics
@@ -381,8 +390,8 @@ class DriftMonitorBase:
         self.tracking.use()  # ensure we have an active run
         self.tracking.log_event('drift', self._resource, drift, **extra)
 
-    def _calc_drift(self, s1, s2, ci=.95, matcher=None):
-        """ calculate drift between two snapshots
+    def _calc_drift(self, s1, s2, ci=0.95, matcher=None):
+        """calculate drift between two snapshots
 
         Args:
             s1 (dict): the first snapshot, see DriftMonitor.snapshot()
@@ -460,12 +469,16 @@ class DriftMonitorBase:
             cdf2 = calc.cdf_from_hist(h2, e2)
             metrics.setdefault(col, {})
             for metric, metric_fn in calc.metrics('numeric').items():
-                metrics[col][metric] = tryOr(lambda: metric_fn(d1, d2, ci=ci, sd=sd),
-                                             {'score': 0, 'drift': False, 'metric': None, 'error': True})
-            sample[col] = {
-                'd1': d1,
-                'd2': d2,
-            }
+                metrics[col][metric] = tryOr(
+                    lambda: metric_fn(d1, d2, ci=ci, sd=sd),
+                    {
+                        'score': 0,
+                        'drift': False,
+                        'metric': None,
+                        'error': True,
+                    },
+                )
+            sample[col] = {'d1': d1, 'd2': d2}
         for col in cat_columns:
             g1 = s1['stats'][_c('d1', s1, col)]['groups']
             g2 = s2['stats'][_c('d2', s2, col)]['groups']
@@ -476,12 +489,16 @@ class DriftMonitorBase:
             d2 = (np.array(g2v) / np.sum(g2v)).round(decimals=99)
             metrics.setdefault(col, {})
             for metric, metric_fn in calc.metrics('categorical').items():
-                metrics[col][metric] = tryOr(lambda: metric_fn(d1, d2, ci=ci, sd=sd),
-                                             {'score': 0, 'drift': False, 'metric': None, 'error': True})
-            sample[col] = {
-                'd1': d1,
-                'd2': d2,
-            }
+                metrics[col][metric] = tryOr(
+                    lambda: metric_fn(d1, d2, ci=ci, sd=sd),
+                    {
+                        'score': 0,
+                        'drift': False,
+                        'metric': None,
+                        'error': True,
+                    },
+                )
+            sample[col] = {'d1': d1, 'd2': d2}
         # add meta information about this drift
         info['dt_from'] = s1['info'].get('dt')
         info['dt_to'] = s2['info'].get('dt')
@@ -519,17 +536,22 @@ class DriftMonitorBase:
         return drift
 
     def _notify_alerts(self, alerts=None, notify=True):
-        """ check for drift and notify recipients
+        """check for drift and notify recipients
 
         Args:
             alerts (list): a list of alert rules
             notify (bool): whether to notify recipients, defaults to True
         """
-        rules = self._make_alert_rules(alerts or [{
-            'event': 'drift',
-            'action': 'notify',
-            'recipients': ['users'],
-        }])
+        rules = self._make_alert_rules(
+            alerts
+            or [
+                {
+                    'event': 'drift',
+                    'action': 'notify',
+                    'recipients': ['users'],
+                }
+            ]
+        )
         for rule in rules:
             rule.check(notify=notify, run=self.tracking.active_run())
 
@@ -616,28 +638,31 @@ class DriftMonitorBase:
         RETRIEVERS = {
             'drift': self._get_drift_events,
             'alert': self._get_alert_events,
-            'snapshot': lambda *args, **kwargs: self.refresh(**kwargs) or (self.df if not raw else self.data)
+            'snapshot': lambda *args, **kwargs: self.refresh(**kwargs) or (self.df if not raw else self.data),
         }
         retriever = RETRIEVERS[event]
         return retriever(run=run, since=since, column=column, statistic=statistic, stats=stats, raw=raw)
 
     def _get_drift_events(self, run=None, since=None, column=None, statistic=None, stats=False, raw=False):
-        data = self.tracking.data(run=run, event='drift', key=self._resource, since=since,
-                                  column=column, statistic=statistic)
+        data = self.tracking.data(
+            run=run, event='drift', key=self._resource, since=since, column=column, statistic=statistic
+        )
         if len(data) and stats:
             # -- each drift event is a list of drift indicators, see .capture()
             # -- 'seq' is the respective (min, max) sequence associated with the drift event
             # ==> drifted_seqs is the list of (min, max) sequence numbers to recalculate the drifts
-            drifted_seqs = (data['value']  # all drift summaries
-                            .apply(lambda v: v['info']['seq'])  # extract seqs
-                            .explode()  # flatten seqs
-                            .to_list())  # get a list of lists
+            drifted_seqs = (
+                data['value']  # all drift summaries
+                .apply(lambda v: v['info']['seq'])  # extract seqs
+                .explode()  # flatten seqs
+                .to_list()
+            )  # get a list of lists
             drifts = [self.compare(seq=seq, raw=True) for seq in drifted_seqs]
             return DriftStats(drifts, monitor=self)
         return data if not raw else data.to_dict(orient='records')
 
     def _get_alert_events(self, run=None, column=None, statistic=None, since=None, raw=False, stats=False):
-        """ Retrieve drift alerts
+        """Retrieve drift alerts
 
         Args:
             run (int|str): the run to query, defaults to all runs
@@ -655,18 +680,19 @@ class DriftMonitorBase:
               else a list of dicts. If stats=True, returns a DriftStats instance.
         """
         run = run or '*'
-        data = self.tracking.data(run=run, event='alert', key=self._drift_alert_key,
-                                  since=since)
+        data = self.tracking.data(run=run, event='alert', key=self._drift_alert_key, since=since)
         if stats:
             # -- data['value'] is a series of dicts, each dict is a drift event
             # -- each drift event is a list of drift indicators, see .capture()
             # -- 'seq' is the respective (min, max) sequence associated with the drift event
             # ==> drifted_seqs is the list of (min, max) sequence numbers to recalculate the drifts
-            drifted_seqs = (data['value']
-                            .explode('value')  # get all events as a list
-                            .apply(lambda v: v['value']['info']['seq'])  # get all seqs as a list of lists
-                            .explode()  # get all seqs as a series
-                            .to_list())  # get all seqs as a flattened list
+            drifted_seqs = (
+                data['value']
+                .explode('value')  # get all events as a list
+                .apply(lambda v: v['value']['info']['seq'])  # get all seqs as a list of lists
+                .explode()  # get all seqs as a series
+                .to_list()
+            )  # get all seqs as a flattened list
             drifts = [self.compare(seq=seq, raw=True) for seq in drifted_seqs]
             return DriftStats(drifts, monitor=self) if not raw else drifts
         return data if not raw else data.to_dict(orient='records')
@@ -693,8 +719,9 @@ class DriftMonitorBase:
         def _ensure_dataframe(df):
             if isinstance(df, (list, np.ndarray, pd.Series)):
                 df = pd.DataFrame(df)
-                df.columns = [str(col) for col in
-                              df.columns]  # ensure column names are strings (needed for json storage)
+                df.columns = [
+                    str(col) for col in df.columns
+                ]  # ensure column names are strings (needed for json storage)
             assert isinstance(df, pd.DataFrame), f'dataset {dataset!r} cannot be processed as a DataFrame'
             return df
 

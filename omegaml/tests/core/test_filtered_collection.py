@@ -1,21 +1,24 @@
 from __future__ import absolute_import
 
-import pandas as pd
 import random
 import warnings
 from hashlib import sha256
+from unittest.case import TestCase
+
+import pandas as pd
+
 from omegaml import Omega
 from omegaml.store.filtered import FilteredCollection
 from omegaml.util import signature
-from unittest.case import TestCase
 
 
 class FilteredCollectionTests(TestCase):
-
     def setUp(self):
         TestCase.setUp(self)
-        df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
-                           'y': random.sample(list(range(0, 100)), 20)})
+        df = pd.DataFrame({
+            'x': list(range(0, 10)) + list(range(0, 10)),
+            'y': random.sample(list(range(0, 100)), 20),
+        })
         om = Omega()
         om.datasets.put(df, 'sample', append=False)
         self.coll = om.datasets.collection('sample')
@@ -85,7 +88,7 @@ class FilteredCollectionTests(TestCase):
         # -- if properly sanitized will return zero rows because the
         #    the $where clause is replaced by -where, not matching any rows
         injected = {
-            "$where": "function() { return true; }"
+            "$where": "function() { return true; }",
         }
         with warnings.catch_warnings(record=True) as wrn:
             warnings.simplefilter('always')
@@ -99,10 +102,12 @@ class FilteredCollectionTests(TestCase):
         # -- if properly sanitized will return zero rows because the
         #    the $where clause is replaced by -where, not matching any rows
         injected = {
-            "$or": [{
-                "x": -1,
-                "$where": "function() { return true; }"
-            }]
+            "$or": [
+                {
+                    "x": -1,
+                    "$where": "function() { return true; }",
+                },
+            ]
         }
         fcoll = FilteredCollection(self.coll, query=injected)
         result = fcoll.count_documents()
@@ -111,7 +116,9 @@ class FilteredCollectionTests(TestCase):
 
     def test_trusted_filter(self):
         filter = {
-            "x": {'$in': [1, 2]}
+            "x": {
+                '$in': [1, 2],
+            }
         }
         for trusted in [False, True, None, sha256(str(filter).encode('utf-8')).hexdigest()]:
             with warnings.catch_warnings(record=True) as wrn:
@@ -119,14 +126,16 @@ class FilteredCollectionTests(TestCase):
                 fcoll = FilteredCollection(self.coll, query=filter, trusted=trusted)
                 result = fcoll.count_documents()
                 warnlog = str(list(w.message for w in wrn))
-                self.assertIn('Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.',
-                              warnlog)
+                self.assertIn(
+                    'Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.', warnlog
+                )
                 self.assertEqual(result, 4)
         with warnings.catch_warnings(record=True) as wrn:
             warnings.simplefilter('always')
             fcoll = FilteredCollection(self.coll, query=filter, trusted=signature(filter))
             result = fcoll.count_documents()
             warnlog = str(list(w.message for w in wrn))
-            self.assertNotIn('Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.',
-                             warnlog)
+            self.assertNotIn(
+                'Your MongoDB query contains operators [\'$in\'] which may be unsafe if not sanitized.', warnlog
+            )
             self.assertEqual(result, 4)

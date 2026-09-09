@@ -30,6 +30,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
     def setup_testdata(self):
         from plotly import express as px
+
         om = self.om
         gapminder = px.data.gapminder()
         om.datasets.drop('gapminder', force=True)
@@ -40,9 +41,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         om = self.om
         with om.runtime.experiment('test') as exp:
             mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
-        df = pd.DataFrame({
-            'x': np.random.uniform(0, 1, 100),
-        })
+        df = pd.DataFrame({'x': np.random.uniform(0, 1, 100)})
         snapshot = mon.snapshot(df)
         self.assertIn('stats', snapshot)
         self.assertIn('info', snapshot)
@@ -63,27 +62,17 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
         class MyDriftStatsCalc(DriftStatsCalc):
             def _init_mixin(self):
-                self._metrics['numeric'].update({
-                    'len': self.calc_len
-                })
+                self._metrics['numeric'].update({'len': self.calc_len})
 
             def calc_len(self, d1, d2, **kwargs):
                 metric = (len(d1) - len(d2)) / sum([len(d1), len(d2)])
-                return {
-                    'metric': metric,
-                    'score': metric,
-                    'drift': metric > 0.1,
-                    'location': 0,
-                    'pvalue': 0,
-                }
+                return {'metric': metric, 'score': metric, 'drift': metric > 0.1, 'location': 0, 'pvalue': 0}
 
         with om.runtime.experiment('test') as exp:
             mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
             mon.statscalc._apply_mixins([MyDriftStatsCalc])
 
-        df = pd.DataFrame({
-            'x': np.random.uniform(0, 1, 100),
-        })
+        df = pd.DataFrame({'x': np.random.uniform(0, 1, 100)})
         stats = mon.compare(d1=df, d2=df)
         self.assertIn('len', stats.data[0]['stats']['x'])
 
@@ -92,31 +81,37 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         with om.runtime.experiment('test') as exp:
             mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
         mon = DataDriftMonitor(tracking=exp, store=om.datasets)
-        mon.snapshot(dataset='gapminder[year,country,gdpPercap]',
-                     filter=dict(country__in=['Switzerland', 'Germany'],
-                                 year__lte=1960),
-                     groupby=['country', 'year'])
-        mon.snapshot(dataset='gapminder[year,country,gdpPercap]',
-                     filter=dict(country__in=['Switzerland', 'Germany'],
-                                 year__gte=1980),
-                     groupby=['country', 'year'])
+        mon.snapshot(
+            dataset='gapminder[year,country,gdpPercap]',
+            filter=dict(country__in=['Switzerland', 'Germany'], year__lte=1960),
+            groupby=['country', 'year'],
+        )
+        mon.snapshot(
+            dataset='gapminder[year,country,gdpPercap]',
+            filter=dict(country__in=['Switzerland', 'Germany'], year__gte=1980),
+            groupby=['country', 'year'],
+        )
         stats = mon.compare()
-        self.assertDictEqual(stats.summary(raw=True)['columns'],
-                             {'country': False,
-                              'country_Germany:1952': False,
-                              'country_Germany:1957': False,
-                              'country_Switzerland:1952': False,
-                              'country_Switzerland:1957': False,
-                              'gdpPercap': True,
-                              'gdpPercap_Germany:1952': True,
-                              'gdpPercap_Germany:1957': True,
-                              'gdpPercap_Switzerland:1952': True,
-                              'gdpPercap_Switzerland:1957': True,
-                              'year': True,
-                              'year_Germany:1952': True,
-                              'year_Germany:1957': True,
-                              'year_Switzerland:1952': True,
-                              'year_Switzerland:1957': True})
+        self.assertDictEqual(
+            stats.summary(raw=True)['columns'],
+            {
+                'country': False,
+                'country_Germany:1952': False,
+                'country_Germany:1957': False,
+                'country_Switzerland:1952': False,
+                'country_Switzerland:1957': False,
+                'gdpPercap': True,
+                'gdpPercap_Germany:1952': True,
+                'gdpPercap_Germany:1957': True,
+                'gdpPercap_Switzerland:1952': True,
+                'gdpPercap_Switzerland:1957': True,
+                'year': True,
+                'year_Germany:1952': True,
+                'year_Germany:1957': True,
+                'year_Switzerland:1952': True,
+                'year_Switzerland:1957': True,
+            },
+        )
 
     def test_model_drift_stats(self):
         om = self.om
@@ -140,15 +135,12 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         mon.snapshot('gapminder[lifeExp,gdpPercap,pop]', year__lte=1960)
         # -- see if we can find drift
         #    expected: drift in lifeExp, gdpPercap, pop
-        mon.snapshot('gapminder',
-                     year__gt=1985,
-                     country__in=['Switzerland', 'Germany'])
+        mon.snapshot('gapminder', year__gt=1985, country__in=['Switzerland', 'Germany'])
         # check snapshots store expected data
         data = mon.data[-1]
         for col in 'lifeExp', 'gdpPercap', 'pop':
             self.assertIn(col, data['stats'])
-        self.assertEqual(set(df.columns), set(data['info']['num_columns'] +
-                                              data['info']['cat_columns']))
+        self.assertEqual(set(df.columns), set(data['info']['num_columns'] + data['info']['cat_columns']))
         # check we get a valid drift report
         report = mon.report(seq=[0, -1], format='dict')
         self.assertIn('info', report)
@@ -156,7 +148,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertIn('stats', report)
         # check we have overall drift
         self.assertTrue(report['result']['drift'])
-        self.assertIn('lifeExp', report['result']['columns'], )
+        self.assertIn('lifeExp', report['result']['columns'])
         """
         example_report = {'info': {'ci': 0.95,
                                    'dt_from': '2024-02-23T14:50:51.413002',
@@ -325,7 +317,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # a sequence of runs directly, instead of snapshots
         # seq= should be named snapshots=, and alternative runs= (with tracking) to avoid confusion
         # perhaps not, as to ensure we always work on actually captured snapshots?
-        drift = mon.compare(seq=[0] + list(range(-3, 0)), ci=.9, raw=True)
+        drift = mon.compare(seq=[0] + list(range(-3, 0)), ci=0.9, raw=True)
         # -- expect 3 drift calculations
         self.assertEqual(len(drift), 3)
         self.assertEqual(drift[0]['info']['seq'], [0, 1])
@@ -354,52 +346,51 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         om = self.om
         preprocessor = ColumnTransformer(
             transformers=[
-                ('num', Pipeline([
-                    ('scaler', StandardScaler()),
-                ]), ['gdpPercap', 'pop', 'year']),  # Numerical features
-                ('cat', OneHotEncoder(), ['county'])  # Categorical feature
+                ('num', Pipeline([('scaler', StandardScaler())]), ['gdpPercap', 'pop', 'year']),  # Numerical features
+                ('cat', OneHotEncoder(), ['county']),  # Categorical feature
             ]
         )
 
         # Create the pipeline
-        pipeline = Pipeline([
-            ('preprocessor', preprocessor),
-            ('logreg', LogisticRegression())
-        ])
+        pipeline = Pipeline([('preprocessor', preprocessor), ('logreg', LogisticRegression())])
         with om.runtime.experiment('test') as exp:
             mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
         mon = DataDriftMonitor(tracking=exp, store=om.datasets)
-        mon.snapshot(dataset='gapminder[year,country,gdpPercap]',
-                     filter=dict(country__in=['Switzerland', 'Germany'],
-                                 year__lte=1960),
-                     groupby=['country', 'year'])
-        mon.snapshot(dataset='gapminder[year,country,gdpPercap]',
-                     filter=dict(country__in=['Switzerland', 'Germany'],
-                                 year__gte=1980),
-                     groupby=['country', 'year'])
+        mon.snapshot(
+            dataset='gapminder[year,country,gdpPercap]',
+            filter=dict(country__in=['Switzerland', 'Germany'], year__lte=1960),
+            groupby=['country', 'year'],
+        )
+        mon.snapshot(
+            dataset='gapminder[year,country,gdpPercap]',
+            filter=dict(country__in=['Switzerland', 'Germany'], year__gte=1980),
+            groupby=['country', 'year'],
+        )
         stats = mon.compare()
-        self.assertDictEqual(stats.summary(raw=True)['columns'],
-                             {'country': False,
-                              'country_Germany:1952': False,
-                              'country_Germany:1957': False,
-                              'country_Switzerland:1952': False,
-                              'country_Switzerland:1957': False,
-                              'gdpPercap': True,
-                              'gdpPercap_Germany:1952': True,
-                              'gdpPercap_Germany:1957': True,
-                              'gdpPercap_Switzerland:1952': True,
-                              'gdpPercap_Switzerland:1957': True,
-                              'year': True,
-                              'year_Germany:1952': True,
-                              'year_Germany:1957': True,
-                              'year_Switzerland:1952': True,
-                              'year_Switzerland:1957': True})
+        self.assertDictEqual(
+            stats.summary(raw=True)['columns'],
+            {
+                'country': False,
+                'country_Germany:1952': False,
+                'country_Germany:1957': False,
+                'country_Switzerland:1952': False,
+                'country_Switzerland:1957': False,
+                'gdpPercap': True,
+                'gdpPercap_Germany:1952': True,
+                'gdpPercap_Germany:1957': True,
+                'gdpPercap_Switzerland:1952': True,
+                'gdpPercap_Switzerland:1957': True,
+                'year': True,
+                'year_Germany:1952': True,
+                'year_Germany:1957': True,
+                'year_Switzerland:1952': True,
+                'year_Switzerland:1957': True,
+            },
+        )
 
     def test_model_drift_autotrack(self):
         om = self.om
-        df = pd.DataFrame({
-            'x': range(1, 10)
-        })
+        df = pd.DataFrame({'x': range(1, 10)})
         df['y'] = df['x'] * 5 + 3
         reg = LinearRegression()
         om.models.put(reg, 'regmodel')
@@ -428,24 +419,39 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         captured = mon.capture()
         self.assertTrue(captured)
         events = exp.data(event='drift')
-        self.assertTrue(dict_almost_equal(events.iloc[0]['value'],
-                                          {'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True,
-                                                       'acc': False},
-                                           'summary': {'feature': True, 'label': True, 'metrics': False},
-                                           'info': {'feature': ['X_0', 'X_1', 'X_2', 'X_3'], 'label': ['Y_0'],
-                                                    'metrics': ['acc'],
-                                                    'seq': [[0, 1]]},
-                                           'score': {'feature': 1.0, 'label': 1.0, 'metrics': 0.1}},
-                                          tolerance=1e-1))
+        self.assertTrue(
+            dict_almost_equal(
+                events.iloc[0]['value'],
+                {
+                    'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True, 'acc': False},
+                    'summary': {'feature': True, 'label': True, 'metrics': False},
+                    'info': {
+                        'feature': ['X_0', 'X_1', 'X_2', 'X_3'],
+                        'label': ['Y_0'],
+                        'metrics': ['acc'],
+                        'seq': [[0, 1]],
+                    },
+                    'score': {'feature': 1.0, 'label': 1.0, 'metrics': 0.1},
+                },
+                tolerance=1e-1,
+            )
+        )
         # capture specific feature drift
         captured = mon.capture(column='X_0')
         self.assertTrue(captured)
         events = exp.data(event='drift')
-        self.assertTrue(dict_almost_equal(events.iloc[-1]['value'],
-                                          {'columns': {'X_0': True}, 'info': {'feature': ['X_0'], 'seq': [[0, 1]]},
-                                           'summary': {'feature': True},
-                                           'score': {'feature': 1.0}},
-                                          tolerance=1e-1))
+        self.assertTrue(
+            dict_almost_equal(
+                events.iloc[-1]['value'],
+                {
+                    'columns': {'X_0': True},
+                    'info': {'feature': ['X_0'], 'seq': [[0, 1]]},
+                    'summary': {'feature': True},
+                    'score': {'feature': 1.0},
+                },
+                tolerance=1e-1,
+            )
+        )
 
     def test_alert_rule_notify(self):
         om = self.om
@@ -456,15 +462,23 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         # capture overall model drift
         captured = mon.capture()
         stats = mon.events(stats=True)
-        self.assertTrue(dict_almost_equal(stats.summary(raw=True),
-                                          {'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True,
-                                                       'acc': False},
-                                           'summary': {'feature': True, 'label': True, 'metrics': False},
-                                           'info': {'feature': ['X_0', 'X_1', 'X_2', 'X_3'], 'label': ['Y_0'],
-                                                    'metrics': ['acc'],
-                                                    'seq': [[0, 1]]},
-                                           'score': {'feature': 1.0, 'label': 1.0, 'metrics': 0.1}},
-                                          tolerance=1e-1))
+        self.assertTrue(
+            dict_almost_equal(
+                stats.summary(raw=True),
+                {
+                    'columns': {'X_0': True, 'X_1': True, 'X_2': True, 'X_3': True, 'Y_0': True, 'acc': False},
+                    'summary': {'feature': True, 'label': True, 'metrics': False},
+                    'info': {
+                        'feature': ['X_0', 'X_1', 'X_2', 'X_3'],
+                        'label': ['Y_0'],
+                        'metrics': ['acc'],
+                        'seq': [[0, 1]],
+                    },
+                    'score': {'feature': 1.0, 'label': 1.0, 'metrics': 0.1},
+                },
+                tolerance=1e-1,
+            )
+        )
         self.assertIsInstance(stats.summary(), pd.DataFrame)
         # check alert rule is called upon detected drift
         rule = AlertRule(monitor=mon, event='drift', action='notify', recipients=['me'])
@@ -484,18 +498,30 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(mon, ModelDriftMonitor)
         self.assertIn('tracking', meta.attributes)
         self.assertIn('monitors', meta.attributes['tracking'])
-        self.assertIn({'experiment': 'test', 'provider': 'models',
-                       'alerts': [{'event': 'drift', 'recipients': []}],
-                       'schedule': 'daily', 'job': 'monitors/test/test'},
-                      meta.attributes['tracking']['monitors'])
+        self.assertIn(
+            {
+                'experiment': 'test',
+                'provider': 'models',
+                'alerts': [{'event': 'drift', 'recipients': []}],
+                'schedule': 'daily',
+                'job': 'monitors/test/test',
+            },
+            meta.attributes['tracking']['monitors'],
+        )
         # test getting the monitor does not add it again
         mon = exp.as_monitor('test', alerts=[{'event': 'drift', 'recipients': ['me']}])
         self.assertIsInstance(mon, ModelDriftMonitor)
         meta = om.models.metadata('test')
-        self.assertIn({'experiment': 'test', 'provider': 'models',
-                       'alerts': [{'event': 'drift', 'recipients': ['me']}],
-                       'schedule': 'daily', 'job': 'monitors/test/test'},
-                      meta.attributes['tracking']['monitors'])
+        self.assertIn(
+            {
+                'experiment': 'test',
+                'provider': 'models',
+                'alerts': [{'event': 'drift', 'recipients': ['me']}],
+                'schedule': 'daily',
+                'job': 'monitors/test/test',
+            },
+            meta.attributes['tracking']['monitors'],
+        )
         self.assertEqual(len(meta.attributes['tracking']['monitors']), 1)
 
     def test_modeldrift_alert(self):
@@ -514,20 +540,32 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(mon, ModelDriftMonitor)
         self.assertIn('tracking', meta.attributes)
         self.assertIn('monitors', meta.attributes['tracking'])
-        self.assertIn({'experiment': 'test', 'provider': 'models',
-                       'alerts': [{'event': 'drift', 'recipients': []}],
-                       'schedule': 'daily', 'job': 'monitors/test/test'},
-                      meta.attributes['tracking']['monitors'])
+        self.assertIn(
+            {
+                'experiment': 'test',
+                'provider': 'models',
+                'alerts': [{'event': 'drift', 'recipients': []}],
+                'schedule': 'daily',
+                'job': 'monitors/test/test',
+            },
+            meta.attributes['tracking']['monitors'],
+        )
         # test getting the monitor does not add it again
         # -- get the monitor
         mon = exp.as_monitor('test')
         self.assertIsInstance(mon, ModelDriftMonitor)
         # -- ensure the monitor is not added again
         meta = om.models.metadata('test')
-        self.assertIn({'experiment': 'test', 'provider': 'models',
-                       'alerts': [{'event': 'drift', 'recipients': []}],
-                       'schedule': 'daily', 'job': 'monitors/test/test'},
-                      meta.attributes['tracking']['monitors'])
+        self.assertIn(
+            {
+                'experiment': 'test',
+                'provider': 'models',
+                'alerts': [{'event': 'drift', 'recipients': []}],
+                'schedule': 'daily',
+                'job': 'monitors/test/test',
+            },
+            meta.attributes['tracking']['monitors'],
+        )
         self.assertEqual(len(meta.attributes['tracking']['monitors']), 1)
         # ensure the monitor job is created, run it
         self.assertIn('monitors/test/test.ipynb', om.jobs.list())
@@ -548,15 +586,16 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         drifts = alerts[0]['value']
         for k in 'userid', 'dt', 'node', 'run', 'step':
             del drifts[0][k]
-        exp_drift_summary = {'columns': {'acc': True},
-                             'info': {'metrics': ['acc'], 'seq': [[0, 1]]},
-                             'summary': {'metrics': True},
-                             'score': {'metrics': .895}}
-        self.assertDictEqual({'event': 'drift',
-                              'experiment': 'test',
-                              'key': 'test',
-                              'monitor': 'test',
-                              'value': exp_drift_summary}, drifts[0])
+        exp_drift_summary = {
+            'columns': {'acc': True},
+            'info': {'metrics': ['acc'], 'seq': [[0, 1]]},
+            'summary': {'metrics': True},
+            'score': {'metrics': 0.895},
+        }
+        self.assertDictEqual(
+            {'event': 'drift', 'experiment': 'test', 'key': 'test', 'monitor': 'test', 'value': exp_drift_summary},
+            drifts[0],
+        )
         # get the drift stats
         stats = mon.events(event='alert', stats=True)
         self.assertIsInstance(stats, DriftStats)
@@ -587,9 +626,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         om = self.om
         reg = LinearRegression()
         om.models.put(reg, 'regmodel')
-        df = pd.DataFrame({
-            'x': range(1, 10)
-        })
+        df = pd.DataFrame({'x': range(1, 10)})
         df['y'] = df['x'] * 5 + 3
         om.datasets.put(df, 'sample', append=False)
         with om.runtime.experiment('foo', autotrack=True) as exp:
@@ -606,6 +643,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
     def test_model_autotrack_california(self):
         from sklearn.datasets import fetch_california_housing
+
         om = self.om
 
         data = fetch_california_housing(as_frame=True)
@@ -618,19 +656,18 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             mon.clear(force=True)
 
             train = df_house.sample(n=5000, replace=False)
-            mon.snapshot(X=train[features],
-                         Y=train[['y']])
+            mon.snapshot(X=train[features], Y=train[['y']])
 
             future = df_house.sample(n=5000, replace=False)
             future['y'] = future['y']
 
-            mon.snapshot(X=future[features],
-                         Y=future[['y']])
+            mon.snapshot(X=future[features], Y=future[['y']])
 
         future = df_house.sample(n=5000, replace=False)
         future['y'] = future['y'] * np.random.normal(1.5, 0, len(future))
 
         from sklearn.linear_model import LinearRegression
+
         train = df_house.sample(n=5000, replace=False)
         reg = LinearRegression()
         reg.fit(train[features], train['y'])
@@ -642,8 +679,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             exp.track('housing', monitor=True)
 
             mon = exp.as_monitor('housing')
-            mon.snapshot(X=train[features],
-                         Y=train[['y']])
+            mon.snapshot(X=train[features], Y=train[['y']])
 
         data = future[features]
         om.runtime.model('housing').predict(data).get()
@@ -663,9 +699,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             return [42]
 
         om.models.put(mymodel, 'mymodel')
-        df = pd.DataFrame({
-            'x': range(1, 10)
-        })
+        df = pd.DataFrame({'x': range(1, 10)})
         df['y'] = df['x'] * 5 + 3
         om.datasets.put(df, 'sample', append=False)
         with om.runtime.experiment('foo', autotrack=True) as exp:
@@ -682,13 +716,12 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
     def test_explicit_xy_model_tracking(self):
         import omegaml as om
+
         # create a model
         reg = LinearRegression()
         om.models.put(reg, 'mymodel')
         # create a dataset
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame({'x': range(10)})
         df['y'] = df['x'] * 2 + 3
         om.datasets.put(df, 'sample')
         # autotrack model
@@ -707,6 +740,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         import omegaml as om
         from sklearn import datasets
         from omegaml.backends.monitoring import ModelDriftMonitor
+
         x, y = datasets.load_iris(return_X_y=True, as_frame=True)
         with om.runtime.experiment('foo', recreate=True) as exp:
             mon = ModelDriftMonitor(tracking=exp)
@@ -717,13 +751,11 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             self.assertIn('Y_target', snapshot['Y']['info']['cat_columns'])
 
     def test_most_recent_snapshot(self):
-        """ get the most recent snapshots and respective time """
+        """get the most recent snapshots and respective time"""
         om = self.om
         with om.runtime.experiment('test') as exp:
             mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
-        df = pd.DataFrame({
-            'x': np.random.uniform(0, 1, 100),
-        })
+        df = pd.DataFrame({'x': np.random.uniform(0, 1, 100)})
         # -- no snapshot
         self.assertEqual(datetime.datetime.min, mon._most_recent_snapshot_time())
         # -- test various snapshot ranges
@@ -736,11 +768,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
             self.assertEqual(snapshot2['info']['dt'], mon._most_recent_snapshot_time())
 
     def test_model_snapshot_since(self):
-        """ automatically snapshot model metrics, X, Y from multiple subsequent runs """
+        """automatically snapshot model metrics, X, Y from multiple subsequent runs"""
         om = self.om
-        df = pd.DataFrame({
-            'x': range(1, 10)
-        })
+        df = pd.DataFrame({'x': range(1, 10)})
         df['y'] = df['x'] * 5 + 3
         reg = LinearRegression()
         om.models.put(reg, 'regmodel')
@@ -770,9 +800,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
     def test_snapshot_since_dt_datamonitor(self):
         om = self.om
-        df = pd.DataFrame({
-            'x': range(1, 10)
-        })
+        df = pd.DataFrame({'x': range(1, 10)})
         with om.runtime.experiment('myexp', autotrack=True) as exp:
             mon = DataDriftMonitor('foo', store=om.datasets, tracking=exp)
             mon.snapshot(df)
@@ -790,9 +818,7 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
 
     def test_snapshot_since_dt_modelmonitor(self):
         om = self.om
-        df = pd.DataFrame({
-            'x': range(1, 10)
-        })
+        df = pd.DataFrame({'x': range(1, 10)})
         with om.runtime.experiment('myexp', autotrack=True) as exp:
             mon = ModelDriftMonitor('foo', store=om.datasets, tracking=exp)
             mon.snapshot(X=df)

@@ -38,20 +38,16 @@ class OmegaTestMixin(object):
             if element == 'streams':
                 drop_kwargs = {'keep_data': False}
             # drop all members
-            [drop(m.name, force=True, **drop_kwargs)
-             for m in part.list(hidden=True, include_temp=True, raw=True)]
+            [drop(m.name, force=True, **drop_kwargs) for m in part.list(hidden=True, include_temp=True, raw=True)]
             # ignore system members, as they may get recreated e.g. by LunaMonitor
-            existing = [m.name for m in part.list(hidden=True, include_temp=True, raw=True)
-                        if not '.system' in m.name]
+            existing = [m.name for m in part.list(hidden=True, include_temp=True, raw=True) if not '.system' in m.name]
             self.assertListEqual(existing, [])
         # stop using minibatch
         disconnect(alias='minibatch')
 
     @property
     def _async_headers(self):
-        return {
-            'async': 'true'
-        }
+        return {'async': 'true'}
 
     def _check_async(self, resp):
         # check resp is async, then retrieve actual result as type TaskOutput
@@ -60,9 +56,9 @@ class OmegaTestMixin(object):
         location = resp.headers['Location']
         self.assertRegex(location, r'.*/api/v1/task/.*/result')
         # check we can get back the actual result
-        resp = self.client.get(location.replace('http://localhost', ''), json={
-            'resource_uri': data.get('resource_uri')
-        })
+        resp = self.client.get(
+            location.replace('http://localhost', ''), json={'resource_uri': data.get('resource_uri')}
+        )
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertEqual(data['status'], 'SUCCESS')
@@ -79,6 +75,7 @@ class OmegaTestMixin(object):
 def tf_in_eager_execution():
     # condition for unittest.skipIf decorator
     import tensorflow as tf
+
     return tf.executing_eagerly()
 
 
@@ -93,6 +90,7 @@ def tf_perhaps_eager_execution(*args, **kwargs):
     tf_eager_switch = os.environ.get('TF_EAGER', False)
     if int(tf_eager_switch):
         import tensorflow as tf
+
         try:
             tf.enable_eager_execution(*args, **kwargs)
             warnings.warn('TensorFlow eager execution enabled')

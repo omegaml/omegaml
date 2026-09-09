@@ -2,8 +2,7 @@ from omegaml.backends.tracking.simple import OmegaSimpleTracker
 
 
 class BackgroundProfiler:
-    """ Profile CPU, Memory and Disk use in a background thread
-    """
+    """Profile CPU, Memory and Disk use in a background thread"""
 
     def __init__(self, interval=10, callback=print):
         self._stop = False
@@ -25,21 +24,22 @@ class BackgroundProfiler:
         """
         import psutil
         from datetime import datetime as dt
+
         p = psutil
         disk = p.disk_usage('/')
         cpu_count = p.cpu_count()
         data = {'profile_dt': dt.utcnow()}
         if 'memory' in self._metrics:
-            data.update(memory_load=p.virtual_memory().percent,
-                        memory_total=p.virtual_memory().total)
+            data.update(memory_load=p.virtual_memory().percent, memory_total=p.virtual_memory().total)
         if 'cpu' in self._metrics:
-            data.update(cpu_load=p.cpu_percent(percpu=True),
-                        cpu_count=cpu_count,
-                        cpu_freq=[f.current for f in p.cpu_freq(percpu=True)],
-                        cpu_avg=[x / cpu_count for x in p.getloadavg()])
+            data.update(
+                cpu_load=p.cpu_percent(percpu=True),
+                cpu_count=cpu_count,
+                cpu_freq=[f.current for f in p.cpu_freq(percpu=True)],
+                cpu_avg=[x / cpu_count for x in p.getloadavg()],
+            )
         if 'disk' in self._metrics:
-            data.update(disk_use=disk.percent,
-                        disk_total=disk.total)
+            data.update(disk_use=disk.percent, disk_total=disk.total)
         return data
 
     @property
@@ -61,7 +61,7 @@ class BackgroundProfiler:
         self._metrics = metrics
 
     def start(self):
-        """ runs a background thread that reports stats every interval seconds
+        """runs a background thread that reports stats every interval seconds
 
         Every interval, calls callback(data), where data is the output of BackgroundProfiler.profile()
         Stop by BackgroundProfiler.stop()
@@ -93,7 +93,7 @@ class BackgroundProfiler:
 
 
 class OmegaProfilingTracker(OmegaSimpleTracker):
-    """ A metric tracker that runs a system profiler while the experiment is active
+    """A metric tracker that runs a system profiler while the experiment is active
 
     Will record ``profile`` events that contain cpu, memory and disk profilings.
     See BackgroundProfiler.profile() for details of the profiling metrics collected.
@@ -130,7 +130,7 @@ class OmegaProfilingTracker(OmegaSimpleTracker):
         self.max_buffer = 10
 
     def log_profile(self, data):
-        """ the callback for BackgroundProfiler """
+        """the callback for BackgroundProfiler"""
         self.profile_logs.append(data)
         if len(self.profile_logs) >= (self.max_buffer or 1):
             self.flush()
@@ -148,8 +148,9 @@ class OmegaProfilingTracker(OmegaSimpleTracker):
 
         if self.profile_logs:
             # passing list of list, as_many=True => collection.insert_many() for speed
-            self._store.put([item for item in log_items()], self._data_name,
-                            index=['event'], as_many=True, noversion=True)
+            self._store.put(
+                [item for item in log_items()], self._data_name, index=['event'], as_many=True, noversion=True
+            )
             self.profile_logs = []
 
     def start_runtime(self):

@@ -30,14 +30,16 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         producer_events = [
             {
                 'message': 'hello world',
-            },
+            }
         ]
         for event in producer_events:
             stream.append(event)
         # mark end of streaming
-        stream.append({
-            'stream_complete': 'stop',
-        })
+        stream.append(
+            {
+                'stream_complete': 'stop',
+            },
+        )
         result = resource.prepare_streaming_result(stream='messages', streamer='inline')
         received_events = list(result)
         self.assertEqual(len(received_events), len(producer_events))
@@ -50,15 +52,17 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         producer_events = [
             {
                 'message': 'hello world',
-            },
+            }
         ]
         for event in producer_events:
             stream.append(event)
         # mark end of streaming in error
-        stream.append({
-            'stream_complete': 'error',
-            'message': 'error occurred'
-        })
+        stream.append(
+            {
+                'stream_complete': 'error',
+                'message': 'error occurred',
+            },
+        )
         with self.assertRaises(RuntimeError):
             list(resource.prepare_streaming_result(stream='messages', streamer='inline'))
 
@@ -77,19 +81,27 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         token = cookies.get('token')
         session_id = cookies.get('session_id')
         token_header = jwe.get_unverified_header(token)
-        self.assertEqual(token_header, {'alg': 'dir', 'enc': 'A256GCM'})
+        self.assertEqual(
+            token_header,
+            {'alg': 'dir', 'enc': 'A256GCM'},
+        )
         # verify decryption
         # -- use arbitrary key
         with self.assertRaises(JWEError):
             key = uuid4().hex
             contents = json.loads(jwe.decrypt(token, key))
         # -- use actual key
-        key = pbkdf2_hmac('sha256', StreamableResourceMixin.SECRET_KEY.encode('utf-8'),
-                          str(session_id).encode('utf-8'),
-                          StreamableResourceMixin.PBKDF_ITER)
+        key = pbkdf2_hmac(
+            'sha256',
+            StreamableResourceMixin.SECRET_KEY.encode('utf-8'),
+            str(session_id).encode('utf-8'),
+            StreamableResourceMixin.PBKDF_ITER,
+        )
         contents = json.loads(jwe.decrypt(token, key))
         self.assertIsInstance(contents, dict)
-        self.assertTrue(set(contents.keys()) >= {'stream', 'userid', 'created'})
+        self.assertTrue(
+            set(contents.keys()) >= {'stream', 'userid', 'created'},
+        )
         self.assertEqual(contents.get('stream'), 'messages')
 
     def _create_cookies(self, om=None):
@@ -131,14 +143,16 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         producer_events = [
             {
                 'message': 'hello world',
-            },
+            }
         ]
         for event in producer_events:
             stream.append(event)
         # mark end of streaming
-        stream.append({
-            'stream_complete': 'stop',
-        })
+        stream.append(
+            {
+                'stream_complete': 'stop',
+            },
+        )
         with self.app.test_client() as client:
             for k, v in cookies.items():
                 client.set_cookie(k, v)
@@ -162,9 +176,11 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         om = OmegaCloud(auth=auth)
         cookies = self._create_cookies(om=om)
         for auth_kind in ('Bearer', 'ApiKey'):
-            with (self.app.test_client() as client,
-                  patch('omegaml.server.events.ssechat.stream_result') as stream_result,
-                  patch('omegaml.server.events.ssechat.get_auth_env') as get_auth_env):
+            with (
+                self.app.test_client() as client,
+                patch('omegaml.server.events.ssechat.stream_result') as stream_result,
+                patch('omegaml.server.events.ssechat.get_auth_env') as get_auth_env,
+            ):
                 auth_env = MagicMock()
                 get_auth_env.return_value = auth_env
                 auth_env.get_omega_from_apikey.return_value = om
@@ -174,14 +190,18 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
                     request_token = f'{om.runtime.auth.userid}:{om.runtime.auth.apikey}'
                 else:
                     request_token = f'{om.runtime.auth.apikey}'
-                response = client.get('/events/chat/completions', headers={
-                    'Authorization': f'{auth_kind} {request_token}',
-                })
+                response = client.get(
+                    '/events/chat/completions',
+                    headers={
+                        'Authorization': f'{auth_kind} {request_token}',
+                    },
+                )
                 self.assertTrue(response.status_code, 201)
                 self.assertTrue(response.mimetype, 'text/event-stream')
                 stream_result.assert_called_once_with('messages')
-                auth_env.get_omega_from_apikey.assert_called_once_with(om.runtime.auth.userid, om.runtime.auth.apikey,
-                                                                       qualifier=om.runtime.auth.qualifier)
+                auth_env.get_omega_from_apikey.assert_called_once_with(
+                    om.runtime.auth.userid, om.runtime.auth.apikey, qualifier=om.runtime.auth.qualifier
+                )
 
 
 if __name__ == '__main__':

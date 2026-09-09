@@ -28,6 +28,7 @@ class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
     See Also:
         https://packaging.python.org/tutorials/packaging-projects/
     """
+
     KIND = 'python.package'
 
     @classmethod
@@ -61,7 +62,8 @@ class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
             bucket=self.data_store.bucket,
             kind=PythonPackageData.KIND,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
     def get(self, name, localpath=None, keep=False, install=True, **kwargs):
         """

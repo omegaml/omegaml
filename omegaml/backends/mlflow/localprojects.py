@@ -21,6 +21,7 @@ class MLFlowProjectBackend(RunnablePackageMixin, BaseDataBackend):
     See Also:
         https://www.mlflow.org/docs/latest/projects.html#project-directories
     """
+
     KIND = 'mlflow.project'
     MLFLOW_PREFIX = 'mlflow://'
 
@@ -55,7 +56,8 @@ class MLFlowProjectBackend(RunnablePackageMixin, BaseDataBackend):
             bucket=self.data_store.bucket,
             kind=self.KIND,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
     def get(self, name, localpath=None, **kwargs):
         """
@@ -92,7 +94,7 @@ class MLFlowProjectBackend(RunnablePackageMixin, BaseDataBackend):
 
 
 class MLFlowProject:
-    """ a proxy to the MLFlow project that runs a script
+    """a proxy to the MLFlow project that runs a script
 
     This provides the mod.run() interface for scripts so that
     we can use the same semantics for mlflow projects and pypi
@@ -110,7 +112,7 @@ class MLFlowProject:
         with open(os.path.join(tmpdir, 'pyenv'), 'w') as fout:
             fout.write('#/bin/bash')
             fout.write('conda activate $1')
-        cmd = fr'PATH={tmpdir}:$PATH; cd {tmpdir}; chmod +x ./pyenv; mlflow run {options} {self.uri}'
+        cmd = rf'PATH={tmpdir}:$PATH; cd {tmpdir}; chmod +x ./pyenv; mlflow run {options} {self.uri}'
         print(cmd)
         output = run(cmd, capture_output=True, shell=True)
         print(output)
@@ -121,6 +123,4 @@ class MLFlowProject:
             }
         else:
             output = output.stdout.decode('utf8')
-        return {
-            'output': output,
-        }
+        return {'output': output}

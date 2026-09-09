@@ -99,6 +99,7 @@ class TFEstimatorModel(object):
         if self.v1_compat:
             # https://www.tensorflow.org/guide/migrate
             import tensorflow.compat.v1 as tf
+
             tf.disable_v2_behavior()
         else:
             import tensorflow as tf
@@ -139,7 +140,7 @@ class TFEstimatorModel(object):
            X (Dataset|ndarray): features
            Y (Dataset|ndarray): labels, optional
         """
-        assert (ok(X, object) or ok(input_fn, object)), "specify either X, Y or input_fn, not both"
+        assert ok(X, object) or ok(input_fn, object), "specify either X, Y or input_fn, not both"
         if input_fn is None:
             input_fn = self.make_input_fn('fit', X, Y, batch_size=batch_size)
         return self.estimator.train(input_fn=input_fn, **kwargs)
@@ -150,7 +151,7 @@ class TFEstimatorModel(object):
            X (Dataset|ndarray): features
            Y (Dataset|ndarray): labels, optional
         """
-        assert (ok(X, object) or ok(input_fn, object)), "specify either X, Y or input_fn, not both"
+        assert ok(X, object) or ok(input_fn, object), "specify either X, Y or input_fn, not both"
         if input_fn is None:
             input_fn = self.make_input_fn('score', X, Y, batch_size=batch_size)
         return self.estimator.evaluate(input_fn=input_fn)
@@ -214,9 +215,9 @@ class TFEstimatorModelBackend(BaseModelBackend):
         meta = self.model_store.put(model, modelname)
         return meta
 
-    def predict(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         import pandas as pd
+
         model = self.model_store.get(modelname)
         X = self._resolve_input_data('predict', Xname, 'X', **kwargs)
         if isfunction(X):
@@ -225,10 +226,9 @@ class TFEstimatorModelBackend(BaseModelBackend):
             result = pd.DataFrame(v for v in model.predict(X))
         return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 
-    def score(
-            self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-            **kwargs):
+    def score(self, modelname, Xname, Yname=None, rName=True, pure_python=True, **kwargs):
         import pandas as pd
+
         model = self.model_store.get(modelname)
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)

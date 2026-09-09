@@ -41,21 +41,10 @@ class BackendBaseCommon:
         return filename
 
     def _is_path(self, obj):
-        return isinstance(obj, (str, Path)) and (
-            os.path.exists(obj) or Path(obj).exists()
-        )
+        return isinstance(obj, (str, Path)) and (os.path.exists(obj) or Path(obj).exists())
 
     def _store_to_file(
-        self,
-        store,
-        obj,
-        filename,
-        encoding=None,
-        replace=False,
-        uri=None,
-        chunksize=None,
-        open_kwargs=None,
-        **kwargs,
+        self, store, obj, filename, encoding=None, replace=False, uri=None, chunksize=None, open_kwargs=None, **kwargs
     ):
         """
         Use this method to store file-like objects to the store's gridfs, or a remote uri, zip-compress if a directory
@@ -80,7 +69,9 @@ class BackendBaseCommon:
             if obj is a directory, it will be zipped-up before storing to the file. See also PythonRawFileBackend.get()
         """
         if replace:
-            for fileobj in store.fs.find({"filename": filename}):
+            for fileobj in store.fs.find(
+                {"filename": filename},
+            ):
                 try:
                     store.fs.delete(fileobj._id)
                 except Exception as e:
@@ -105,9 +96,7 @@ class BackendBaseCommon:
                 with open(basedir / self._magicszip, "w") as fout:
                     fout.write("# zipped by omegaml")
                 with smart_open.open(uri, "wb") as fout:
-                    with zipfile.ZipFile(
-                        fout, "w", compression=zipfile.ZIP_DEFLATED
-                    ) as zipf:
+                    with zipfile.ZipFile(fout, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
                         # note pathlib glob pattern **/* matches any path, any file
                         # - see https://docs.python.org/3/library/pathlib.html#pathlib-pattern-language
                         for fn in basedir.glob("**/*"):
@@ -128,9 +117,7 @@ class BackendBaseCommon:
                 with open(basedir / self._magicszip, "w") as fout:
                     fout.write("# zipped by omegaml")
                 with open(tmpfn, "wb") as fout:
-                    with zipfile.ZipFile(
-                        fout, "w", compression=zipfile.ZIP_DEFLATED
-                    ) as zipf:
+                    with zipfile.ZipFile(fout, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
                         for fn in basedir.glob("**/*"):
                             arcname = fn.relative_to(basedir.parent)
                             zipf.write(fn, arcname)
@@ -258,15 +245,17 @@ class BackendBaseCommon:
             str: resolved creds string
         """
         values = (
-            {
-                k: v
-                for k, v in os.environ.items()
-                if k.isupper() and isinstance(v, (str, bytes))
-            }
+            {k: v for k, v in os.environ.items() if k.isupper() and isinstance(v, (str, bytes))}
             if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG
             else dict()
         )
         values.update(**self.data_store.defaults)
-        values.update(secrets or {})
+        values.update(
+            secrets or {},
+        )
         user = getattr(self.data_store.defaults, "OMEGA_USERID", getuser())
-        return creds.format_map(KeepMissing({**values, "userid": user}))
+        return creds.format_map(
+            KeepMissing(
+                {**values, "userid": user},
+            )
+        )

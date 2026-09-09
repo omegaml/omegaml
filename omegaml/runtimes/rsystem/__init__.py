@@ -1,4 +1,4 @@
-""" R system runtime support
+"""R system runtime support
 
 This implements omegaml's R interface
 
@@ -63,6 +63,7 @@ See Also
 
     https://github.com/rstudio/reticulate
 """
+
 import os
 
 import shutil
@@ -85,7 +86,7 @@ def rhelper(init=True):
 
 
 def load(r_session=None):
-    """ load omegamlr helper methods
+    """load omegamlr helper methods
 
     This is the equivalent of a future library(omegamlr) statement.
     It loads all dependencies and functions required for omegaml R support.
@@ -97,7 +98,7 @@ def load(r_session=None):
 
 
 def start_worker(om, queue=None):
-    """ start the omega runtime worker from within R env
+    """start the omega runtime worker from within R env
 
     This starts the omega worker within a R session, ensuring
     the R helper object is initialized. This is the equivalent

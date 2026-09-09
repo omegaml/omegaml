@@ -20,13 +20,14 @@ class PGVectorBackend(VectorStoreBackend):
     """
     docker run pgvector/pgvector:pg16
     """
+
     KIND = 'pgvector.conx'
     PROMOTE = 'metadata'
     _attributes_keys = ('tags', 'source', 'type')
 
     @classmethod
     def supports(cls, obj, name, insert=False, data_store=None, model_store=None, meta=None, *args, **kwargs):
-        valid_types = (meta is not None and isinstance(obj, (str, list, tuple, dict)))
+        valid_types = meta is not None and isinstance(obj, (str, list, tuple, dict))
         return valid_types or _is_valid_url(obj)
 
     def insert_chunks(self, chunks, name, embeddings, attributes, data=None, **kwargs):
@@ -54,16 +55,17 @@ class PGVectorBackend(VectorStoreBackend):
         Session = self._get_connection(name, session=True)
         data = []
         with Session as session:
-            query = (select(Document.id,
+            query = select(
+                Document.id,
                 Document.source,
-                Document.attributes)
-                     .order_by(Document.source))
+                Document.attributes,
+            ).order_by(Document.source)
             result = session.execute(query)
             data = list(result.mappings().all())
         return data
 
     def find_similar(self, name, obj, top=5, filter=None, distance=None, max_distance=None, **kwargs):
-        """ Find similar documents in a collection based on the provided object.
+        """Find similar documents in a collection based on the provided object.
 
         Args:
             name (str): The name of the collection to search in.
@@ -92,15 +94,17 @@ class PGVectorBackend(VectorStoreBackend):
         filter = filter or kwargs
         with Session as session:
             distance_fn = METRIC_MAP[metric]
-            query = (select(Document.id,
+            query = select(
+                Document.id,
                 Document.source,
                 Document.attributes,
                 Chunk.text,
-                distance_fn(obj).label('distance'))
-                     .join(Chunk.document))
+                distance_fn(obj).label('distance'),
+            ).join(Chunk.document)
             attributes_filter = filter.get('attributes', None)
-            attributes_filter = attributes_filter or {k: v for k, v in (filter or {}).items() if
-                                                      k in self._attributes_keys}
+            attributes_filter = attributes_filter or {
+                k: v for k, v in (filter or {}).items() if k in self._attributes_keys
+            }
             # add attributes filter
             filters = []
             for key, value in attributes_filter.items():
@@ -131,13 +135,17 @@ class PGVectorBackend(VectorStoreBackend):
         Session = self._get_connection(name, session=True)
         data = []
         with Session as session:
-            query = (select(Chunk.id,
-                Chunk.text,
-                Chunk.embedding,
-                Document.source,
-                Document.attributes)
-                     .join(Chunk.document)
-                     .order_by(Document.source))
+            query = (
+                select(
+                    Chunk.id,
+                    Chunk.text,
+                    Chunk.embedding,
+                    Document.source,
+                    Document.attributes,
+                )
+                .join(Chunk.document)
+                .order_by(Document.source)
+            )
             result = session.execute(query)
             data = list(result.mappings().all())
         return data
@@ -263,7 +271,7 @@ class PGVectorBackend(VectorStoreBackend):
                     Chunk.embedding,
                     postgresql_using='hnsw',
                     postgresql_with={'m': 16, 'ef_construction': 64},
-                    postgresql_ops={'embedding': 'vector_l2_ops'}
+                    postgresql_ops={'embedding': 'vector_l2_ops'},
                 )
                 index.create(session.get_bind())
             except Exception as e:
@@ -273,10 +281,12 @@ class PGVectorBackend(VectorStoreBackend):
 
     def _get_connection(self, name, session=False):
         from sqlalchemy import create_engine
+
         meta = self.data_store.metadata(name)
         connection_str = meta.kind_meta['connection']
         connection_str = connection_str.replace('pgvector', 'postgresql').replace('sqla+', '')
         import sqlalchemy
+
         # https://docs.sqlalchemy.org/en/14/changelog/migration_20.html
         kwargs = {} if sqlalchemy.__version__.startswith('2.') else dict(future=True)
         engine = create_engine(connection_str, **kwargs)

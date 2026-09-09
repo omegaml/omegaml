@@ -1,23 +1,25 @@
-import dill
 import importlib
-import numpy as np
 import os
-import pandas as pd
 import platform
-import pymongo
 import warnings
-from base64 import b64encode, b64decode
+from base64 import b64decode, b64encode
 from datetime import date
 from itertools import chain
-from omegaml.backends.tracking.base import TrackingProvider
-from omegaml.documents import Metadata
-from omegaml.util import _raise, ensure_index, batched, signature, tryOr, ensurelist
 from typing import Iterable
 from uuid import uuid4
 
+import dill
+import numpy as np
+import pandas as pd
+import pymongo
+
+from omegaml.backends.tracking.base import TrackingProvider
+from omegaml.documents import Metadata
+from omegaml.util import _raise, batched, ensure_index, ensurelist, signature, tryOr
+
 
 class NoTrackTracker(TrackingProvider):
-    """ A default tracker that does not record anything """
+    """A default tracker that does not record anything"""
 
     def start(self, run=None):
         pass
@@ -51,7 +53,7 @@ class NoTrackTracker(TrackingProvider):
 
 
 class OmegaSimpleTracker(TrackingProvider):
-    """ A tracking provider that logs to an omegaml dataset
+    """A tracking provider that logs to an omegaml dataset
 
     Usage::
 
@@ -63,14 +65,16 @@ class OmegaSimpleTracker(TrackingProvider):
         any extra
 
     """
+
     _provider = 'simple'
     _experiment = None
     _startdt = None
     _stopdt = None
     _autotrack = False
 
-    _ensure_active = lambda self, r: r if r is not None else _raise(
-        ValueError('no active run, call .start() or .use() '))
+    _ensure_active = lambda self, r: (
+        r if r is not None else _raise(ValueError('no active run, call .start() or .use() '))
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,7 +83,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self._initialize_dataset()
 
     def active_run(self, run=None):
-        """ set the lastest run as the active run
+        """set the lastest run as the active run
 
         Args:
             run (int|str): optional or unique task id, if None the
@@ -91,7 +95,7 @@ class OmegaSimpleTracker(TrackingProvider):
         """
         if run is None:
             latest = self._latest_run
-            latest_is_active = (latest is not None and self.status(run=latest) == 'STARTED')
+            latest_is_active = latest is not None and self.status(run=latest) == 'STARTED'
             self._run = latest if latest_is_active else self.start(run=None)
         else:
             self._run = run
@@ -99,7 +103,7 @@ class OmegaSimpleTracker(TrackingProvider):
         return self._run
 
     def use(self, run=None):
-        """ reuse the latest run instead of starting a new one
+        """reuse the latest run instead of starting a new one
 
         semantic sugar for self.active_run()
 
@@ -125,7 +129,7 @@ class OmegaSimpleTracker(TrackingProvider):
         return run
 
     def status(self, run=None):
-        """ status of a run
+        """status of a run
 
         Args:
             run (int): the run number, defaults to the currently active run
@@ -140,7 +144,7 @@ class OmegaSimpleTracker(TrackingProvider):
         return 'PENDING' if no_runs else 'STOPPED' if has_stop else 'STARTED'
 
     def start(self, run=None, immediate=True):
-        """ start a new run
+        """start a new run
 
         This starts a new run and logs the start event
         """
@@ -151,7 +155,7 @@ class OmegaSimpleTracker(TrackingProvider):
         return self._run
 
     def stop(self, flush=True):
-        """ stop the current run
+        """stop the current run
 
         This stops the current run and records the stop event
         """
@@ -163,12 +167,11 @@ class OmegaSimpleTracker(TrackingProvider):
     def flush(self):
         # passing list of list, as_many=True => collection.insert_many() for speed
         if self.log_buffer:
-            self._store.put(self.log_buffer, self._data_name,
-                            noversion=True, as_many=True)
+            self._store.put(self.log_buffer, self._data_name, noversion=True, as_many=True)
             self.log_buffer.clear()
 
     def clear(self, force=False):
-        """ clear all data
+        """clear all data
 
         All data is removed from the experiment's dataset. This is not recoverable.
 
@@ -184,7 +187,9 @@ class OmegaSimpleTracker(TrackingProvider):
         .. versionadded:: 0.16.2
 
         """
-        assert force, "clear() requires force=True to prevent accidental data loss. This will clear all experiment data and is not recoverable."
+        assert force, (
+            "clear() requires force=True to prevent accidental data loss. This will clear all experiment data and is not recoverable."
+        )
         self._store.drop(self._data_name, force=True)
         self._initialize_dataset(force=True)
 
@@ -196,9 +201,7 @@ class OmegaSimpleTracker(TrackingProvider):
             if isinstance(value.get('args'), (list, tuple)):
                 value['args'] = [getattr(arg, '_passthrough_data', arg) for arg in value['args']]
             if isinstance(value.get('kwargs'), dict):
-                value['kwargs'] = {
-                    k: getattr(v, '_passthrough_data', v) for k, v in value['kwargs'].items()
-                }
+                value['kwargs'] = {k: getattr(v, '_passthrough_data', v) for k, v in value['kwargs'].items()}
         data = {
             'experiment': self._experiment,
             'run': run or self._ensure_active(self._run),
@@ -224,7 +227,7 @@ class OmegaSimpleTracker(TrackingProvider):
             self.flush()
 
     def log_artifact(self, obj, name, step=None, dt=None, event=None, key=None, **extra):
-        """ log any object to the current run
+        """log any object to the current run
 
         Usage::
 
@@ -272,16 +275,12 @@ class OmegaSimpleTracker(TrackingProvider):
             except TypeError as e:
                 rawdata = repr(obj)
                 format = 'repr'
-        value = {
-            'name': name,
-            'data': rawdata,
-            'format': format
-        }
+        value = {'name': name, 'data': rawdata, 'format': format}
         data = self._common_log_data(event, key, value, step=step, dt=dt, name=name, **extra)
         self._write_log(data)
 
     def log_event(self, event, key, value, step=None, dt=None, **extra):
-        """ log a system event
+        """log a system event
 
         Args:
             event (str): the event name
@@ -311,7 +310,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self._write_log(data)
 
     def log_events(self, event, key, values, step=None, dt=None, **extra):
-        """ log a series of events
+        """log a series of events
 
         This is a convenience method to log multiple values for the same event.
         All values will be logged with the same commong log data, i.e. the same
@@ -334,7 +333,7 @@ class OmegaSimpleTracker(TrackingProvider):
             self._write_log(dict(data))
 
     def log_param(self, key, value, step=None, dt=None, **extra):
-        """ log an experiment parameter
+        """log an experiment parameter
 
         Args:
             key (str): the parameter name
@@ -349,7 +348,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self._write_log(data)
 
     def log_metric(self, key, value, step=None, dt=None, **extra):
-        """ log a metric value
+        """log a metric value
 
         Args:
             key (str): the metric name
@@ -364,7 +363,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self._write_log(data)
 
     def log_data(self, key, value, step=None, dt=None, event=None, **extra):
-        """ log x/y data for model predictions
+        """log x/y data for model predictions
 
         This is semantic sugar for log_artifact() using the 'data' event.
 
@@ -383,7 +382,7 @@ class OmegaSimpleTracker(TrackingProvider):
         self.log_artifact(value, key, step=step, dt=dt, key=key, event=event, **extra)
 
     def log_system(self, key=None, value=None, step=None, dt=None, **extra):
-        """ log system data
+        """log system data
 
         Args:
             key (str): the key to use, defaults to 'system'
@@ -398,16 +397,14 @@ class OmegaSimpleTracker(TrackingProvider):
         key = key or 'system'
         value = value or {
             'platform': platform.uname()._asdict(),
-            'python': '-'.join((platform.python_implementation(),
-                                platform.python_version())),
-            'packages': ['=='.join((d.metadata['Name'], d.version))
-                         for d in importlib.metadata.distributions()]
+            'python': '-'.join((platform.python_implementation(), platform.python_version())),
+            'packages': ['=='.join((d.metadata['Name'], d.version)) for d in importlib.metadata.distributions()],
         }
         data = self._common_log_data('system', key, value, step=step, dt=dt, **extra)
         self._write_log(data)
 
     def log_extra(self, remove=False, **kwargs):
-        """ add additional log information for every subsequent logging call
+        """add additional log information for every subsequent logging call
 
         Args:
             remove (bool): if True, removes the extra log information
@@ -419,14 +416,28 @@ class OmegaSimpleTracker(TrackingProvider):
             self._extra_log.update(kwargs)
         elif kwargs:
             from collections import deque as consume
+
             deletions = (self._extra_log.pop(k, None) for k in kwargs)
             consume(deletions, maxlen=0)
         else:
             self._extra_log = {}
 
-    def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False,
-             lazy=False, since=None, end=None, batchsize=None, slice=None, **extra):
-        """ build a dataframe of all stored data
+    def data(
+        self,
+        experiment=None,
+        run=None,
+        event=None,
+        step=None,
+        key=None,
+        raw=False,
+        lazy=False,
+        since=None,
+        end=None,
+        batchsize=None,
+        slice=None,
+        **extra,
+    ):
+        """build a dataframe of all stored data
 
         Args:
             experiment (str|list): the name of the experiment, defaults to its current value
@@ -466,7 +477,7 @@ class OmegaSimpleTracker(TrackingProvider):
         .. versionchanged:: 0.16.2
             run supports negative indexing
 
-	    .. versionchanged:: 0.17
+            .. versionchanged:: 0.17
             added batchsize
 
         .. versionchanged:: 0.17
@@ -476,6 +487,7 @@ class OmegaSimpleTracker(TrackingProvider):
             enabled data(run=, start=, end=, since=), accepting range queries on run, dt and event#
         """
         from functools import cache
+
         experiment = experiment or self._experiment
         # -- flush all buffers before querying
         self.flush()
@@ -490,7 +502,8 @@ class OmegaSimpleTracker(TrackingProvider):
             # -- run can be a list, in which case we adjust run < 0 for each element
             # -- run can never be less than 1 (1-indexed), even if run << 0
             last_run = cache(
-                lambda: int(self._latest_run or 0))  # PERF/consistency: memoize the last run per each .data() call
+                lambda: int(self._latest_run or 0)
+            )  # PERF/consistency: memoize the last run per each .data() call
             relative_run = lambda r: max(1, 1 + last_run() + r)
             if isinstance(run, list) and any(r < 0 for r in run):
                 run = [(r if r >= 0 else relative_run(r)) for r in run]
@@ -507,6 +520,7 @@ class OmegaSimpleTracker(TrackingProvider):
 
         def read_data_batched(cursor, batchsize, slice):
             from builtins import slice as t_slice
+
             if cursor is None:
                 yield None
                 return
@@ -536,8 +550,9 @@ class OmegaSimpleTracker(TrackingProvider):
         valid = lambda s: s is not None and str(s).lower() not in ('all', '*')
         # SEC: ensure all values are basic types, to prevent operator injection
         valid_types = (str, int, float, list, tuple, date, datetime)
-        op = lambda s: {'$in': ensurelist(s)} if isinstance(s, (list, tuple, np.ndarray)) else ensure_type(s,
-                                                                                                           valid_types)
+        op = lambda s: (
+            {'$in': ensurelist(s)} if isinstance(s, (list, tuple, np.ndarray)) else ensure_type(s, valid_types)
+        )
         ensure_type = lambda v, t: v if isinstance(v, t) else str(v)
         if valid(experiment):
             filter['data.experiment'] = op(experiment)
@@ -562,7 +577,8 @@ class OmegaSimpleTracker(TrackingProvider):
                 since = since
             else:
                 raise ValueError(
-                    f'invalid since value: {since}, must be datetime, timedelta or string in format "<n><unit:[smhdwMqy]>"')
+                    f'invalid since value: {since}, must be datetime, timedelta or string in format "<n><unit:[smhdwMqy]>"'
+                )
             filter['data.dt'] = {'$gte': str(since.isoformat())}
         if valid(end):
             dtnow = getattr(self, '_since_dtnow', datetime.utcnow())
@@ -574,7 +590,8 @@ class OmegaSimpleTracker(TrackingProvider):
                 end = end
             else:
                 raise ValueError(
-                    f'invalid end value: {end}, must be datetime, timedelta or string in format "<n><unit:[smhdwMqy]>"')
+                    f'invalid end value: {end}, must be datetime, timedelta or string in format "<n><unit:[smhdwMqy]>"'
+                )
             filter['data.dt'] = filter.setdefault('data.dt', {})
             filter['data.dt']['$lte'] = str(end.isoformat())
         for k, v in extra.items():
@@ -590,6 +607,7 @@ class OmegaSimpleTracker(TrackingProvider):
     @property
     def stats(self):
         from omegaml.backends.tracking.statistics import ExperimentStatistics
+
         return ExperimentStatistics(self)
 
     def summary(self, **kwargs):
@@ -603,18 +621,34 @@ class OmegaSimpleTracker(TrackingProvider):
         meta = self._store.metadata(self._data_name)
         idxs = [
             # fast retrieval by run, event, key
-            {'data.run': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING,
-             'data.experiment': pymongo.ASCENDING},
+            {
+                'data.run': pymongo.ASCENDING,
+                'data.event': pymongo.ASCENDING,
+                'data.key': pymongo.ASCENDING,
+                'data.experiment': pymongo.ASCENDING,
+            },
             # fast retrieval by dt, event, key
-            {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING,
-             'data.experiment': pymongo.ASCENDING},
+            {
+                'data.dt': pymongo.ASCENDING,
+                'data.event': pymongo.ASCENDING,
+                'data.key': pymongo.ASCENDING,
+                'data.experiment': pymongo.ASCENDING,
+            },
             {'data.dt': pymongo.ASCENDING, 'data.event': pymongo.ASCENDING, 'data.experiment': pymongo.ASCENDING},
             # fast retrieval by event, key, userid across all runs
-            {'data.event': pymongo.ASCENDING, 'data.key': pymongo.ASCENDING, 'data.userid': pymongo.ASCENDING,
-             'data.experiment': pymongo.ASCENDING},
+            {
+                'data.event': pymongo.ASCENDING,
+                'data.key': pymongo.ASCENDING,
+                'data.userid': pymongo.ASCENDING,
+                'data.experiment': pymongo.ASCENDING,
+            },
             # optimize self._latest_run - this is O(1) retrieval of max(run)
-            {'data.run': pymongo.DESCENDING, 'data.event': pymongo.ASCENDING, 'data.experiment': pymongo.ASCENDING,
-             'create_index_kwargs': dict(partialFilterExpression={"data.event": "start"})},
+            {
+                'data.run': pymongo.DESCENDING,
+                'data.event': pymongo.ASCENDING,
+                'data.experiment': pymongo.ASCENDING,
+                'create_index_kwargs': dict(partialFilterExpression={"data.event": "start"}),
+            },
         ]
         # add additional indexes from metadata
         idxs.extend(meta.attributes.get('indexes', [])) if meta else None
@@ -626,7 +660,7 @@ class OmegaSimpleTracker(TrackingProvider):
         # self._store.put(coll, self._data_name)
 
     def restore_artifact(self, *args, **kwargs):
-        """ restore a specific logged artifact
+        """restore a specific logged artifact
 
         .. versionchanged:: 0.17
              deprecated, use exp.restore_artifacts() instead
@@ -635,9 +669,10 @@ class OmegaSimpleTracker(TrackingProvider):
         restored = self.restore_artifacts(*args, **kwargs)
         return restored[-1] if restored else None
 
-    def restore_artifacts(self, key=None, experiment=None, run=None, since=None, step=None, value=None, event=None,
-                          name=None):
-        """ restore logged artifacts
+    def restore_artifacts(
+        self, key=None, experiment=None, run=None, since=None, step=None, value=None, event=None, name=None
+    ):
+        """restore logged artifacts
 
         Args:
             key (str): the name of the artifact as provided in log_artifact
@@ -661,8 +696,9 @@ class OmegaSimpleTracker(TrackingProvider):
         event = event or 'artifact'
         name = name or '*'
         if value is None:
-            all_data = self.data(experiment=experiment, run=run, since=since, event=event,
-                                 step=step, key=key, raw=True, name=name)
+            all_data = self.data(
+                experiment=experiment, run=run, since=since, event=event, step=step, key=key, raw=True, name=name
+            )
         else:
             all_data = [{'value': value}] if isinstance(value, dict) else value
         restored = []
@@ -686,7 +722,7 @@ class OmegaSimpleTracker(TrackingProvider):
         return restored
 
     def restore_data(self, key, run=None, event=None, since=None, concat=True, **extra):
-        """ restore x/y data for model predictions
+        """restore x/y data for model predictions
 
         This is semantic sugar for restore_artifacts() using the event='data' event.
 
@@ -724,7 +760,7 @@ from datetime import datetime, timedelta
 
 
 def dtrelative(delta, now=None, as_delta=False):
-    """ return a datetime relative to now
+    """return a datetime relative to now
 
     Args:
         delta (str|timedelta): the relative delta, if a string, specify as '[+-]<n><unit:[smhdwMqy]>',
@@ -738,25 +774,29 @@ def dtrelative(delta, now=None, as_delta=False):
         datetime|timedelta: the relative datetime or timedelta
     """
     # Parse the numeric part and the unit from the specifier
-    UNIT_MAP = {'s': 1,  # 1 second
-                'm': 60,  # 1 minute
-                'h': 60 * 60,  # 1 hour
-                'd': 24 * 60 * 60,  # 1 day
-                'w': 7 * 24 * 60 * 60,  # 1 week
-                'n': 30 * 24 * 60 * 60,  # 1 month
-                'q': 90 * 24 * 60 * 60,  # 1 quarter
-                'y': 365 * 24 * 60 * 60}  # 1 year
+    UNIT_MAP = {
+        's': 1,  # 1 second
+        'm': 60,  # 1 minute
+        'h': 60 * 60,  # 1 hour
+        'd': 24 * 60 * 60,  # 1 day
+        'w': 7 * 24 * 60 * 60,  # 1 week
+        'n': 30 * 24 * 60 * 60,  # 1 month
+        'q': 90 * 24 * 60 * 60,  # 1 quarter
+        'y': 365 * 24 * 60 * 60,
+    }  # 1 year
     now = now or datetime.utcnow()
     error_msg = f"Invalid delta {delta}. Use a string of format '<n><unit:[hdwmqy]>' or timedelta object."
     if isinstance(delta, str):
         try:
             past = delta.startswith('-')
-            delta = (delta
-                     .replace('-', '')
-                     .replace('+', '')  # Remove the sign
-                     .replace(' ', '')  # Remove spaces
-                     .replace('M', 'n')  # m is ambiguous, so we use n for month
-                     .lower())
+            delta = (
+                delta
+                .replace('-', '')
+                .replace('+', '')  # Remove the sign
+                .replace(' ', '')  # Remove spaces
+                .replace('M', 'n')  # m is ambiguous, so we use n for month
+                .lower()
+            )
             num = int(delta[:-1])  # The numeric part
             units = UNIT_MAP.get(delta[-1])  # The last character
             if delta[-1] == 'y' and num == 0:

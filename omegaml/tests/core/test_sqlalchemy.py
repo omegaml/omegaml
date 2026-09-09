@@ -58,9 +58,9 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(conn, Connection)
 
     def test_connection_cache(self):
-        """ test connection caching
-        """
+        """test connection caching"""
         from omegaml.backends import sqlalchemy
+
         om = self.om
         cnx = 'sqlite:///{user}.db'
         om.datasets.put(cnx, 'testsqlite', kind=SQLAlchemyBackend.KIND)
@@ -86,13 +86,11 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         cnx_str = 'sqlite:///test.db'
         engine = create_engine(cnx_str)
         with engine.connect() as cnx:
-            df = pd.DataFrame({
-                'x': range(10)
-            })
+            df = pd.DataFrame(
+                {'x': range(10)},
+            )
             df.to_sql('foobar', cnx, if_exists='replace', index=False)
-        om.datasets.put(cnx_str, 'foobar',
-                        sql='select * from foobar',
-                        kind=SQLAlchemyBackend.KIND)
+        om.datasets.put(cnx_str, 'foobar', sql='select * from foobar', kind=SQLAlchemyBackend.KIND)
         self.assertIn('foobar', om.datasets.list())
         meta = om.datasets.metadata('foobar')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
@@ -107,13 +105,11 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         cnx_str = 'sqlite:///test.db'
         engine = create_engine(cnx_str)
         cnx = engine.connect()
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.to_sql('foobar', cnx, if_exists='replace', index=False)
-        om.datasets.put(cnx_str, 'foobar',
-                        sql='select {{cols}} from foobar',
-                        kind=SQLAlchemyBackend.KIND)
+        om.datasets.put(cnx_str, 'foobar', sql='select {{cols}} from foobar', kind=SQLAlchemyBackend.KIND)
         self.assertIn('foobar', om.datasets.list())
         meta = om.datasets.metadata('foobar')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
@@ -131,14 +127,12 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         cnx_str = 'sqlite:///test.db'
         engine = create_engine(cnx_str)
         cnx = engine.connect()
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.to_sql('foobar', cnx, if_exists='replace', index=False)
         # using
-        om.datasets.put(cnx_str, 'foobar',
-                        sql='select {{cols}} from foobar',
-                        kind=SQLAlchemyBackend.KIND)
+        om.datasets.put(cnx_str, 'foobar', sql='select {{cols}} from foobar', kind=SQLAlchemyBackend.KIND)
         self.assertIn('foobar', om.datasets.list())
         meta = om.datasets.metadata('foobar')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
@@ -157,14 +151,11 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         cnx_str = 'sqlite:///test.db'
         engine = create_engine(cnx_str)
         cnx = engine.connect()
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.to_sql('foobar', cnx, if_exists='replace', index=False)
-        om.datasets.put(cnx_str, 'foobar_copy',
-                        copy=True,
-                        sql='select * from foobar',
-                        kind=SQLAlchemyBackend.KIND)
+        om.datasets.put(cnx_str, 'foobar_copy', copy=True, sql='select * from foobar', kind=SQLAlchemyBackend.KIND)
         self.assertIn('foobar_copy', om.datasets.list())
         meta = om.datasets.metadata('foobar_copy')
         self.assertEqual(meta.kind, 'pandas.dfrows')
@@ -176,9 +167,9 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         store sql alchemy connection to specific query
         """
         # -- no index, will use default to_sql, which is 'index'
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         self._test_put_connection_with_sql_index(df, index_names=None)
 
     def test_put_connection_with_sql_default_index(self):
@@ -186,9 +177,9 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         store store connection to specific query with default index name
         """
         # -- specify the default index explicitely
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         self._test_put_connection_with_sql_index(df, index_names=['index'])
 
     def test_put_connection_with_sql_custom_index(self):
@@ -196,9 +187,9 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         store store connection to specific query with custom index name
         """
         # -- specify a custom index name
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         self._test_put_connection_with_sql_index(df, index_names=['idx'])
 
     def _test_put_connection_with_sql_index(self, df, index_names=None):
@@ -211,8 +202,7 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         df.to_sql('foobar', cnx, if_exists='replace', index=index_names is not None)
         # store connection string
         sql = "select * from foobar"
-        om.datasets.put(cnx_str, 'testsqlite', kind=SQLAlchemyBackend.KIND,
-                        sql=sql, index_columns=index_names)
+        om.datasets.put(cnx_str, 'testsqlite', kind=SQLAlchemyBackend.KIND, sql=sql, index_columns=index_names)
         self.assertIn('testsqlite', om.datasets.list())
         meta = om.datasets.metadata('testsqlite')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
@@ -229,11 +219,10 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         """
         om = self.om
         cnx = 'sqlite:///test.db'
-        om.datasets.put(cnx, 'testsqlite', table=':foo',
-                        kind=SQLAlchemyBackend.KIND)
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        om.datasets.put(cnx, 'testsqlite', table=':foo', kind=SQLAlchemyBackend.KIND)
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.index.names = ['index']
         # replace
         om.datasets.put(df, 'testsqlite', insert=True, append=False)
@@ -255,14 +244,13 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         self.clean('mybucket')
         om = self.om['mybucket']
         cnx = 'sqlite:///test.db'
-        om.datasets.put(cnx, 'testsqlite', table='foo',
-                        kind=SQLAlchemyBackend.KIND)
+        om.datasets.put(cnx, 'testsqlite', table='foo', kind=SQLAlchemyBackend.KIND)
         meta = om.datasets.metadata('testsqlite')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
         # try inserting via connection
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.index.names = ['index']
         # replace
         om.datasets.put(df, 'testsqlite', insert=True, append=False)
@@ -284,11 +272,10 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         om = self.om
         # store connection
         cnx = 'sqlite:///test.db'
-        om.datasets.put(cnx, 'testsqlite', table=':foo',
-                        kind=SQLAlchemyBackend.KIND)
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        om.datasets.put(cnx, 'testsqlite', table=':foo', kind=SQLAlchemyBackend.KIND)
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.index.names = ['index']
         raw = df.to_dict('dict')
         # replace
@@ -310,17 +297,17 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         cnx_str = 'sqlite:///test.db'
         engine = create_engine(cnx_str)
         cnx = engine.connect()
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.to_sql('foobar', cnx, if_exists='replace', index=False)
-        om.datasets.put(cnx_str, 'foobar',
-                        sql='select * from foobar where x in {x} or x in {y}',
-                        kind=SQLAlchemyBackend.KIND)
-        df_db = om.datasets.get('foobar', sqlvars={
-            'x': [1, 2, 3],
-            'y': [5, 6, 7]
-        })
+        om.datasets.put(
+            cnx_str, 'foobar', sql='select * from foobar where x in {x} or x in {y}', kind=SQLAlchemyBackend.KIND
+        )
+        df_db = om.datasets.get(
+            'foobar',
+            sqlvars={'x': [1, 2, 3], 'y': [5, 6, 7]},
+        )
         fltx = df['x'].isin([1, 2, 3])
         flty = df['x'].isin([5, 6, 7])
         df_filtered = df[fltx | flty].reset_index(drop=True)
@@ -334,13 +321,13 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         cnx_str = 'sqlite:///test.db'
         engine = create_engine(cnx_str)
         cnx = engine.connect()
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.to_sql('foobar', cnx, if_exists='replace', index=False)
-        om.datasets.put(cnx_str, 'foobar',
-                        sql='select * from foobar where x={x} and x > 5',
-                        kind=SQLAlchemyBackend.KIND)
+        om.datasets.put(
+            cnx_str, 'foobar', sql='select * from foobar where x={x} and x > 5', kind=SQLAlchemyBackend.KIND
+        )
         self.assertIn('foobar', om.datasets.list())
         meta = om.datasets.metadata('foobar')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
@@ -365,13 +352,11 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
         cnx_str = 'sqlite:///test.db'
         engine = create_engine(cnx_str)
         cnx = engine.connect()
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.to_sql('foobar', cnx, if_exists='replace', index=False)
-        om.datasets.put(cnx_str, 'foobar',
-                        sql='select * from foobar where x={{x}}',
-                        kind=SQLAlchemyBackend.KIND)
+        om.datasets.put(cnx_str, 'foobar', sql='select * from foobar where x={{x}}', kind=SQLAlchemyBackend.KIND)
         self.assertIn('foobar', om.datasets.list())
         meta = om.datasets.metadata('foobar')
         self.assertEqual(meta.kind, SQLAlchemyBackend.KIND)
@@ -384,7 +369,8 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
                 warnlog = str(list(w.message for w in wrn))
                 self.assertIn(
                     'Statement >select * from foobar where x={x}< contains unsafe variables [\'x\']. Use :notation or sanitize input.',
-                    warnlog)
+                    warnlog,
+                )
         # we trust the sqlvars -- no warning will be issued
         with warnings.catch_warnings(record=True) as wrn:
             dfx = om.datasets.get('foobar', sqlvars=sqlvars, trusted=signature(sqlvars))
@@ -392,24 +378,25 @@ class SQLAlchemyBackendTests(OmegaTestMixin, TestCase):
             warnlog = str(list(w.message for w in wrn))
             self.assertNotIn(
                 'Statement >select * from foobar where x={x}< contains unsafe variables [\'x\']. Use :notation or sanitize input.',
-                warnlog)
+                warnlog,
+            )
 
     def test_postgres(self):
         om = self.om
         cnx_str = 'postgresql://postgres:test@localhost:5432/postgres'
         engine = create_engine(cnx_str)
         cnx = engine.connect()
-        df = pd.DataFrame({
-            'x': range(10)
-        })
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df.to_sql('foobar', cnx, if_exists='replace', index=False)
-        om.datasets.put(cnx_str, 'foobar',
-                        sql='select * from foobar where x in {x} or x in {y}',
-                        kind=SQLAlchemyBackend.KIND)
-        df_db = om.datasets.get('foobar', sqlvars={
-            'x': [1, 2, 3],
-            'y': [5, 6, 7]
-        })
+        om.datasets.put(
+            cnx_str, 'foobar', sql='select * from foobar where x in {x} or x in {y}', kind=SQLAlchemyBackend.KIND
+        )
+        df_db = om.datasets.get(
+            'foobar',
+            sqlvars={'x': [1, 2, 3], 'y': [5, 6, 7]},
+        )
         fltx = df['x'].isin([1, 2, 3])
         flty = df['x'].isin([5, 6, 7])
         df_filtered = df[fltx | flty].reset_index(drop=True)

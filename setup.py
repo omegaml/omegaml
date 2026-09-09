@@ -65,10 +65,19 @@ ai_dev_deps = [
     'torchvision',  # due to transformers lazy, imported in TestCase.assertRaises
     'tf-keras',  # https://github.com/orgs/community/discussions/118713
 ]
-all_deps = (tables + graph_deps + dashserve_deps + jupyter_deps +
-            mlflow_deps + tf_deps + backtracking_deps + ai_inf_deps + ai_dev_deps)
+all_deps = (
+    tables
+    + graph_deps
+    + dashserve_deps
+    + jupyter_deps
+    + mlflow_deps
+    + tf_deps
+    + backtracking_deps
+    + ai_inf_deps
+    + ai_dev_deps
+)
 test_deps = all_deps + ai_dev_deps
-client_deps = (tables + dashserve_deps + graph_deps)
+client_deps = tables + dashserve_deps + graph_deps
 install_deps = [
     'celery>5,<6.0',
     'joblib>=0.9.4',
@@ -152,7 +161,5 @@ setup(
         'dev': dev_deps,
         'test': dev_deps + test_deps,
     },
-    entry_points={
-        'console_scripts': ['om=omegaml.client.cli:climain'],
-    }
+    entry_points={'console_scripts': ['om=omegaml.client.cli:climain']},
 )

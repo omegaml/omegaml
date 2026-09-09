@@ -9,8 +9,10 @@ from omegaml import Omega
 class MDataFrameMixinTests(TestCase):
     def setUp(self):
         TestCase.setUp(self)
-        df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
-                                     'y': list(range(0, 10)) + list(range(0, 10))})
+        df = self.df = pd.DataFrame({
+            'x': list(range(0, 10)) + list(range(0, 10)),
+            'y': list(range(0, 10)) + list(range(0, 10)),
+        })
         om = self.om = Omega()
         om.datasets.put(df, 'sample', append=False)
         self.coll = om.datasets.collection('sample')
@@ -103,7 +105,7 @@ class MDataFrameMixinTests(TestCase):
             ctx.add({
                 '$project': {
                     'x': {
-                        '$multiply': ['$x', 5]
+                        '$multiply': ['$x', 5],
                     },
                     'y': 1,
                 }
@@ -124,9 +126,14 @@ class MDataFrameMixinTests(TestCase):
         df = self.df
 
         def complexfn(ctx):
-            ctx.project(x={
-                '$multiply': ['$x', 5]
-            }, b={'$divide': ['$x', 5]})
+            ctx.project(
+                x={
+                    '$multiply': ['$x', 5],
+                },
+                b={
+                    '$divide': ['$x', 5],
+                },
+            )
             return ctx
 
         mdf = om.datasets.getl('sample')
@@ -142,15 +149,22 @@ class MDataFrameMixinTests(TestCase):
         om = self.om
 
         df = pd.DataFrame({
-            'x': pd.date_range(start=pd.to_datetime('09.05.2018',
-                                                    format='%m.%d.%Y'), periods=5, tz=None),
+            'x': pd.date_range(
+                start=pd.to_datetime('09.05.2018', format='%m.%d.%Y'),
+                periods=5,
+                tz=None,
+            ),
             'y': range(5),
         })
         om.datasets.put(df, 'sample', append=False)
 
         mdf = om.datasets.getl('sample')
-        mdf = mdf.apply(lambda v: dict(a=v['x'].dt.dayofweek,
-                                       b=v['x'].dt.year)).value
+        mdf = mdf.apply(
+            lambda v: dict(
+                a=v['x'].dt.dayofweek,
+                b=v['x'].dt.year,
+            ),
+        ).value
 
         self.assertEqual(list(mdf['a'].values), [4, 5, 6, 7, 1])
         self.assertTrue(all(v == 2018 for v in mdf['b'].values))
@@ -460,7 +474,7 @@ class MDataFrameMixinTests(TestCase):
         })
         om.datasets.put(df, 'qtest', append=False)
         mdf = om.datasets.getl('qtest')
-        result = mdf.quantile([.1, .2]).value
+        result = mdf.quantile([0.1, 0.2]).value
         # FIXME this is actually wrong, see df.quantile([.1, .2])
         self.assertListEqual(list(result.loc['p0.1'].values), [100, 100])
         self.assertListEqual(list(result.loc['p0.2'].values), [200, 200])

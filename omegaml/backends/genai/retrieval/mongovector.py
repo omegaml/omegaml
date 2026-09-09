@@ -1,6 +1,6 @@
+import re
 from collections import Counter
 
-import re
 from bson import ObjectId
 
 from omegaml.backends.genai.retrieval.index import VectorStoreBackend
@@ -11,6 +11,7 @@ class MongoDBVectorStore(VectorStoreBackend):
     """
     MongoDB vector store for storing documents and their embeddings.
     """
+
     KIND = 'vector.conx'
     PROMOTE = 'metadata'
 
@@ -28,12 +29,22 @@ class MongoDBVectorStore(VectorStoreBackend):
         """
         List all documents inside a collection.
         """
-        docs = self._documents(name).find({},
-            {'_id': 1, 'source': 1, 'attributes': 1})
-        return [{'id': str(doc['_id']),
-                 'source': doc.get('source', ''),
-                 'attributes': doc.get('attributes', {})}
-                for doc in docs]
+        docs = self._documents(name).find(
+            {},
+            {
+                '_id': 1,
+                'source': 1,
+                'attributes': 1,
+            },
+        )
+        return [
+            {
+                'id': str(doc['_id']),
+                'source': doc.get('source', ''),
+                'attributes': doc.get('attributes', {}),
+            }
+            for doc in docs
+        ]
 
     def insert_chunks(self, chunks, name, embeddings, attributes=None, **kwargs):
         attributes = attributes or {}
@@ -42,10 +53,7 @@ class MongoDBVectorStore(VectorStoreBackend):
         attributes.setdefault('tags', [])
 
         # Insert the document metadata
-        doc_id = self._documents(name).insert_one({
-            'source': source,
-            'attributes': attributes,
-        }).inserted_id
+        doc_id = self._documents(name).insert_one({'source': source, 'attributes': attributes}).inserted_id
 
         # Insert the chunks and their embeddings
         for text, embedding in zip(chunks, embeddings):
@@ -64,70 +72,71 @@ class MongoDBVectorStore(VectorStoreBackend):
                     'from': self._documents(name).name,
                     'localField': 'document_id',
                     'foreignField': '_id',
-                    'as': 'document'
+                    'as': 'document',
                 }
             },
-            {
-                '$unwind': '$document'
-            },
+            {'$unwind': '$document'},
         ]
         if filter:
-            match = [{
-                '$match': {
-                    '$or': [
-                        {f'document.attributes.{key}':
-                             {'$in': values if isinstance(filter, list) else [values]}
-                         for key, values in filter.items()}
-                    ]
+            match = [
+                {
+                    '$match': {
+                        '$or': [
+                            {
+                                f'document.attributes.{key}': {'$in': values if isinstance(filter, list) else [values]}
+                                for key, values in filter.items()
+                            }
+                        ]
+                    }
                 }
-            }]
+            ]
         else:
             match = []
-        project = [{
-            '$project': {
-                'document_id': 1,
-                'text': 1,
-                'embedding': 1,
-                'source': '$document.source',
-                'attributes': '$document.attributes',
-                'distance': {
-                    '$sqrt': {
-                        '$sum': {
-                            '$map': {
-                                'input': {
-                                    '$range': [0, len(obj)],
-                                },
-                                'as': 'i',
-                                'in': {
-                                    '$pow': [
-                                        {'$subtract': [
-                                            {'$arrayElemAt': ['$embedding', '$$i']},
-                                            {'$arrayElemAt': [{'$literal': obj}, '$$i']}
-                                        ]},
-                                        2
-                                    ]
+        project = [
+            {
+                '$project': {
+                    'document_id': 1,
+                    'text': 1,
+                    'embedding': 1,
+                    'source': '$document.source',
+                    'attributes': '$document.attributes',
+                    'distance': {
+                        '$sqrt': {
+                            '$sum': {
+                                '$map': {
+                                    'input': {'$range': [0, len(obj)]},
+                                    'as': 'i',
+                                    'in': {
+                                        '$pow': [
+                                            {
+                                                '$subtract': [
+                                                    {'$arrayElemAt': ['$embedding', '$$i']},
+                                                    {'$arrayElemAt': [{'$literal': obj}, '$$i']},
+                                                ]
+                                            },
+                                            2,
+                                        ]
+                                    },
                                 }
                             }
                         }
-                    }
-                },
-            }
-        }]
-        sort = [
-            {
-                '$sort': {'distance': 1}
-            },
-            {
-                '$limit': top
-            }
-        ]
-        subset = [
-            {
-                '$match': {
-                    'distance': {'$lte': float(max_distance)}
+                    },
                 }
             }
-        ] if max_distance is not None else []
+        ]
+        sort = [
+            {'$sort': {'distance': 1}},
+            {'$limit': top},
+        ]
+        subset = (
+            [
+                {
+                    '$match': {'distance': {'$lte': float(max_distance)}},
+                }
+            ]
+            if max_distance is not None
+            else []
+        )
         pipeline = lookup + match + project + sort + subset
         # Execute the aggregation pipeline
         results = list(self._chunks(name).aggregate(pipeline))[0:top]
@@ -147,7 +156,7 @@ class MongoDBVectorStore(VectorStoreBackend):
         doc_ids = self._documents(name).find(filter, {'_id': 1})
         self._documents(name).delete_many(filter)
         self._chunks(name).delete_many({
-            'document_id': {'$in': [doc['_id'] for doc in doc_ids]}
+            'document_id': {'$in': [doc['_id'] for doc in doc_ids]},
         })
 
     def attributes(self, name, key=None):
@@ -179,9 +188,9 @@ class MongoDBVectorStore(VectorStoreBackend):
                 "$group": {
                     "_id": {
                         "key": "$keyValuePairs.k",  # Group by the key
-                        "value": "$keyValuePairs.v"  # Group by the value
+                        "value": "$keyValuePairs.v",  # Group by the value
                     },
-                    "count": {"$sum": 1}  # Count occurrences
+                    "count": {"$sum": 1},  # Count occurrences
                 }
             },
             {
@@ -189,15 +198,15 @@ class MongoDBVectorStore(VectorStoreBackend):
                     "key": "$_id.key",  # Restructure the output
                     "value": "$_id.value",
                     "count": 1,
-                    "_id": 0  # Exclude the default _id field
+                    "_id": 0,  # Exclude the default _id field
                 }
             },
             {
                 "$sort": {
                     "key": 1,  # Sort by key
-                    "value": 1  # Sort by value
+                    "value": 1,  # Sort by value
                 }
-            }
+            },
         ]
         data = self._documents(name).aggregate(pipeline)
         results = {}

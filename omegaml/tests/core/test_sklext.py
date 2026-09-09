@@ -25,7 +25,7 @@ class OnlinePipelineTests(TestCase):
         ])
         # generate some data
         X, y = make_regression(100, 100, random_state=42)
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
         # fit, predict in an online manner
         for i in range(100):
             piple.partial_fit(X_train[0:30], y_train[0:30])

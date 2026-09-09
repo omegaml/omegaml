@@ -12,12 +12,14 @@ class InMemoryVectorStore(VectorStoreBackend):
     """
     In-memory vector store for storing documents and their embeddings.
     """
+
     KIND = 'vecmem'
     PROMOTE = 'metadata'
 
     def load(self, name, store=None, vector_size=None, embedding_model=None, index_cls=None, **kwargs):
-        super().load(name, store=store, vector_size=vector_size, embedding_model=embedding_model,
-            index_cls=index_cls, **kwargs)
+        super().load(
+            name, store=store, vector_size=vector_size, embedding_model=embedding_model, index_cls=index_cls, **kwargs
+        )
         store = INMEMORY_VECTOR_STORE.setdefault(name, {})
         self.documents = store.setdefault('documents', {})  # Maps document IDs to their metadata
         self.chunks = store.setdefault('chunks', {})  # Maps document IDs to lists of chunks
@@ -29,11 +31,10 @@ class InMemoryVectorStore(VectorStoreBackend):
         return bool(re.match(r'^(vecmem|vector\+memory)://', str(obj)))
 
     def list(self, name):
-        return [{
-            'id': doc_id,
-            'source': doc['source'],
-            'attributes': doc['attributes'],
-        } for doc_id, doc in self.documents.items()]
+        return [
+            {'id': doc_id, 'source': doc['source'], 'attributes': doc['attributes']}
+            for doc_id, doc in self.documents.items()
+        ]
 
     def insert_chunks(self, chunks, name, embeddings, attributes, **kwargs):
         doc_id = len(self.documents) + 1  # Simple ID generation
@@ -42,10 +43,7 @@ class InMemoryVectorStore(VectorStoreBackend):
         attributes.setdefault('source', source)
         attributes.setdefault('tags', [])
         # Store the document
-        self.documents[doc_id] = {
-            'source': source,
-            'attributes': attributes,
-        }
+        self.documents[doc_id] = {'source': source, 'attributes': attributes}
 
         # Store the chunks and their embeddings
         self.chunks[doc_id] = []
@@ -60,9 +58,11 @@ class InMemoryVectorStore(VectorStoreBackend):
         distance = distance or 'l2'
         distances = []
         all_match = lambda filter: all(
-            set(value).issubset(self.documents[doc_id]['attributes'][key]) for key, value in filter.items())
+            set(value).issubset(self.documents[doc_id]['attributes'][key]) for key, value in filter.items()
+        )
         any_match = lambda filter: any(
-            str(value) == str(self.documents[doc_id]['attributes'][key]) for key, value in filter.items())
+            str(value) == str(self.documents[doc_id]['attributes'][key]) for key, value in filter.items()
+        )
         for doc_id, embeddings in self.embeddings.items():
             if filter and not (all_match(filter) or any_match(filter)):
                 continue
@@ -84,7 +84,7 @@ class InMemoryVectorStore(VectorStoreBackend):
                 'source': self.documents[doc_id]['source'],
                 'attributes': self.documents[doc_id]['attributes'],
                 'text': ' '.join(self.chunks[doc_id]),
-                'distance': dist
+                'distance': dist,
             })
         return results
 

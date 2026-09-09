@@ -1,23 +1,24 @@
 import builtins
 import datetime
-import flask
 import inspect
 import json
 import logging
+import re
+from functools import wraps
+from urllib.parse import unquote, urljoin
+
+import flask
 import numpy as np
 import pandas as pd
-import re
-from flask import Blueprint, render_template, url_for, Response
-from flask_restx import Resource, fields, Api, marshal_with
+from flask import Blueprint, Response, render_template, url_for
+from flask_restx import Api, Resource, fields, marshal_with
 from flask_restx.apidoc import apidoc
-from functools import wraps
 from mongoengine import DoesNotExist
-from urllib.parse import unquote, urljoin
 from werkzeug.exceptions import NotFound
 
 from omegaml import _base_config
-from omegaml.backends.restapi.asyncrest import AsyncTaskResourceMixin, AsyncResponseMixin, resolve
-from omegaml.server.restapi.util import OmegaResourceMixin, strict, AnyObject
+from omegaml.backends.restapi.asyncrest import AsyncResponseMixin, AsyncTaskResourceMixin, resolve
+from omegaml.server.restapi.util import AnyObject, OmegaResourceMixin, strict
 from omegaml.util import isTrue
 
 logger = logging.getLogger(__name__)
@@ -29,8 +30,7 @@ omega_api = None
 
 class RemoteableSwaggerApi(Api):
     def render_doc(self):
-        return render_template("swagger-ui.html", title=self.title,
-                               specs_url=self.remote_specs_url or self.specs_url)
+        return render_template("swagger-ui.html", title=self.title, specs_url=self.remote_specs_url or self.specs_url)
 
 
 class marshal_with_streaming:
@@ -69,11 +69,9 @@ class marshal_with_streaming:
             return marshal_one(resp)
 
         def marshal_one(resp):
-            from flask import has_app_context
-            from flask import current_app
-            from flask import request
-            from flask_restx.utils import unpack
+            from flask import current_app, has_app_context, request
             from flask_restx import marshal
+            from flask_restx.utils import unpack
 
             mask = self.mask
             if has_app_context():
@@ -94,9 +92,7 @@ class marshal_with_streaming:
                     headers,
                 )
             else:
-                return marshal(
-                    resp, self.fields, self.envelope, self.skip_none, mask, self.ordered
-                )
+                return marshal(resp, self.fields, self.envelope, self.skip_none, mask, self.ordered)
 
         return wrapper
 
@@ -105,7 +101,7 @@ marshal_with.__call__ = marshal_with_streaming.__call__
 
 
 def create_app(url_prefix=None):
-    """ create the omega-api blueprint
+    """create the omega-api blueprint
 
     This creates the requires blueprint for the Swagger UI and the omegaml REST API.
     The blueprint is created with the given url_prefix, or the default '/api'. The
@@ -118,13 +114,15 @@ def create_app(url_prefix=None):
     the OMEGA_HUB_URL env variable to the client-reachable URL (e.g. omegaml.mycorp.com).
     """
     global omega_api
-    omega_bp = Blueprint('omega-api',
-                         __name__,
-                         url_prefix=url_prefix)
-    omega_api = api = RemoteableSwaggerApi(omega_bp, doc='/api/doc', version='1.0',
-                                           default='omegaml-restapi',
-                                           default_label='omega-ml REST API',
-                                           default_mediatype='application/json')
+    omega_bp = Blueprint('omega-api', __name__, url_prefix=url_prefix)
+    omega_api = api = RemoteableSwaggerApi(
+        omega_bp,
+        doc='/api/doc',
+        version='1.0',
+        default='omegaml-restapi',
+        default_label='omega-ml REST API',
+        default_mediatype='application/json',
+    )
     apidoc.url_prefix = url_prefix
     # set up swagger ui, if not local
     # -- swagger.json is provided by the hub
@@ -150,74 +148,96 @@ def create_app(url_prefix=None):
 
 
 def add_api_endpoints(api):
-    PredictInput = strict(api).model('ModelInputSchema', {
-        'columns': fields.List(fields.String),
-        'data': fields.List(fields.Raw),
-        'shape': fields.List(fields.Integer),
-    })
+    PredictInput = strict(api).model(
+        'ModelInputSchema',
+        {
+            'columns': fields.List(fields.String),
+            'data': fields.List(fields.Raw),
+            'shape': fields.List(fields.Integer),
+        },
+    )
 
-    PredictOutput = api.model('PredictOutput', {
-        'model': fields.String,
-        'result': fields.Raw,
-        'resource_uri': fields.String,
-    })
+    PredictOutput = api.model(
+        'PredictOutput',
+        {
+            'model': fields.String,
+            'result': fields.Raw,
+            'resource_uri': fields.String,
+        },
+    )
 
-    TaskInput = strict(api).model('TaskInput', {
-        'resource_uri': fields.String,
-    })
+    TaskInput = strict(api).model(
+        'TaskInput',
+        {
+            'resource_uri': fields.String,
+        },
+    )
 
-    TaskOutput = strict(api).model('TaskOutput', {
-        'task_id': fields.String,
-        'status': fields.String,
-        'response': fields.Raw
-    })
+    TaskOutput = strict(api).model(
+        'TaskOutput',
+        {
+            'task_id': fields.String,
+            'status': fields.String,
+            'response': fields.Raw,
+        },
+    )
 
-    DatasetInput = api.model('DatasetInput', {
-        'data': fields.Raw,
-        'dtypes': fields.Raw,
-        'append': fields.Boolean,
-    })
+    DatasetInput = api.model(
+        'DatasetInput',
+        {
+            'data': fields.Raw,
+            'dtypes': fields.Raw,
+            'append': fields.Boolean,
+        },
+    )
 
-    DatasetIndex = api.model('DatasetIndex', {
-        'values': fields.List(fields.Raw),
-        'type': fields.String,
-    })
+    DatasetIndex = api.model(
+        'DatasetIndex',
+        {
+            'values': fields.List(fields.Raw),
+            'type': fields.String,
+        },
+    )
 
-    DatasetQueryOutput = api.model('DatasetQueryOutput', {
-        'data': fields.Raw,
-        'index': fields.Nested(DatasetIndex)
-    })
+    DatasetQueryOutput = api.model(
+        'DatasetQueryOutput',
+        {
+            'data': fields.Raw,
+            'index': fields.Nested(DatasetIndex),
+        },
+    )
 
-    ScriptInput = api.model('ScriptInput', {
-    })
+    ScriptInput = api.model('ScriptInput', {})
 
-    ScriptOutput = api.model('ScriptOutput', {
-        'resource_uri': fields.String,
-        'script': fields.String,
-        'result': fields.Raw,
-        'runtimes': fields.Float,
-        'started': fields.DateTime,
-        'ended': fields.DateTime,
-    })
+    ScriptOutput = api.model(
+        'ScriptOutput',
+        {
+            'resource_uri': fields.String,
+            'script': fields.String,
+            'result': fields.Raw,
+            'runtimes': fields.Float,
+            'started': fields.DateTime,
+            'ended': fields.DateTime,
+        },
+    )
 
-    ServiceInput = api.model('ServiceInput', {
-    })
+    ServiceInput = api.model('ServiceInput', {})
 
-    ServiceOutput = api.model('ServiceOutput', {
-        '*': AnyObject
-    })
+    ServiceOutput = api.model('ServiceOutput', {'*': AnyObject})
 
-    JobInput = api.model('JobInput', {
-    })
+    JobInput = api.model('JobInput', {})
 
-    JobOutput = api.model('JobOutput', {
-        'resource_uri': fields.String,
-        'job': fields.String,
-        'source_job': fields.String,
-        'job_results': fields.Raw,
-        'job_runs': fields.List(fields.Raw),
-        'created': fields.DateTime,
-    })
+    JobOutput = api.model(
+        'JobOutput',
+        {
+            'resource_uri': fields.String,
+            'job': fields.String,
+            'source_job': fields.String,
+            'job_results': fields.Raw,
+            'job_runs': fields.List(fields.Raw),
+            'created': fields.DateTime,
+        },
+    )
 
     @api.errorhandler(Exception)
     def errorhandler(e):
@@ -295,8 +315,9 @@ def add_api_endpoints(api):
     @api.route('/api/service/<path:resource_id>/', defaults={'action': '*'}, methods=['GET', 'PUT', 'POST', 'DELETE'])
     @api.route('/api/service/<path:resource_id>/<string:action>', methods=['GET', 'PUT', 'POST', 'DELETE'])
     @api.route('/api/v1/service/<path:resource_id>', defaults={'action': '*'}, methods=['GET', 'PUT', 'POST', 'DELETE'])
-    @api.route('/api/v1/service/<path:resource_id>/', defaults={'action': '*'},
-               methods=['GET', 'PUT', 'POST', 'DELETE'])
+    @api.route(
+        '/api/v1/service/<path:resource_id>/', defaults={'action': '*'}, methods=['GET', 'PUT', 'POST', 'DELETE']
+    )
     @api.route('/api/v1/service/<path:resource_id>/<string:action>', methods=['GET', 'PUT', 'POST', 'DELETE'])
     # we expose service resources as /api/v1/service and /api/service
     # rationale: this is user-defined, and /v1/ does not make sense in this case
@@ -353,17 +374,14 @@ def add_api_endpoints(api):
             restore filter kwargs for query in om.datasets.get
             """
             # -- get filters as specified on request query args
-            fltkwargs = {k: v for k, v in fltparams.items()
-                         if k not in ['orient', 'limit', 'skip', 'page']}
+            fltkwargs = {k: v for k, v in fltparams.items() if k not in ['orient', 'limit', 'skip', 'page']}
             # -- get dtypes of dataframe and convert filter values
             metadata = om.datasets.metadata(name)
             kind_meta = metadata.kind_meta or {}
             dtypes = kind_meta.get('dtypes')
             # get numpy/python typemap. this is required for Py3 support
             # adopted from https://stackoverflow.com/a/34919415
-            np_typemap = {v: getattr(builtins, k)
-                          for k, v in np.sctypeDict.items()
-                          if k in vars(builtins)}
+            np_typemap = {v: getattr(builtins, k) for k, v in np.sctypeDict.items() if k in vars(builtins)}
             for k, v in fltkwargs.items():
                 # -- get column name without operator (e.g. x__gt => x)
                 col = k.split('__')[0]
@@ -395,7 +413,7 @@ def add_api_endpoints(api):
                 'index': {
                     'values': index_values,
                     'type': index_type,
-                }
+                },
             }
 
         @api.expect(DatasetInput, validate=True)
@@ -413,8 +431,7 @@ def add_api_endpoints(api):
             if dtypes:
                 # due to https://github.com/pandas-dev/pandas/issues/14655#issuecomment-260736368
                 dtypes = {k: np.dtype(v) for k, v in dtypes.items()}
-            df = pd.DataFrame.from_dict(api.payload.get('data'),
-                                        orient=orient).astype(dtypes)
+            df = pd.DataFrame.from_dict(api.payload.get('data'), orient=orient).astype(dtypes)
             om.datasets.put(df, dataset_id, append=append)
             return '', 200
 
@@ -432,12 +449,24 @@ def add_api_endpoints(api):
 
     @api.route('/api/v2/ai/<path:model_id>/<string:action>', methods=['POST', 'PUT'])
     @api.route('/api/v2/ai/<path:model_id>/', defaults={'action': 'metadata'}, methods=['GET'])
-    @api.route('/api/openai/v1/chat/completions', defaults={'action': 'complete', 'model_id': '_query_'},
-               methods=['PUT', 'POST'], endpoint='openai_chat_completions')
-    @api.route('/api/openai/v1/embeddings', defaults={'action': 'embed', 'model_id': '_query_'},
-               methods=['PUT', 'POST'], endpoint='openai_embeddings')
-    @api.route('/api/openai/v1/models', defaults={'action': 'models', 'model_id': '_blank_'},
-               methods=['GET'], endpoint='openai_models')
+    @api.route(
+        '/api/openai/v1/chat/completions',
+        defaults={'action': 'complete', 'model_id': '_query_'},
+        methods=['PUT', 'POST'],
+        endpoint='openai_chat_completions',
+    )
+    @api.route(
+        '/api/openai/v1/embeddings',
+        defaults={'action': 'embed', 'model_id': '_query_'},
+        methods=['PUT', 'POST'],
+        endpoint='openai_embeddings',
+    )
+    @api.route(
+        '/api/openai/v1/models',
+        defaults={'action': 'models', 'model_id': '_blank_'},
+        methods=['GET'],
+        endpoint='openai_models',
+    )
     class GenerativeAIResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
         result_uri = '/api/v1/task/{id}/result'
 

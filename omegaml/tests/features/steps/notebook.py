@@ -5,7 +5,7 @@ from behave import then, when
 from omegaml.tests.features.util import Notebook, jburl
 
 
-@when(u'we open jupyter')
+@when('we open jupyter')
 def open_jupyter(ctx):
     br = ctx.browser
     br.visit(jburl(ctx.feature.jynb_url, ''))
@@ -18,7 +18,7 @@ def open_jupyter(ctx):
     nb.jupyter_home
 
 
-@when(u'we create a notebook')
+@when('we create a notebook')
 def create_notebook(ctx):
     br = ctx.browser
     nb = Notebook(br)
@@ -36,14 +36,14 @@ def create_notebook(ctx):
     assert not br.is_text_present('error while saving')
 
 
-@when(u'we restart the notebook')
+@when('we restart the notebook')
 def restart_kernel(ctx):
     br = ctx.browser
     nb = Notebook(br)
     nb.restart(wait=True)
 
 
-@when(u'we create a folder')
+@when('we create a folder')
 def create_folder(ctx):
     br = ctx.browser
     nb = Notebook(br)
@@ -52,7 +52,7 @@ def create_folder(ctx):
     nb.open_folder('Untitled Folder')
 
 
-@then(u'we can list datasets in omegaml')
+@then('we can list datasets in omegaml')
 def list_datasets(ctx):
     # test omegaml functionality
     br = ctx.browser
@@ -78,7 +78,7 @@ def list_datasets(ctx):
     assert expected in current, "Expected {expected}, got {current}".format(**locals())
 
 
-@then(u'we can add a notebook in the folder')
+@then('we can add a notebook in the folder')
 def add_notebook_in_folder(ctx):
     br = ctx.browser
     br.visit(jburl(ctx.feature.jynb_url, '', nbstyle='lab'))

@@ -6,6 +6,7 @@ from omegaml.mixins.store.cached import CachedObjectMixin
 class CachedMixinTests(TestCase):
     def setUp(self):
         from omegaml import Omega
+
         self.om = Omega()
         self.om.datasets.register_mixin(CachedObjectMixin)
         self.om.datasets.drop('test_cached', force=True)
@@ -52,4 +53,3 @@ class CachedMixinTests(TestCase):
         self.assertNotEqual(id(obj), id(obj_))
         obj = self.om.datasets.get('test_cached')
         self.assertEqual(id(obj), id(obj_))
-

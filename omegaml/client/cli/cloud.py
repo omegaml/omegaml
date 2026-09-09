@@ -1,10 +1,11 @@
-import pandas as pd
-import requests
 import shlex
 import subprocess
 from datetime import datetime, timedelta
-from tabulate import tabulate
 from time import sleep
+
+import pandas as pd
+import requests
+from tabulate import tabulate
 
 from omegaml import mongoshim
 from omegaml.client.auth import AuthenticationEnv
@@ -86,6 +87,7 @@ class CloudCommandBase(CommandBase):
       $ om cloud metrics pod-cpu-usage --since 30m
       $ om cloud metrics pod-memory-usage --start 20dec2020T0100 --end20dec2020T0800
     """
+
     command = 'cloud'
 
     @property
@@ -107,8 +109,7 @@ class CloudCommandBase(CommandBase):
         if not apikey:
             apikey = self.ask('Apikey:')
         auth_env = AuthenticationEnv().secure()
-        auth_env.save_userconfig_from_apikey(configfile, userid, apikey, qualifier=qualifier,
-                                             api_url=api_url)
+        auth_env.save_userconfig_from_apikey(configfile, userid, apikey, qualifier=qualifier, api_url=api_url)
 
     def config(self):
         om = self.om
@@ -204,6 +205,7 @@ class CloudCommandBase(CommandBase):
 
         """
         import tqdm
+
         with tqdm.tqdm(unit='s', total=30) as progress:
             while True:
                 progress.update(1)
@@ -224,7 +226,7 @@ class CloudCommandBase(CommandBase):
         kinds = ('runtime', 'pods', 'nodes', 'storage')
         om = self.om
         auth = self._restapi_auth()
-        for kind in (filter(lambda k: self.args.get(k), kinds)):
+        for kind in filter(lambda k: self.args.get(k), kinds):
             status_meth = getattr(self, f'status_{kind}')
             status_meth(kind, auth)
             break
@@ -233,8 +235,13 @@ class CloudCommandBase(CommandBase):
 
     def metrics(self):
         # available metrics
-        metrics = ('node_cpu_usage', 'node_memory_usage', 'node_disk_usage',
-                   'pod_memory_usage', 'pod_cpu_usage')
+        metrics = (
+            'node_cpu_usage',
+            'node_memory_usage',
+            'node_disk_usage',
+            'pod_memory_usage',
+            'pod_cpu_usage',
+        )
         # column in prom2df dataframe for given metric group
         metric_group_column = {
             'node': 'node',
@@ -279,6 +286,7 @@ class CloudCommandBase(CommandBase):
                 return
             if should_plot:
                 import plotext as plx
+
                 # as returned by plx.get_colors
                 colors = 'red', 'green', 'yellow', 'organge', 'blue', 'violet', 'cyan'
                 metric_group = metric_group_column[metric_name.split('_', 1)[0]]
@@ -309,7 +317,9 @@ class CloudCommandBase(CommandBase):
         return data
 
     def _get_logs(self, podname, since, auth):
-        url = f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/logs/{podname}?since={since}&provider={self._provider}'
+        url = (
+            f'https://hub.omegaml.io/apps/omops/dashboard/api/v1/logs/{podname}?since={since}&provider={self._provider}'
+        )
         resp = requests.get(url, auth=auth)
         data = resp.json()
         return data
@@ -318,13 +328,19 @@ class CloudCommandBase(CommandBase):
         data = self._get_status(kind, auth)
         active_tasks = data['objects'][0].get('active') or {}
         queues = data['objects'][0]['queues']
-        workers = [{'worker': k,
-                    'tasks': len(v),
-                    'labels': ','.join(q['name']
-                                       for q in queues.get(k, [])
-                                       # filter amq internal queues
-                                       if not q['name'].startswith('amq.')),
-                    } for k, v in active_tasks.items()]
+        workers = [
+            {
+                'worker': k,
+                'tasks': len(v),
+                'labels': ','.join(
+                    q['name']
+                    for q in queues.get(k, [])
+                    # filter amq internal queues
+                    if not q['name'].startswith('amq.')
+                ),
+            }
+            for k, v in active_tasks.items()
+        ]
         if workers:
             print(tabulate(workers, headers='keys', showindex=False))
         else:
@@ -346,7 +362,7 @@ class CloudCommandBase(CommandBase):
             # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
             CONVERSION = {
                 'Ki': 1024,
-                'Mi': 1024 ** 2,
+                'Mi': 1024**2,
             }
             if v[-2:] in CONVERSION:
                 value, unit = int(v[0:-2]), v[-2:]
@@ -415,9 +431,9 @@ class CloudCommandBase(CommandBase):
 
 
 def prom2df(data, metric_name):
-    """ convert prom response to pandas dataframe
-    """
+    """convert prom response to pandas dataframe"""
     import pandas as pd
+
     def parse_vector(metrics):
         for item in metrics:
             data = item['metric']

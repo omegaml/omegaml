@@ -2,7 +2,7 @@ from omegaml.util import extend_instance
 
 
 class RuntimeProxyBase:
-    """ Base class for runtime proxies
+    """Base class for runtime proxies
 
     Runtime proxies are used to provide a runtime context for a specific type
     of object, such as a model, script or job. This base class provides
@@ -19,7 +19,7 @@ class RuntimeProxyBase:
         self._apply_require()
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.name})'
+        return f'{self.__class__.__name__}({self.name},)'
 
     def _apply_mixins(self):
         """
@@ -36,17 +36,23 @@ class RuntimeProxyBase:
         self.meta = meta = self.store.metadata(self.name)
         assert meta is not None, f"{self.store.prefix}{self.name} does not exist".format(**locals())
         # get common require kwargs
-        require_kwargs = meta.attributes.get('require', {})
-        tracking_specs = meta.attributes.get('tracking', {})
+        require_kwargs = meta.attributes.get(
+            'require',
+            {},
+        )
+        tracking_specs = meta.attributes.get(
+            'tracking',
+            {},
+        )
         # enable tracking by current runtime label, unless explicitly tracked
         label = self.runtime._common_kwargs['routing'].get('label')
         label = label or require_kwargs.get('label') or 'default'
         should_track = label in tracking_specs
         already_tracked = self.runtime._common_kwargs['task'].get('__experiment')
         if not already_tracked and should_track:
-            require_kwargs.update({
-                'task': dict(__experiment=meta.attributes['tracking'].get(label))
-            })
+            require_kwargs.update(
+                {'task': dict(__experiment=meta.attributes['tracking'].get(label))},
+            )
         self.runtime.require(**require_kwargs, override=False) if require_kwargs else None
 
     def require(self, label=None, always=False, drop=False, **kwargs):

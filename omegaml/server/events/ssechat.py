@@ -26,11 +26,12 @@ class Streamable(StreamableResourceMixin):
 
 def get_auth_env():
     from omegaml.client.auth import AuthenticationEnv
+
     return AuthenticationEnv.active()
 
 
 def authorized(fn):
-    """ decorator to authorize views
+    """decorator to authorize views
 
     Checks authorization cookie, aborts with HTTP 401 if not present or could not
     be authenticated. Otherwise calls the view function as is.
@@ -61,8 +62,9 @@ def authorized(fn):
     def decode_payload():
         session_id = request.cookies.get('session_id')
         token = request.cookies.get('token')
-        key = pbkdf2_hmac('sha256', Streamable.SECRET_KEY.encode('utf-8'), str(session_id).encode('utf-8'),
-                          Streamable.PBKDF_ITER)
+        key = pbkdf2_hmac(
+            'sha256', Streamable.SECRET_KEY.encode('utf-8'), str(session_id).encode('utf-8'), Streamable.PBKDF_ITER
+        )
         payload = json.loads(jwe.decrypt(token, key))
         logger.debug('key %s', key)
         logger.debug('token %s', token)
@@ -141,7 +143,7 @@ def authorized(fn):
 
 
 def sse_json(fn):
-    """ convert generator result to valid HTTP server-side event (SSE)
+    """convert generator result to valid HTTP server-side event (SSE)
 
     Usage:
         decorate a generator function as @sse_json, it will convert

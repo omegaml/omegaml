@@ -39,6 +39,7 @@ class OmegaResourceMixin(object):
     """
     helper mixin to resolve the request to a configured Omega instance
     """
+
     max_url_length = 2048
 
     def __init__(self, *args, **kwargs):
@@ -52,25 +53,30 @@ class OmegaResourceMixin(object):
     @property
     def _omega(self):
         import omegaml as om
+
         if self._omega_instance is None:
             bucket = flask.request.headers.get('bucket')
             om = self._omega_instance = om.setup()[bucket]
             try:
                 import flask_login
+
                 om.defaults.OMEGA_USERID = flask_login.current_user.get_id()
             except:
                 import getpass
+
                 om.defaults.OMEGA_USERID = getpass.getuser()
         return self._omega_instance
 
     def get_query_payload(self):
         from omegaml.server.restapi.resources import omega_api
+
         query = flask.request.args.to_dict()
         payload = tryOr(lambda: omega_api.payload, None) or {}
         return query, payload
 
     def check_object_authorization(self, pattern):
         from omegaml.server.restapi import resource_filter
+
         if resource_filter:
             if len(pattern) > self.max_url_length:
                 # SEC: Avoid ReDoS on admin-provided regular expression
@@ -81,8 +87,9 @@ class OmegaResourceMixin(object):
                 return False
         return True
 
-    def create_response_from_resource(self, generic_resource, resource_method, resource_name, resource_pk, *args,
-                                      **kwargs):
+    def create_response_from_resource(
+        self, generic_resource, resource_method, resource_name, resource_pk, *args, **kwargs
+    ):
         query, payload = self.get_query_payload()
         async_body = {
             resource_name: resource_pk,
@@ -113,9 +120,10 @@ class OmegaResourceMixin(object):
             message, status_code = e.args
         else:
             # retrieve lowest farme to get the context of the exception
+            import logging
             import traceback
             import uuid
-            import logging
+
             error_id = str(uuid.uuid4())
             tb = traceback.format_exc()
             logging.error(f"Error ID: {error_id}\n{tb}")
@@ -132,21 +140,25 @@ class OmegaResourceMixin(object):
     @property
     def _generic_model_resource(self):
         from omegaml.backends.restapi.model import GenericModelResource
+
         return GenericModelResource(self._omega, is_async=self.is_async)
 
     @property
     def _generic_script_resource(self):
         from omegaml.backends.restapi.script import GenericScriptResource
+
         return GenericScriptResource(self._omega, is_async=self.is_async)
 
     @property
     def _generic_service_resource(self):
         from omegaml.backends.restapi.service import GenericServiceResource
+
         return GenericServiceResource(self._omega, is_async=self.is_async)
 
     @property
     def _generic_job_resource(self):
         from omegaml.backends.restapi.job import GenericJobResource
+
         return GenericJobResource(self._omega, is_async=self.is_async)
 
     @property

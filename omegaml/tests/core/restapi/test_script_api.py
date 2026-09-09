@@ -76,8 +76,9 @@ class ScriptResourceTests(OmegaTestMixin, TestCase):
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster
-        resp = self.client.post(self.url('helloworld', action='run', query='text=foo'),
-                                headers=self._async_headers, json={})
+        resp = self.client.post(
+            self.url('helloworld', action='run', query='text=foo'), headers=self._async_headers, json={}
+        )
         resp = self._check_async(resp)
         self.assertHttpOK(resp)
         data = self.deserialize(resp)['response']

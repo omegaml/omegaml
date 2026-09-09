@@ -20,15 +20,17 @@ class VirtualHelperBackend(VirtualObjectBackend):
     def get(self, name, **kwargs):
         meta = self.store.metadata(name)
         hkwargs = {**kwargs, **dict(helper=False)}
-        data = self.handler(method='get', obj=None, name=name, meta=meta, store=self.store, backend=self.backend,
-                            **hkwargs)
+        data = self.handler(
+            method='get', obj=None, name=name, meta=meta, store=self.store, backend=self.backend, **hkwargs
+        )
         return data or self.backend.get(name, **kwargs)
 
     def put(self, obj, name, **kwargs):
         meta = self.store.metadata(name)
         hkwargs = {**kwargs, **dict(helper=False)}
-        handled_meta = self.handler(method='put', obj=obj, name=name, meta=meta, store=self.store, backend=self.backend,
-                                    **hkwargs)
+        handled_meta = self.handler(
+            method='put', obj=obj, name=name, meta=meta, store=self.store, backend=self.backend, **hkwargs
+        )
         meta = handled_meta or self.backend.put(obj, name, **kwargs)
         meta.kind_meta.setdefault('helper', self.handler._handler_name)
         meta.save()
@@ -45,14 +47,22 @@ class VirtualHelperBackend(VirtualObjectBackend):
         model = self.get(modelname, **kwargs)
         data = self.data_store.get(Xname)
         hkwargs = {**kwargs, **dict(helper=False)}
-        result = self.handler(method='predict', obj=model, name=modelname, meta=meta, store=self.store,
-                              backend=self.backend, data=data, **hkwargs)
+        result = self.handler(
+            method='predict',
+            obj=model,
+            name=modelname,
+            meta=meta,
+            store=self.store,
+            backend=self.backend,
+            data=data,
+            **hkwargs,
+        )
         result = result if not None else self.backend.predict(modelname, Xname=Xname, Yname=Yname, **kwargs)
         return result
 
 
 class ObjectHelperMixin:
-    """ virtual backend support
+    """virtual backend support
 
     Enables the use of any virtualobj as a dynamically loaded backend
 
@@ -94,7 +104,7 @@ class ObjectHelperMixin:
     """
 
     def put(self, obj, name, supports=None, helper=None, **kwargs):
-        """ store a virtualobj as a helper for other objects
+        """store a virtualobj as a helper for other objects
 
         Args:
             obj (any): any object supported by backends
@@ -132,8 +142,11 @@ class ObjectHelperMixin:
         meta = self.metadata(name)
         if meta:
             backend = super().get_backend(name, model_store=model_store, data_store=data_store, **kwargs)
-            helper = None if helper is False else (
-                    helper or meta.kind_meta.get('helper') or self._resolve_supports(meta=meta))
+            helper = (
+                None
+                if helper is False
+                else (helper or meta.kind_meta.get('helper') or self._resolve_supports(meta=meta))
+            )
             if helper:
                 return self._get_handler(helper, model_store, data_store, backend, **kwargs)
         return super().get_backend(name, model_store=model_store, data_store=data_store, **kwargs)
@@ -142,9 +155,15 @@ class ObjectHelperMixin:
         meta = self.metadata(name) if name else None
         backend = super().get_backend_byobj(obj, name, model_store=model_store, data_store=data_store, **kwargs)
         kind = getattr(backend, 'KIND', '__nobackend__')
-        helper = None if helper is False else (
-                helper or (meta.kind_meta.get('helper') if meta is not None else None) or
-                self._resolve_supports(obj=obj, meta=meta, kind=kind))
+        helper = (
+            None
+            if helper is False
+            else (
+                helper
+                or (meta.kind_meta.get('helper') if meta is not None else None)
+                or self._resolve_supports(obj=obj, meta=meta, kind=kind)
+            )
+        )
         if helper:
             return self._get_handler(helper, model_store, data_store, backend)
         return backend
@@ -154,8 +173,9 @@ class ObjectHelperMixin:
         handler._handler_name = helper
         model_store = model_store or self
         data_store = data_store or self
-        return VirtualHelperBackend(handler, self, model_store=model_store, data_store=data_store,
-                                    backend=backend, **kwargs)
+        return VirtualHelperBackend(
+            handler, self, model_store=model_store, data_store=data_store, backend=backend, **kwargs
+        )
 
     def _resolve_supports(self, obj=None, meta=None, kind=None):
         helpers_meta = self.metadata('.helpers')

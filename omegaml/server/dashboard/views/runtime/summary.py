@@ -12,18 +12,18 @@ class RuntimeView(BaseView):
     @fv.route('/runtime')
     def summary(self):
         workers = self._worker_status()
-        return render_template('dashboard/runtime/summary.html',
-                               segment='runtime',
-                               items=workers,
-                               attributes={},
-                               buckets=self.buckets)
+        return render_template(
+            'dashboard/runtime/summary.html',
+            segment='runtime',
+            items=workers,
+            attributes={},
+            buckets=self.buckets,
+        )
 
     @fv.route('/runtime/worker/<name>')
     def worker(self, name):
         status = self._worker_status(name, detail=True)
-        return render_template('dashboard/runtime/worker_detail.html',
-                               status=status,
-                               attributes={})
+        return render_template('dashboard/runtime/worker_detail.html', status=status, attributes={})
 
     @cachetools.cached(cache=cachetools.TTLCache(maxsize=10, ttl=5))
     def _worker_status(self, name=None, detail=False):
@@ -53,16 +53,20 @@ class RuntimeView(BaseView):
         # filter and prepare log data
         mdf = self.om.logger.dataset.get(lazy=True)
         sortprefix = '-' if sortascending else ''
-        logdata = (mdf
-                   .skip(start)
-                   .head(nrows)
-                   .sort(f'{sortprefix}{sortby}')
-                   .query(text__contains=query)
-                   .value)
+        logdata = (
+            mdf
+            .skip(start)
+            .head(nrows)
+            .sort(f'{sortprefix}{sortby}')
+            .query(
+                text__contains=query,
+            )
+            .value
+        )
         if len(logdata) > 0:
-            logdata = (logdata
-                       .reset_index()
-                       .to_dict(orient='records'))
+            logdata = logdata.reset_index().to_dict(
+                orient='records',
+            )
         else:
             logdata = []
         return {
@@ -75,55 +79,67 @@ class RuntimeView(BaseView):
     def status(self):
         om = self.om
         status = om.status(data=True)
-        return render_template('dashboard/runtime/status.html',
-                               data=status)
+        return render_template('dashboard/runtime/status.html', data=status)
 
     @fv.route('/runtime/status/plot/health')
     def api_status_plot_health(self):
         # FIXME replace dummy data with monitoring data (.system experiment)
+        import pandas as pd
         import plotly.express as px
         from plotly.io import json
-        import pandas as pd
+
         by_status = pd.DataFrame({
             'status': ['failed', 'healthy', 'pending'],
             'count': [2, 9, 0],
         })
-        fig = px.pie(data_frame=by_status,
-                     values='count',
-                     names='status')  # explicitley mark each data point
+        fig = px.pie(
+            data_frame=by_status,
+            values='count',
+            names='status',
+        )  # explicitley mark each data point
         return json.to_json(fig)
 
     @fv.route('/runtime/status/plot/uptime')
     def api_status_plot_uptime(self):
-        import plotly.express as px
         import pandas as pd
+        import plotly.express as px
+
         om = self.om
         sysexp = om.runtime.experiment('.system')
         logdf = sysexp.data(event='monitor')
         # group by day and determine health status
         if len(logdf) > 0:
-            grouped = logdf.groupby(logdf['dt'].dt.date).agg(
-                status=(
-                    'value', lambda x: 'healthy' if sum(d['status'] == 'ok' for d in x) / len(x) > 0.01 else 'failed'),
-                count=('value', 'size')  # count of events
-            ).reset_index()
+            grouped = (
+                logdf
+                .groupby(logdf['dt'].dt.date)
+                .agg(
+                    status=(
+                        'value',
+                        lambda x: 'healthy' if sum(d['status'] == 'ok' for d in x) / len(x) > 0.01 else 'failed',
+                    ),
+                    count=('value', 'size'),  # count of events
+                )
+                .reset_index()
+            )
             # rename columns for plotting
             dailydf = grouped.rename(columns={'dt': 'date'})
         else:
             dailydf = pd.DataFrame(columns=['date', 'status', 'count'])
         # create full range
         end_date = datetime.utcnow()
-        date_range = pd.date_range(end=end_date,
-                                   periods=90,
-                                   freq='D',
-                                   normalize=True)
+        date_range = pd.date_range(end=end_date, periods=90, freq='D', normalize=True)
         full_df = pd.DataFrame({'date': date_range})
         full_df['date'] = full_df['date'].dt.date
         dailydf = dailydf.merge(full_df, on='date', how='right')
         dailydf['count'] = 1
         dailydf['status'] = dailydf['status'].fillna('unknown')
-        fig = px.bar(dailydf, x="date", y="count", color="status",
-                     color_discrete_map={'failed': 'red', 'healthy': 'green', 'unknown': 'gray'})
+        fig = px.bar(
+            dailydf,
+            x="date",
+            y="count",
+            color="status",
+            color_discrete_map={'failed': 'red', 'healthy': 'green', 'unknown': 'gray'},
+        )
         fig.update_layout(showlegend=False, margin={'l': 0, 'r': 0, 't': 0, 'b': 0, 'autoexpand': True})
         fig.update_yaxes(visible=False)
         return fig.to_json()
@@ -134,6 +150,7 @@ class RuntimeView(BaseView):
         import plotly.express as px
         from plotly.io import json
 
+        # FIXME dynamic date range current year
         df = pd.DataFrame({
             'date': pd.date_range('1.1.2024', '31.1.2024'),
             'load_pct': np.random.rand(31),
@@ -146,6 +163,7 @@ class RuntimeView(BaseView):
     def api_runtime_dbstats_plot(self):
         import plotly.express as px
         from plotly.io import json
+
         om = self.om
         dbstats = om.datasets.dbstats(scale='gb')
         dfx = dbstats.loc[['fsAvailableSize', 'fsUsedSize']]
@@ -156,6 +174,7 @@ class RuntimeView(BaseView):
     def api_runtime_repostats_plot(self):
         import plotly.express as px
         from plotly.io import json
+
         om = self.om
         stats = om.stats()
         fig = px.pie(stats, names=stats.index, values=stats['count'])

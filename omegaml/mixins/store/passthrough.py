@@ -7,7 +7,7 @@ _max_size = os.environ.get('OMEGA_PASSTHROUGH_MAX_SIZE', 1024 * 1024 * 10)
 
 
 class PassthroughMixin:
-    """ Resolve a PasstroughDataset to its actual value
+    """Resolve a PasstroughDataset to its actual value
 
     Behaves as a normal dataset, however retrieves the value from the in-memory
     representation, i.e. PasshroughDataset.data. This should only be used
@@ -38,7 +38,7 @@ class PassthroughMixin:
 
 
 class PassthroughDataset(str):
-    """ A dataset that exists in-memory when passed through om.runtime.model()
+    """A dataset that exists in-memory when passed through om.runtime.model()
 
     Rationale:
 
@@ -61,6 +61,7 @@ class PassthroughDataset(str):
         - SimpleTracker._common_log_data resolves the actual value of any
           positional argument passed as a PassthroughDataset
     """
+
     # cut off to passthrough
     # -- checked by ModelMixin.__ensure_data_is_stored
     # -- rabbitmq max size with reasonable performance is considered 128MB

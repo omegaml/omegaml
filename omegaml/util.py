@@ -48,6 +48,7 @@ __settings = None
 def is_dataframe(obj):
     try:
         import pandas as pd
+
         return isinstance(obj, pd.DataFrame)
     except:
         return False
@@ -56,6 +57,7 @@ def is_dataframe(obj):
 def is_series(obj):
     try:
         import pandas as pd
+
         return isinstance(obj, pd.Series) and not isinstance(obj, pd.DataFrame)
     except:
         return False
@@ -64,13 +66,14 @@ def is_series(obj):
 def is_ndarray(obj):
     try:
         import numpy as np
+
         return isinstance(obj, np.ndarray)
     except:
         False
 
 
 def settings(reload=False):
-    """ wrapper to get omega settings from either django or omegaml.defaults
+    """wrapper to get omega settings from either django or omegaml.defaults
 
     This is a settings (defaults) loader. It returns a cached DefaultsContext
     that is initialised from omegaml.defaults. When running in Django, the
@@ -101,19 +104,24 @@ def settings(reload=False):
         to the new.
     """
     from omegaml import _base_config as omdefaults
+
     global __settings
     if not reload and __settings is not None:
         return __settings
     try:
         # see if we're running as a django app
         from django.conf import settings as djsettings  # @UnresolvedImport
+
         try:
             getattr(djsettings, 'SECRET_KEY')
         except Exception as e:
             from warnings import warn
-            warn("Using omegaml.defaults because Django was not initialized."
-                 "Try importing omegaml within a method instead of at the "
-                 "module level")
+
+            warn(
+                "Using omegaml.defaults because Django was not initialized."
+                "Try importing omegaml within a method instead of at the "
+                "module level"
+            )
             raise
         else:
             defaults = djsettings
@@ -123,6 +131,7 @@ def settings(reload=False):
     else:
         # get default omega settings into django settings if not set there
         from omegaml import _base_config as omdefaults
+
         for k in dir(omdefaults):
             if k.isupper() and not hasattr(defaults, k):
                 setattr(defaults, k, getattr(omdefaults, k))
@@ -135,7 +144,7 @@ def settings(reload=False):
 
 
 def override_settings(**kwargs):
-    """ test support """
+    """test support"""
     cfgvars = settings()
     for k, v in kwargs.items():
         setattr(cfgvars, k, v)
@@ -148,7 +157,7 @@ def override_settings(**kwargs):
 
 
 def delete_database():
-    """ test support """
+    """test support"""
     from omegaml.mongoshim import MongoClient
 
     mongo_url = settings().OMEGA_MONGO_URL
@@ -196,6 +205,7 @@ def load_class(requested_class):
     class from module, otherwise return requested_class as is
     """
     import importlib
+
     if isinstance(requested_class, str):
         if requested_class in CLASS_CACHE:
             return CLASS_CACHE.get(requested_class)
@@ -207,8 +217,9 @@ def load_class(requested_class):
             return cls
         except Exception as e:
             logging.debug(
-                'could not load module %s for class %s due to %s. sys.path=%s' % (
-                    module_name, class_name, str(e), str(sys.path)))
+                'could not load module %s for class %s due to %s. sys.path=%s'
+                % (module_name, class_name, str(e), str(sys.path))
+            )
             raise
     return requested_class
 
@@ -219,16 +230,18 @@ def get_rdd_from_df(df):
     """
     from pyspark import SparkContext, SQLContext
     from pyspark.mllib.linalg import Vectors
+
     sc = SparkContext.getOrCreate()
     from warnings import warn
+
     warn(
         "get_rdd_from_df creates a spark context, it is recommended"
         " that you use SparkContext.getOrCreate() to prevent multiple context"
-        " creation")
+        " creation"
+    )
     sqlContext = SQLContext(sc)
     spark_df = sqlContext.createDataFrame(df)
-    rdd = spark_df.rdd.map(lambda data: Vectors.dense(
-        [float(x) for x in data]))
+    rdd = spark_df.rdd.map(lambda data: Vectors.dense([float(x) for x in data]))
     return rdd
 
 
@@ -239,6 +252,7 @@ def get_labeledpoints(Xname, Yname):
     from pyspark.mllib.regression import LabeledPoint
 
     import omegaml as om
+
     # import from datastore
     X = om.datasets.get(Xname)
     Y = om.datasets.get(Yname)
@@ -254,6 +268,7 @@ def get_labeled_points_from_rdd(rdd):
     returns a labeledpoint from the RDD provided
     """
     from pyspark.mllib.regression import LabeledPoint
+
     return rdd.map(lambda x: LabeledPoint(float(x[0]), x[1:]))
 
 
@@ -273,12 +288,9 @@ def unravel_index(df, row_count=0):
     :return: the unravelled dataframe, meta
     """
     # remember original names
-    idx_meta = {
-        'names': df.index.names,
-    }
+    idx_meta = {'names': df.index.names}
     # convert index names so we can restore them later
-    store_idxnames = ['_idx#{}_{}'.format(i, name or i)
-                      for i, name in enumerate(idx_meta['names'])]
+    store_idxnames = ['_idx#{}_{}'.format(i, name or i) for i, name in enumerate(idx_meta['names'])]
     df.index.names = store_idxnames
     unravelled_df, idx_meta = df.reset_index(), idx_meta
     # store row ids
@@ -351,6 +363,7 @@ def jsonescape(s):
 def grouper(n, iterable):
     # https://stackoverflow.com/a/8998040
     import itertools
+
     it = iter(iterable)
     while True:
         chunk_it = itertools.islice(it, n)
@@ -366,10 +379,11 @@ def cursor_to_dataframe(cursor, chunk_size=10000, parser=None):
     # works by building a set of smaller dataframes to reduce memory
     # consumption. Note chunks are of size max. chunk_size.
     import pandas as pd
+
     frames = []
     if hasattr(cursor, 'count_documents'):
         count = cursor.count_documents()
-        chunk_size = max(chunk_size, int(count * .1))
+        chunk_size = max(chunk_size, int(count * 0.1))
     else:
         # CommandCursors don't have .count_documents, go as long as we can
         count = None
@@ -434,6 +448,7 @@ def reshaped(data):
     """
     import numpy as np
     import pandas as pd
+
     if isinstance(data, (pd.Series, pd.DataFrame)):
         if len(data.shape) == 1:
             data = data.values.reshape(-1, 1)
@@ -458,6 +473,7 @@ def gsreshaped(data):
     """
     import numpy as np
     import pandas as pd
+
     if isinstance(data, (pd.Series, pd.DataFrame)):
         if len(data.shape) == 2 and data.shape[1] == 1:
             data = data.values.reshape(-1)
@@ -557,6 +573,7 @@ class PickableCollection(object):
 
     def __setstate__(self, state):
         from omegaml.mongoshim import MongoClient
+
         url = 'mongodb://{username}:{password}@{host}:{port}/{database}'.format(**state, **state['credentials'])
         # ClientOptions calls it serverselectiontimeoutms, but stores seconds
         # MongoClient however, on recreating in unpickling, requires milliseconds
@@ -565,8 +582,7 @@ class PickableCollection(object):
         # https://github.com/mongodb/mongo-python-driver/blob/master/pymongo/client_options.py#L157
         options = state.get('options', {})
         options['serverSelectionTimeoutMS'] = options.pop('serverselectiontimeoutms', 30) * 1000
-        client = MongoClient(url, authSource=state['credentials']['source'],
-            uuidRepresentation='standard', **options)
+        client = MongoClient(url, authSource=state['credentials']['source'], uuidRepresentation='standard', **options)
         db = client.get_database()
         collection = db[state['name']]
         super(PickableCollection, self).__setattr__('collection', collection)
@@ -580,6 +596,7 @@ def extend_instance(obj, cls, *args, conditional=None, **kwargs):
     """Apply mixins to a class instance after creation"""
     # source https://stackoverflow.com/a/31075641
     from omegaml import load_class
+
     cls = load_class(cls)
     base_mro = obj.__class__.mro()
     should_apply = True if not callable(conditional) else conditional(cls, obj)
@@ -592,7 +609,7 @@ def extend_instance(obj, cls, *args, conditional=None, **kwargs):
 
 
 def temp_filename(dir=None, ext='tmp'):
-    """ generate a temporary file name """
+    """generate a temporary file name"""
     dir = dir or tempfile.mkdtemp()
     return os.path.join(dir, uuid.uuid4().hex + f'.{ext}')
 
@@ -609,6 +626,7 @@ def remove_temp_filename(fn, dir=True):
 
 def ensure_python_array(arr, dtype):
     import numpy as np
+
     return np.array(arr).astype(dtype)
 
 
@@ -635,6 +653,7 @@ def module_available(modname, min=None, max=None, load=True, py_min=None, py_max
     from importlib.metadata import version
 
     from packaging.version import Version
+
     try:
         if load:
             import_module(modname)
@@ -659,8 +678,12 @@ def module_available(modname, min=None, max=None, load=True, py_min=None, py_max
             py_min = py_min or 'any'
             py_max = py_max or 'any'
             if any(bool(v) is False for v in (min_ok, max_ok, py_min_ok, py_max_ok)):
-                logger.warning((f'require {modname}>={min},<={max}, have {modname}=={mod_version} Python=={py_version}.'
-                                f'Use a model helper for {modname} models.'))
+                logger.warning(
+                    (
+                        f'require {modname}>={min},<={max}, have {modname}=={mod_version} Python=={py_version}.'
+                        f'Use a model helper for {modname} models.'
+                    )
+                )
             return all(v for v in (min_ok, max_ok, py_min_ok, py_max_ok))
     return True
 
@@ -684,6 +707,7 @@ def mlflow_available(min=None, max=None, py_min=None, py_max=None):
     if available:
         try:
             from pydantic import PydanticDeprecatedSince20
+
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
         except ImportError:
@@ -795,6 +819,7 @@ def ensure_json_serializable(v):
     #    (json_dumps_np handles np.ndarrays differently)
     import numpy as np
     import pandas as pd
+
     if isinstance(v, np.ndarray):
         return v.flatten().tolist()
     if isinstance(v, pd.Series):
@@ -802,17 +827,13 @@ def ensure_json_serializable(v):
     elif isinstance(v, range):
         v = list(v)
     elif isinstance(v, dict):
-        vv = {
-            k: ensure_json_serializable(v)
-            for k, v in v.items()
-        }
+        vv = {k: ensure_json_serializable(v) for k, v in v.items()}
         v = vv
     return mongo_compatible(v)
 
 
 def mkdirs(path):
-    """ safe os.makedirs for python 2 & 3
-    """
+    """safe os.makedirs for python 2 & 3"""
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -837,6 +858,7 @@ def base_loader(_base_config):
     def load_commercial():
         from omegaee import eedefaults as _base_config_ee
         from omegaee import omega as _omega
+
         _base_config.update_from_obj(_base_config_ee, attrs=_base_config)
         # ensure django settings are reloaded
         settings(reload=True)
@@ -844,6 +866,7 @@ def base_loader(_base_config):
 
     def load_base():
         from omegaml import omega as _omega
+
         return _omega, 'base configuration'
 
     loaders = load_customized, load_commercial, load_base
@@ -866,8 +889,7 @@ from contextlib import contextmanager
 from io import StringIO
 
 
-def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None, msg='could not read {}',
-           **kwargs):
+def markup(file_or_str, parsers=None, direct=True, on_error='warn', default=None, msg='could not read {}', **kwargs):
     """
     a safe markup file reader, accepts json and yaml, returns a dict or a default
     Usage:
@@ -993,8 +1015,9 @@ def dict_merge(destination, source, delete_on='__delete__', subset=None, overrid
 
 
 def ensure_base_collection(collection):
-    """ get base from pymongo.Collection subclass instance """
+    """get base from pymongo.Collection subclass instance"""
     from pymongo.collection import Collection
+
     is_real_collection = isinstance(collection, Collection)
     while not is_real_collection:
         collection = collection.collection
@@ -1003,7 +1026,7 @@ def ensure_base_collection(collection):
 
 
 def reorder(df, specs):
-    """ build reordered column selector given specs
+    """build reordered column selector given specs
 
     Takes a dataframe and returns a column selector accordingly.
     This is convenient to reorder a large number of
@@ -1020,7 +1043,7 @@ def reorder(df, specs):
 
 
 def migrate_unhashed_datasets(store):
-    """ Migrate the names of previously unhashed datasets (collections)
+    """Migrate the names of previously unhashed datasets (collections)
 
     Args:
         store: the OmegaStore instance, e.g. om.datasets
@@ -1048,7 +1071,7 @@ def migrate_unhashed_datasets(store):
 
 
 class MongoEncoder(json.JSONEncoder):
-    """ A safe encoder for mongodb
+    """A safe encoder for mongodb
 
     Encoder for python object to its corresponding JSON/BSON-compatible type,
     defaulting to a value's string representation if no other conversion is possible.
@@ -1071,6 +1094,7 @@ class MongoEncoder(json.JSONEncoder):
     def default(self, obj):
         # TODO improve for speed
         import numpy as np
+
         try:
             from pandas.api.types import is_array_like, is_float_dtype, is_integer_dtype
         except:
@@ -1134,7 +1158,7 @@ _raise = lambda ex: (_ for _ in ()).throw(ex)
 
 
 class IterableJsonDump(list):
-    """ dump iterable of json data """
+    """dump iterable of json data"""
 
     # adapted from https://stackoverflow.com/a/45143995/890242
     def __init__(self, generator, transform=None):
@@ -1168,7 +1192,7 @@ isTrue = lambda v: v if isinstance(v, bool) else (v.lower() in ['yes', 'y', 't',
 
 
 class SystemPosixPath(type(Path()), Path):
-    """ a pathlib.Path shim that renders with Posix path.sep on all systems
+    """a pathlib.Path shim that renders with Posix path.sep on all systems
 
     Usage:
         path = SystemPosixPath('./foo/bar')
@@ -1232,9 +1256,9 @@ class KeepMissing(dict):
 
 
 def sec_validate_url(url):
-    assert validators.url(url,
-        skip_ipv4_addr=True,
-        skip_ipv6_addr=True), f"expected a http:// or https:// url, got {url}"
+    assert validators.url(url, skip_ipv4_addr=True, skip_ipv6_addr=True), (
+        f"expected a http:// or https:// url, got {url}"
+    )
     assert url.startswith('http'), f"expected http:// or https:// url, got {url}"
     return True
 
@@ -1272,8 +1296,9 @@ def tarfile_safe_extractall(tar, dest_path, filter='data'):
 
 
 def batched(iterable, batch_size):
-    """ split an iterable into batches of batch_size """
+    """split an iterable into batches of batch_size"""
     from itertools import islice
+
     it = iter(iterable) if iterable else []
     while True:
         batch = list(islice(it, batch_size))
@@ -1327,6 +1352,7 @@ def is_interactive():
     # adopted from https://stackoverflow.com/a/47428575/890242
     try:
         from IPython import get_ipython
+
         ipy_str = str(type(get_ipython())).lower()
     except:
         # we're not in IPython
@@ -1351,8 +1377,7 @@ def inprogress(text="running {fn}", **__kwargs):
     def decorator(fn):
         def wrapper(*args, **kwargs):
             text.format(fn=fn.__name__)
-            with (warnings.catch_warnings(),
-                  yaspin(text=text, **__kwargs) as sp):
+            with warnings.catch_warnings(), yaspin(text=text, **__kwargs) as sp:
                 warnings.simplefilter("ignore", append=True)
                 return fn(*args, **kwargs)
 
@@ -1378,6 +1403,7 @@ def utcnow():
 def ensurelist(l):
     # ensure we have a python list() from a numpy array
     import numpy as np
+
     return l.tolist() if isinstance(l, np.ndarray) else list(l)
 
 
@@ -1400,6 +1426,7 @@ def failsafe_yaspin(mock=False):
     def is_running_in_jupyter():
         try:
             from IPython import get_ipython
+
             return get_ipython() is not None
         except ImportError:
             return False
@@ -1420,22 +1447,25 @@ def failsafe_yaspin(mock=False):
     def show_progress():
         try:
             from omegaml.defaults import OMEGA_SHOW_PROGRESS
+
             return OMEGA_SHOW_PROGRESS
         except Exception:
             pass
         return False
 
-    may_spin = (is_running_in_jupyter() or (not is_piped() and terminal_ok()))
+    may_spin = is_running_in_jupyter() or (not is_piped() and terminal_ok())
     mock = True if mock or not show_progress() else not may_spin
 
     if not mock and yaspin_available():
         from yaspin import yaspin
     else:
+
         @contextmanager
         def yaspin(*args, text=None, **kwargs):
             setattr(yaspin, 'text', text)
             logger.debug(getattr(yaspin, 'text', '...'))
             yield
+
     return yaspin
 
 
@@ -1448,6 +1478,7 @@ def is_alphanumeric(s):
 def find_instances(cls):
     # find all instances of a class
     import gc
+
     instances = []
     for obj in gc.get_objects():
         try:

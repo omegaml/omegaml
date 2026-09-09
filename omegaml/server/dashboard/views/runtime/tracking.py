@@ -1,7 +1,8 @@
 import base64
+from io import BytesIO
+
 from cachetools import TTLCache, cached
 from flask import jsonify
-from io import BytesIO
 from matplotlib import pyplot as plt
 
 from omegaml.server import flaskview as fv
@@ -9,9 +10,9 @@ from omegaml.server.dashboard.views.repobase import RepositoryBaseView
 from omegaml.server.util import datatables_ajax, json_abort, testable
 from omegaml.util import ensure_json_serializable
 
-validOrNone = lambda v, astype=None: ((astype(v) if astype else v)
-                                      if v and str(v).strip() not in ('undefined', 'null', None)
-                                      else None)
+validOrNone = lambda v, astype=None: (
+    (astype(v) if astype else v) if v and str(v).strip() not in ('undefined', 'null', None) else None
+)
 
 truefalse = lambda v: str(v) in ('true', 'True', '1')
 
@@ -25,15 +26,13 @@ class TrackingView(RepositoryBaseView):
         return self.om.models
 
     def members(self, excludes=None):
-        excludes = (
-            lambda m: not m.name.startswith('experiments/'),
-            lambda m: m.name.endswith('.notrack'),
-        )
+        excludes = (lambda m: not m.name.startswith('experiments/'), lambda m: m.name.endswith('.notrack'))
         return super().members(excludes=excludes)
 
-    def _experiment_data(self, name, start=None, nrows=None, event=None, run=None, summary=False, as_dataframe=False,
-                         **kwargs):
-        """ return the experiment data for a given experiment
+    def _experiment_data(
+        self, name, start=None, nrows=None, event=None, run=None, summary=False, as_dataframe=False, **kwargs
+    ):
+        """return the experiment data for a given experiment
 
         Args:
             name:
@@ -67,14 +66,25 @@ class TrackingView(RepositoryBaseView):
             data = exp.data(event=event, run=actual_runs, **kwargs)
 
             def byrun(df):
-                metrics = (df.where(df['event'] == 'metric')
-                           .groupby(["run", "key"])["value"]
-                           .mean()
-                           .unstack())
-                df = (df.where(df['event'] == 'start')
-                      .set_index("run")
-                      .merge(metrics, on="run")
-                      .reset_index())
+                metrics = (
+                    df
+                    .where(df['event'] == 'metric')
+                    .groupby(
+                        ["run", "key"],
+                    )["value"]
+                    .mean()
+                    .unstack()
+                )
+                df = (
+                    df
+                    .where(df['event'] == 'start')
+                    .set_index("run")
+                    .merge(
+                        metrics,
+                        on="run",
+                    )
+                    .reset_index()
+                )
                 return df[['run', 'dt'] + list(metrics.columns) + ['node', 'userid']]
 
             data = byrun(data) if hasdata(data) else []
@@ -85,9 +95,7 @@ class TrackingView(RepositoryBaseView):
             total_rows = exp._latest_run if hasdata(data) else 0
         if hasdata(data):
             totalRows = total_rows
-            data = (data
-                    .reset_index()
-                    .fillna(''))
+            data = data.reset_index().fillna('')
             if not as_dataframe:
                 data = data.to_dict(orient='records')
         else:
@@ -97,7 +105,7 @@ class TrackingView(RepositoryBaseView):
 
     @fv.route('/{self.segment}/experiment/data/<path:name>')
     def api_experiment_data(self, name):
-        """ return the experiment data for a given experiment (datatables.js)
+        """return the experiment data for a given experiment (datatables.js)
 
         Args:
             name (str): the experiment name
@@ -126,14 +134,15 @@ class TrackingView(RepositoryBaseView):
         end = validOrNone(self.request.args.get('end', None))
         events = validOrNone(self.request.args.get('events', None)) or 'all'
         events = ['start', 'metric', 'stop'] if summary else events.split(',') if ',' in events else events
-        data, totalRows = self._experiment_data(name, start=start, nrows=nrows, summary=summary,
-                                                run=run, since=since, end=end, event=events)
+        data, totalRows = self._experiment_data(
+            name, start=start, nrows=nrows, summary=summary, run=run, since=since, end=end, event=events
+        )
 
         return datatables_ajax(data, n_total=totalRows, n_filtered=totalRows, draw=draw, ignore='index')
 
     @fv.route('/{self.segment}/experiment/plot/<path:name>')
     def api_plot_metrics(self, name):
-        """ plot the metrics for a given experiment
+        """plot the metrics for a given experiment
 
         Args:
             name (str): the experiment name
@@ -146,17 +155,17 @@ class TrackingView(RepositoryBaseView):
         """
         import plotly.express as px
         from plotly.io import json
+
         multicharts = int(self.request.args.get('multicharts', 0))
         since = validOrNone(self.request.args.get('since', None))
         end = validOrNone(self.request.args.get('end', None))
         runs = self.request.args.get('runs', 0) or 'all'
         runs = [validOrNone(v, astype=int) for v in runs.split(',')] if runs not in ('all', '*') else 'all'
-        metrics, totalRows = self._experiment_data(name, run=runs, event='metric', since=since, end=end,
-                                                   as_dataframe=True)
+        metrics, totalRows = self._experiment_data(
+            name, run=runs, event='metric', since=since, end=end, as_dataframe=True
+        )
         cols = 'key' if multicharts else None
-        pltkwargs = dict(facet_col=cols,
-                         facet_col_wrap=4,
-                         color='key')
+        pltkwargs = dict(facet_col=cols, facet_col_wrap=4, color='key')
         if not hasdata(metrics):
             json_abort(400, "no data to plot")
         single_run = len(metrics['run'].unique()) == 1
@@ -164,8 +173,7 @@ class TrackingView(RepositoryBaseView):
         if single_run and not multi_steps:
             # one bar for reach metric
             pltfn = px.bar
-            pltkwargs.update(x='key',
-                             y='value')
+            pltkwargs.update(x='key', y='value')
         elif single_run and multi_steps:
             # one line for each metric
             pltfn = px.line
@@ -198,7 +206,7 @@ class TrackingView(RepositoryBaseView):
 
     @fv.route('/{self.segment}/monitor/plot/<path:model>')
     def api_plot_monitor(self, model):
-        """ plot the monitor data for a given model
+        """plot the monitor data for a given model
 
         Args:
             model (str): the model name
@@ -247,8 +255,8 @@ class TrackingView(RepositoryBaseView):
         exp = om.runtime.model(model).experiment(experiment=experiment)
         # Function to categorize the values based on the specified ranges
         categories = {
-            'alert': (.55, 1.0),
-            'warning': (.25, .55),
+            'alert': (0.55, 1.0),
+            'warning': (0.25, 0.55),
             'stable': (0.0, 0.25),
         }
 
@@ -259,11 +267,16 @@ class TrackingView(RepositoryBaseView):
             return 'check'  # Default case
 
         def compare_stats(stats):
-            snapshots = stats.df.groupby(['seq_from', 'seq_to']).agg(
-                {'drift': 'max', 'score': 'max', 'dt_from': 'min', 'dt_to': 'min'}).reset_index()
+            snapshots = (
+                stats.df
+                .groupby(['seq_from', 'seq_to'])
+                .agg({'drift': 'max', 'score': 'max', 'dt_from': 'min', 'dt_to': 'min'})
+                .reset_index()
+            )
             mask = stats.df.groupby(['seq_from', 'seq_to'])['score'].idxmax()
             snapshots = stats.df.iloc[mask][
-                ['column', 'drift', 'score', 'metric', 'stats', 'kind', 'dt_from', 'dt_to', 'seq_from', 'seq_to']]
+                ['column', 'drift', 'score', 'metric', 'stats', 'kind', 'dt_from', 'dt_to', 'seq_from', 'seq_to']
+            ]
             snapshots['status'] = snapshots['score'].apply(lambda x: categorize(x, categories))
             result = {
                 'summary': stats.summary(raw=True),
@@ -308,9 +321,11 @@ class TrackingView(RepositoryBaseView):
                     'resource': resource(doc),
                     'message': f'Drift on {resource(doc)}',
                     'dt': doc['dt'],
-                } for doc in alerts.to_dict('records')])
+                }
+                for doc in alerts.to_dict('records')
+            ])
         result = {
-            'alerts': all_alerts
+            'alerts': all_alerts,
         }
         return jsonify(result)
 

@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExperimentBackend(BaseModelBackend):
-    """ ExperimentBackend provides storage of tracker configurations
+    """ExperimentBackend provides storage of tracker configurations
 
     Usage:
 
@@ -52,6 +52,7 @@ class ExperimentBackend(BaseModelBackend):
         * :class:`omegaml.backends.tracking.OmegaSimpleTracker`
         * :class:`omegaml.backends.tracking.OmegaProfilingTracker`
     """
+
     KIND = 'experiment.tracker'
     exp_prefix = 'experiments/'
 
@@ -89,8 +90,10 @@ class ExperimentBackend(BaseModelBackend):
         elif not based_dataset and actual_dataset:
             name = actual_name
         elif all((based_dataset, actual_dataset)) and based_dataset != actual_dataset:
-            msg = (f"experiment {name} may previously have logged to {data_store.prefix}{based_name}, "
-                   f"now using {data_store.prefix}{actual_name}")
+            msg = (
+                f"experiment {name} may previously have logged to {data_store.prefix}{based_name}, "
+                f"now using {data_store.prefix}{actual_name}"
+            )
             logger.warning(msg)
             name = actual_name
         else:

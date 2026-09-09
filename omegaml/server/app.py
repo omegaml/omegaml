@@ -32,8 +32,7 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     if configure or server is None:
         # only do this running standalone
         # -- ensure url_for('static') files are served from blue blueprint
-        app = Flask(__name__,
-                    static_url_path=f'{url_prefix}/static')
+        app = Flask(__name__, static_url_path=f'{url_prefix}/static')
         should_debug = os.getenv('DEBUG', '0')[0].lower() in ('1', 'y', 't')
         if should_debug:
             config = CONFIG_MAP['dev']
@@ -56,9 +55,11 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
             return dict(current_user=user())
 
         if url_prefix:
+
             @app.route('/')
             def base_index():
                 return redirect(url_prefix)
+
     else:
         app = server
     # ensure slashes in URIs are matched as specified
@@ -96,17 +97,24 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
     # -- this is necessary to serve static files from the blueprint
     # -- we try bc the server/Flask() may already have endpoint=static route
     try:
+
         @app.route(f'{url_prefix}/static/<path:filename>', endpoint='static')
         def app_static(filename):
             return app.send_static_file(filename)
+
     except (RuntimeError, AssertionError) as e:
-        logger.warning((f"could not add {url_prefix}/static endpoint=static due to {e} "
-                        f"- make sure that url_for('static') renders to {url_prefix} or use url_for('omega-server.static')"))
+        logger.warning(
+            (
+                f"could not add {url_prefix}/static endpoint=static due to {e} "
+                f"- make sure that url_for('static') renders to {url_prefix} or use url_for('omega-server.static')"
+            )
+        )
 
     @app.context_processor
     def setconfig():
-        cards_enabled = (getattr(app.current_om.defaults, 'OMEGA_CARDS_ENABLED', False)
-                         or app.config.get('CARDS_ENABLED', False))
+        cards_enabled = getattr(app.current_om.defaults, 'OMEGA_CARDS_ENABLED', False) or app.config.get(
+            'CARDS_ENABLED', False
+        )
         return dict(cards_enabled=cards_enabled)
 
     return app
@@ -119,8 +127,7 @@ def get_cloud_config(app, apiurl=None):
     qualifier = om.runtime.auth.qualifier
     headers = {'Qualifier': qualifier}
     auth = requests.auth.HTTPBasicAuth(user, om.runtime.auth.apikey)
-    resp = requests.get(f'{huburl}/api/config/dashboard',
-                        auth=auth, headers=headers)
+    resp = requests.get(f'{huburl}/api/config/dashboard', auth=auth, headers=headers)
     resp.raise_for_status()
     data = resp.json()
     config = data.get('data', {})
@@ -129,6 +136,7 @@ def get_cloud_config(app, apiurl=None):
 
 def setup_omega(**kwargs):
     import omegaml as om
+
     om = om.setup(**kwargs)
     om.system: OmegaStore = getattr(om, 'system', om._make_store('.system'))
     admin_user = om.system.metadata('users/admin')

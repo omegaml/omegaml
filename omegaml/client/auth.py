@@ -35,8 +35,7 @@ class OmegaRestApiAuth(AuthBase):
         return r
 
     def __repr__(self):
-        return ('OmegaRestApiAuth(username={}, apikey="*****",'
-                'qualifier={})').format(self.username, self.qualifier)
+        return ('OmegaRestApiAuth(username={}, apikey="*****",qualifier={})').format(self.username, self.qualifier)
 
     @property
     def kind(self):
@@ -60,12 +59,13 @@ class OmegaRuntimeAuthentication:
         return self.userid, self.apikey, self.qualifier
 
     def __repr__(self):
-        return ('OmegaRuntimeAuthentication(userid={}, '
-                'apikey="*****", qualifier={})').format(self.userid, self.qualifier)
+        return ('OmegaRuntimeAuthentication(userid={}, apikey="*****", qualifier={})').format(
+            self.userid, self.qualifier
+        )
 
 
 class AuthenticationEnv(object):
-    """ AuthenticationEnv creates Omega() configured to the current environment
+    """AuthenticationEnv creates Omega() configured to the current environment
 
     This provides a basic authentication environment that is not protected. It
     should not be used in production environments.
@@ -88,18 +88,30 @@ class AuthenticationEnv(object):
           to provide credentials in a format suitable for their authentication
           backends (e.g. REST APIs, kerberos, etc.)
     """
+
     auth_env = None
     is_secure = False
     # subprocess env keys to keep, see .prepare_env()
-    env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_MONGO_URL', 'OMEGA_BROKER', 'OMEGA_CARDS_ENABLED',
-                'OMEGA_ALLOW_ENV_CONFIG', 'OMEGA_STATUS_CHECK', 'OMEGA_TEST_MODE', 'OMEGA_LOCAL_RUNTIME',
-                'OMEGA_RESTAPI_URL', 'OMEGA_EVENTS_STREAMER', 'OMEGA_EVENTS_STREAMER_URL']
+    env_keys = [
+        'OMEGA_AUTH_ENV',
+        'OMEGA_MONGO_URL',
+        'OMEGA_BROKER',
+        'OMEGA_CARDS_ENABLED',
+        'OMEGA_ALLOW_ENV_CONFIG',
+        'OMEGA_STATUS_CHECK',
+        'OMEGA_TEST_MODE',
+        'OMEGA_LOCAL_RUNTIME',
+        'OMEGA_RESTAPI_URL',
+        'OMEGA_EVENTS_STREAMER',
+        'OMEGA_EVENTS_STREAMER_URL',
+    ]
 
     @classmethod
     @session_cache  # PERFTUNED
     def get_omega_for_task(cls, task, auth=None):
         # return the omega instance for the given task authentication
         from omegaml import setup
+
         om = setup()
         return om
 
@@ -108,6 +120,7 @@ class AuthenticationEnv(object):
     def get_omega_from_apikey(cls, *args, auth=None, **kwargs):
         # return the omega instance for the given task authentication
         from omegaml import setup
+
         om = setup()
         return om
 
@@ -116,14 +129,17 @@ class AuthenticationEnv(object):
     def get_omega_on_behalf(cls, userid, qualifier, **kwargs):
         # return the omega instance on behalf of a user, assuming base user is authorized
         from omegaml import setup
+
         om = setup()
-        return cls.get_omega_from_apikey(getattr(om.defaults, 'OMEGA_USERID', userid),
-                                         getattr(om.defaults, 'OMEGA_APIKEY', ''),
-                                         requested_userid=userid, qualifier=qualifier)
+        return cls.get_omega_from_apikey(
+            getattr(om.defaults, 'OMEGA_USERID', userid),
+            getattr(om.defaults, 'OMEGA_APIKEY', ''),
+            requested_userid=userid,
+            qualifier=qualifier,
+        )
 
     @classmethod
-    def get_restapi_auth(cls, defaults=None, om=None,
-                         userid=None, apikey=None, qualifier=None):
+    def get_restapi_auth(cls, defaults=None, om=None, userid=None, apikey=None, qualifier=None):
         return None
 
     @classmethod
@@ -132,7 +148,7 @@ class AuthenticationEnv(object):
 
     @classmethod
     def active(cls):
-        """ return the active authentication env
+        """return the active authentication env
 
         If no instance is active, it will be instantiated according to the class specified in
         defaults.OMEGA_AUTH_ENV. Defaults to omegaml.client.auth.AuthenticationEnv
@@ -143,8 +159,8 @@ class AuthenticationEnv(object):
         # load the currently active auth env
         if cls.auth_env is None:
             from omegaml import _base_config
-            cls.auth_env = load_class(getattr(_base_config, 'OMEGA_AUTH_ENV',
-                                              'omegaml.client.auth.AuthenticationEnv'))
+
+            cls.auth_env = load_class(getattr(_base_config, 'OMEGA_AUTH_ENV', 'omegaml.client.auth.AuthenticationEnv'))
             cls.auth_env.prepare_env(DefaultsContext(_base_config))
         return cls.auth_env
 
@@ -152,6 +168,7 @@ class AuthenticationEnv(object):
     def secure(cls):
         # load a server-backed authentication env
         from omegaml import _base_config
+
         # ensure loading of a secure env by default
         if not getattr(_base_config, 'OMEGA_AUTH_ENV', None):
             _base_config.OMEGA_AUTH_ENV = 'omegaml.client.auth.CloudClientAuthenticationEnv'
@@ -159,7 +176,8 @@ class AuthenticationEnv(object):
         cls.active()
         if not cls.auth_env.is_secure:
             raise SystemError(
-                f'A secure authentication environment was requested, however {cls.auth_env} is not secure.')
+                f'A secure authentication environment was requested, however {cls.auth_env} is not secure.'
+            )
         return cls.auth_env
 
     @classmethod
@@ -200,10 +218,20 @@ class AuthenticationEnv(object):
 
 class CloudClientAuthenticationEnv(AuthenticationEnv):
     is_secure = True
-    env_keys = ['OMEGA_AUTH_ENV', 'OMEGA_RESTAPI_URL', 'OMEGA_TEST_MODE',
-                'OMEGA_ALLOW_ENV_CONFIG', 'OMEGA_USERID', 'OMEGA_APIKEY', 'OMEGA_QUALIFIER', 'OMEGA_CARDS_ENABLED',
-                'OMEGA_STATUS_CHECK', 'OMEGA_SERVICES_INCLUSTER',
-                'OMEGA_EVENTS_STREAMER', 'OMEGA_EVENTS_STREAMER_URL']
+    env_keys = [
+        'OMEGA_AUTH_ENV',
+        'OMEGA_RESTAPI_URL',
+        'OMEGA_TEST_MODE',
+        'OMEGA_ALLOW_ENV_CONFIG',
+        'OMEGA_USERID',
+        'OMEGA_APIKEY',
+        'OMEGA_QUALIFIER',
+        'OMEGA_CARDS_ENABLED',
+        'OMEGA_STATUS_CHECK',
+        'OMEGA_SERVICES_INCLUSTER',
+        'OMEGA_EVENTS_STREAMER',
+        'OMEGA_EVENTS_STREAMER_URL',
+    ]
 
     @classmethod
     @session_cache
@@ -225,8 +253,7 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
         from omegaml.util import settings
 
         default_auth = (None, None, 'default')
-        is_auth_provided = lambda token: (token is not None
-                                          and token != default_auth)
+        is_auth_provided = lambda token: token is not None and token != default_auth
         defaults = settings()
         token = auth.token if isinstance(auth, OmegaRuntimeAuthentication) else auth
 
@@ -239,72 +266,88 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
                 view = defaults.OMEGA_SERVICES_INCLUSTER
                 om = cls.get_omega_from_apikey(userid, apikey, qualifier=qualifier, view=view)
             else:
-                raise ValueError(
-                    'cannot parse authentication as {}'.format(auth))
+                raise ValueError('cannot parse authentication as {}'.format(auth))
         elif token == default_auth:
             # we provide the default implementation as per configuration
             from omegaml import _omega
+
             om = _omega._om
             if not getattr(defaults, 'OMEGA_ALLOW_TASK_DEFAULT_AUTH', True):
-                raise ValueError(
-                    'Default task authentication is not allowed, got {}'.format(auth))
+                raise ValueError('Default task authentication is not allowed, got {}'.format(auth))
         else:
-            raise ValueError(
-                'Missing runtime task authentication, got {}'.format(auth))
+            raise ValueError('Missing runtime task authentication, got {}'.format(auth))
         return om
 
     @classmethod
     @session_cache  # PERFTUNED
     def get_omega_from_apikey(cls, *args, **kwargs):
         from omegaml.client.userconf import _get_omega_from_apikey
+
         return _get_omega_from_apikey(*args, **kwargs)
 
     @classmethod
-    def get_restapi_auth(cls, defaults=None, om=None,
-                         userid=None, apikey=None, qualifier=None, bucket=None):
+    def get_restapi_auth(cls, defaults=None, om=None, userid=None, apikey=None, qualifier=None, bucket=None):
         assert defaults or om, "require either defaults or om"
         defaults = defaults or om.defaults
-        return OmegaRestApiAuth(userid or defaults.OMEGA_USERID,
-                                apikey or defaults.OMEGA_APIKEY,
-                                qualifier=qualifier or defaults.OMEGA_QUALIFIER,
-                                bucket=bucket)
+        return OmegaRestApiAuth(
+            userid or defaults.OMEGA_USERID,
+            apikey or defaults.OMEGA_APIKEY,
+            qualifier=qualifier or defaults.OMEGA_QUALIFIER,
+            bucket=bucket,
+        )
 
     @classmethod
     def get_runtime_auth(cls, defaults=None, om=None):
         assert defaults or om, "require either defaults or om"
         defaults = defaults or om.defaults
-        return OmegaRuntimeAuthentication(defaults.OMEGA_USERID,
-                                          defaults.OMEGA_APIKEY,
-                                          defaults.OMEGA_QUALIFIER)
+        return OmegaRuntimeAuthentication(defaults.OMEGA_USERID, defaults.OMEGA_APIKEY, defaults.OMEGA_QUALIFIER)
 
     @classmethod
-    def get_userconfig_from_api(cls, api_auth=None, api_url=None, userid=None, apikey=None,
-                                requested_userid=None, defaults=None, qualifier=None, view=False):
+    def get_userconfig_from_api(
+        cls,
+        api_auth=None,
+        api_url=None,
+        userid=None,
+        apikey=None,
+        requested_userid=None,
+        defaults=None,
+        qualifier=None,
+        view=False,
+    ):
         from omegaml.client.userconf import _get_userconfig_from_api, ensure_api_url
+
         defaults = defaults or settings()
-        api_auth = api_auth or cls.get_restapi_auth(userid=userid, apikey=apikey,
-                                                    qualifier=qualifier,
-                                                    defaults=defaults)
-        return _get_userconfig_from_api(api_auth,
-                                        api_url=ensure_api_url(api_url, defaults),
-                                        qualifier=qualifier or defaults.OMEGA_QUALIFIER,
-                                        requested_userid=requested_userid,
-                                        view=view)
+        api_auth = api_auth or cls.get_restapi_auth(
+            userid=userid, apikey=apikey, qualifier=qualifier, defaults=defaults
+        )
+        return _get_userconfig_from_api(
+            api_auth,
+            api_url=ensure_api_url(api_url, defaults),
+            qualifier=qualifier or defaults.OMEGA_QUALIFIER,
+            requested_userid=requested_userid,
+            view=view,
+        )
 
     @classmethod
-    def save_userconfig_from_apikey(cls, configfile, userid, apikey, api_url=None, requested_userid=None,
-                                    view=False, keys=None, qualifier=None):
+    def save_userconfig_from_apikey(
+        cls, configfile, userid, apikey, api_url=None, requested_userid=None, view=False, keys=None, qualifier=None
+    ):
         from omegaml.client.userconf import _save_userconfig_from_apikey
-        return _save_userconfig_from_apikey(configfile, userid, apikey, api_url=api_url,
-                                            requested_userid=requested_userid,
-                                            view=view, keys=keys, qualifier=qualifier)
+
+        return _save_userconfig_from_apikey(
+            configfile,
+            userid,
+            apikey,
+            api_url=api_url,
+            requested_userid=requested_userid,
+            view=view,
+            keys=keys,
+            qualifier=qualifier,
+        )
 
     @classmethod
     def taskrepr(cls, args, kwargs, celery_kwargs):
-        celery_kwargs.update({
-            'argsrepr': ['*****'] * len(args),
-            'kwargsrepr': {k: '*****' for k in kwargs}
-        })
+        celery_kwargs.update({'argsrepr': ['*****'] * len(args), 'kwargsrepr': {k: '*****' for k in kwargs}})
 
     @classmethod
     def resultrepr(cls, value):

@@ -13,7 +13,6 @@ from omegaml.backends.repository.orasreg import OrasOciRegistry, parse_ociuri
 
 @skipUnless(shutil.which('oras') is not None, "oras executable cannot be found on PATH")
 class TestOrasRegistry(unittest.TestCase):
-
     def tearDown(self):
         shutil.rmtree(self.tmppath)
 
@@ -158,10 +157,9 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertEqual(tag, 'latest')
 
     def test_list_url(self):
-        """ Test list of repos in url-specified registry """
+        """Test list of repos in url-specified registry"""
         reg = OrasOciRegistry('localhost:22255')
-        contents = {'registry': 'localhost:22255',
-                    'repositories': ['mymodel']}
+        contents = {'registry': 'localhost:22255', 'repositories': ['mymodel']}
         with patch.object(reg, '_oras') as mock_oras:
             mock_oras.return_value = json.dumps(contents)
             repos = reg.list()
@@ -169,10 +167,9 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertEqual(repos, contents)
 
     def test_list_namespaced_url(self):
-        """ Test list of repos in url-specified and namespaced registry """
+        """Test list of repos in url-specified and namespaced registry"""
         reg = OrasOciRegistry('localhost:22255/user')
-        contents = {'registry': 'localhost:22255/user',
-                    'repositories': ['mymodel']}
+        contents = {'registry': 'localhost:22255/user', 'repositories': ['mymodel']}
         with patch.object(reg, '_oras') as mock_oras:
             mock_oras.return_value = json.dumps(contents)
             repos = reg.list()
@@ -180,7 +177,7 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertEqual(repos, contents)
 
     def test_artifacts(self):
-        """ Test that artifacts are empty initially """
+        """Test that artifacts are empty initially"""
         rpath = self.tmppath
         lpath = rpath / 'fooimage'
         shutil.rmtree(lpath) if lpath.exists() else None
@@ -191,7 +188,7 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertEqual(len(artifacts), 0)
 
     def test_artifacts_namespaced(self):
-        """ Test that artifacts are empty initially """
+        """Test that artifacts are empty initially"""
         rpath = self.tmppath
         lpath = rpath / 'ns' / 'myspace' / 'myimage'
         shutil.rmtree(rpath) if rpath.exists() else None
@@ -204,21 +201,21 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertEqual(len(artifacts), 0)
 
     def test_reg_url(self):
-        """ Test that artifacts are empty initially """
+        """Test that artifacts are empty initially"""
         url = 'oci://localhost:22255'
         reg = OrasOciRegistry(url, 'fooimage:scratch')
         self.assertEqual(reg.url, url)
         self.assertEqual(reg.repo, 'fooimage:scratch')
 
     def test_reg_namespaced_url(self):
-        """ Test that artifacts are empty initially """
+        """Test that artifacts are empty initially"""
         url = 'oci://localhost:22255/user'
         reg = OrasOciRegistry(url, 'fooimage:scratch')
         self.assertEqual(reg.url, url)
         self.assertEqual(reg.repo, 'fooimage:scratch')
 
     def test_manifest(self):
-        """ Test that a manifest is correctly created """
+        """Test that a manifest is correctly created"""
         rpath = self.tmppath
         reg = OrasOciRegistry(rpath, 'orasimage:test')
         reg.create()
@@ -228,7 +225,7 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertIn('layers', manifest)
 
     def test_create(self):
-        """ Test that the registry is created """
+        """Test that the registry is created"""
         rpath = self.tmppath
         lpath = rpath / 'fooimage'
         shutil.rmtree(lpath) if lpath.exists() else None
@@ -237,7 +234,7 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertEqual(reg.tags(), ['scratch'])
 
     def test_tags(self):
-        """ Test that tags are correctly retrieved """
+        """Test that tags are correctly retrieved"""
         rpath = self.tmppath
         reg = OrasOciRegistry(rpath, 'orasimage:test')
         with open(rpath / 'myfile.txt', 'w') as fout:
@@ -248,7 +245,7 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertEqual(tags, ['test'])
 
     def test_add(self):
-        """ Test that files are added to the registry """
+        """Test that files are added to the registry"""
         rpath = self.tmppath
         filespath = self._make_files(rpath)
         reg = OrasOciRegistry(rpath, 'orasimage:test')
@@ -259,7 +256,7 @@ class TestOrasRegistry(unittest.TestCase):
         self.assertIn(digest, reg.members)
 
     def test_add_multi(self):
-        """ Test that multiple files are added to the registry """
+        """Test that multiple files are added to the registry"""
         rpath = self.tmppath
         filespath = self._make_files(rpath)
         reg = OrasOciRegistry(rpath, 'orasimage:test')
@@ -291,8 +288,7 @@ class TestOrasRegistry(unittest.TestCase):
         reg = OrasOciRegistry('oci://myuser:mykey@ghcr.io', 'orasimage:test')
         self.assertEqual(reg.url, 'oci://ghcr.io')
         self.assertEqual(reg.auth, ('myuser', 'mykey'))
-        with (patch.object(reg, 'login') as mock_login,
-              patch.object(reg, '_oras') as mock_oras):
+        with patch.object(reg, 'login') as mock_login, patch.object(reg, '_oras') as mock_oras:
             reg.manifest()
             mock_login.assert_called_with('myuser', 'mykey')
             mock_oras.assert_called_once()

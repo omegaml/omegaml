@@ -28,6 +28,7 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
 
         # Generate dummy data
         import numpy as np
+
         x_train = np.random.random((1000, 20))
         y_train = keras.utils.to_categorical(np.random.randint(10, size=(1000, 1)), num_classes=10)
         x_test = np.random.random((100, 20))
@@ -43,17 +44,11 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
         model.add(Dropout(0.5))
         model.add(Dense(10, activation='softmax'))
         sgd = SGD(lr=0.01, momentum=0.9, nesterov=True)
-        model.compile(loss='categorical_crossentropy',
-                      optimizer=sgd,
-                      metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
         # https://www.tensorflow.org/guide/estimators
         est_model = tf.keras.estimator.model_to_estimator(keras_model=model)
-        train_input_fn = _tffn('numpy_input_fn')(
-            x={"X_input": x_train},
-            y=y_train,
-            num_epochs=1,
-            shuffle=False)
+        train_input_fn = _tffn('numpy_input_fn')(x={"X_input": x_train}, y=y_train, num_epochs=1, shuffle=False)
 
         est_model.train(train_input_fn)
         return est_model
@@ -74,27 +69,28 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
 
         def serving_input_receiver_fn():
             """An input receiver that expects a serialized tf.Example."""
-            serialized_tf_example = tf.placeholder(dtype=tf.string,
-                                                   shape=[default_batch_size],
-                                                   name='X_input')
+            serialized_tf_example = tf.placeholder(dtype=tf.string, shape=[default_batch_size], name='X_input')
             receiver_tensors = {'X_input': serialized_tf_example}
             features = tf.parse_example(serialized_tf_example, feature_spec)
             return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
 
         x_test = np.random.random((100, 20))
+
         def input_fn():
             X = tf.data.Dataset.from_tensor_slices(x_test)
             return X.batch(1)
+
         yhat = [v for v in model.predict(input_fn=input_fn)]
-        om.models.put(model, 'estimator-savedmodel',
-                      serving_input_fn=serving_input_receiver_fn)
+        om.models.put(model, 'estimator-savedmodel', serving_input_fn=serving_input_receiver_fn)
         self.assertIn('estimator-savedmodel', om.models.list())
         model_ = om.models.get('estimator-savedmodel')
         self.assertIsInstance(model_, TensorflowSavedModelPredictor)
         for i in range(x_test.shape[0]):
-            example = tf.train.Example(features=tf.train.Features(feature={
-                'X_input': tf.train.Feature(float_list=tf.train.FloatList(value=x_test[i, :]))
-            }))
+            example = tf.train.Example(
+                features=tf.train.Features(
+                    feature={'X_input': tf.train.Feature(float_list=tf.train.FloatList(value=x_test[i, :]))}
+                )
+            )
             yhat_ = model_.predict([example.SerializeToString()])
             self.assertTrue(np.allclose(yhat_, yhat[i][model_.output_names[0]]))
 
@@ -111,20 +107,19 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
         default_batch_size = 1
 
         def serving_input_receiver_fn():
-            placeholder = tf.placeholder(dtype=np.float32,
-                                         shape=(default_batch_size, 20),
-                                         name='X_input')
+            placeholder = tf.placeholder(dtype=np.float32, shape=(default_batch_size, 20), name='X_input')
             receiver_tensors = {'X_input': placeholder}
             features = {'X_input': placeholder}
             return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
 
         x_test = np.random.random((100, 20))
+
         def input_fn():
             X = tf.data.Dataset.from_tensor_slices(x_test)
             return X.batch(1)
+
         yhat = [v for v in model.predict(input_fn=input_fn)]
-        om.models.put(model, 'estimator-savedmodel',
-                      serving_input_fn=serving_input_receiver_fn)
+        om.models.put(model, 'estimator-savedmodel', serving_input_fn=serving_input_receiver_fn)
         self.assertIn('estimator-savedmodel', om.models.list())
         model_ = om.models.get('estimator-savedmodel')
         self.assertIsInstance(model_, TensorflowSavedModelPredictor)
@@ -140,13 +135,9 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
         model = self._build_model()
 
         default_batch_size = 1
+
         def serving_input_receiver_fn():
-            placeholder = tf.placeholder(dtype=np.float32,
-                                         shape=(default_batch_size, 20),
-                                         name='X_input')
+            placeholder = tf.placeholder(dtype=np.float32, shape=(default_batch_size, 20), name='X_input')
             receiver_tensors = {'X_input': placeholder}
             features = {'X_input': placeholder}
             return tf.estimator.export.ServingInputReceiver(features, receiver_tensors)
-
-
-

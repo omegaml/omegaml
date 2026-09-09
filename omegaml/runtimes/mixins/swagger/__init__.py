@@ -1,11 +1,16 @@
-import apispec
 import json
+
+import apispec
 import yaml
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 
-from omegaml.runtimes.mixins.swagger.helpers import SpecFromModelHelper, SpecFromDatasetHelper, SpecFromScriptHelper, \
-    SpecFromServiceHelper
+from omegaml.runtimes.mixins.swagger.helpers import (
+    SpecFromDatasetHelper,
+    SpecFromModelHelper,
+    SpecFromScriptHelper,
+    SpecFromServiceHelper,
+)
 
 
 class SwaggerGenerator:
@@ -77,7 +82,7 @@ class SwaggerGenerator:
 
     @staticmethod
     def combine_swagger(self, name, patches=[], sources=[], file=None):
-        """ combine swagger definition of a model with schemas of other specs
+        """combine swagger definition of a model with schemas of other specs
 
         Args:
             name (str): the name of the model
@@ -102,6 +107,7 @@ class SwaggerGenerator:
                             sources=['mymodel/schema/data#mymodel_schema_data_X'])
         """
         import yaml
+
         om = self.omega
         spec = om.runtime.swagger(name, format='dict')
         for patch, source in zip(patches, sources):
@@ -114,4 +120,3 @@ class SwaggerGenerator:
         else:
             spec['definitions'][ttype]['properties'][tprop]['$ref'] = f'#/definitions/{stype}'
         return yaml.dump(spec, stream=file)
-

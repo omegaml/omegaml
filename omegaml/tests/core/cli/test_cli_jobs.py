@@ -91,7 +91,7 @@ class CliJobsTest(CliTestScenarios, OmegaTestMixin, TestCase):
         kwargs = dict(now=trigger['run-at'])
         self.om.runtime.task('omegaml.notebook.tasks.execute_scripts').apply_async(kwargs=kwargs).get()
         self.cli('jobs status test', new_start=True)
-        entries =  self.get_log('info')
+        entries = self.get_log('info')
         # entries example - a list of args tuples passed to logger.info(*args)
         #   [('Runs:',), ('  2019-11-15 18:32:28.625000 OK ',),
         #   ('Next scheduled runs:',), ('   PENDING scheduled 2019-11-15T18:34:00',)]

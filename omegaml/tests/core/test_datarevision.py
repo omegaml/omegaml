@@ -15,19 +15,23 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         self.om.datasets.register_mixin(DataRevisionMixin)
 
     def test_revision_store_retrieve(self):
-        """ check storing revisions works as expected"""
+        """check storing revisions works as expected"""
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        })
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+        )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
         self.assertIn('revisions', meta.kind_meta)
         self.assertEqual(meta.kind_meta['revisions']['seq'], 0)
         # update idx data 0-5 with new data
-        df_b = pd.DataFrame({
-            'x': range(5, 10)
-        })
+        df_b = pd.DataFrame(
+            {
+                'x': range(5, 10),
+            },
+        )
         meta = om.datasets.put(df_b, 'revtest')
         self.assertEqual(meta.kind_meta['revisions']['seq'], 1)
         # check we retrieve updated frame as the latest revision
@@ -46,18 +50,14 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         dfx = om.datasets.get('revtest', changeset=1)
         assert_frame_equal(dfx, df_b)
         # check we can append new data and get back revisions with and without this
-        df_c = pd.DataFrame({
-            'x': range(11, 15)
-        }, index=range(11, 15))
+        df_c = pd.DataFrame({'x': range(11, 15)}, index=range(11, 15))
         meta = om.datasets.put(df_c, 'revtest')
         dfx = om.datasets.get('revtest', revision=-1)
         assert_frame_equal(dfx.iloc[5:10], df_a.iloc[5:10])
         assert_frame_equal(dfx.iloc[0:5], df_b.iloc[0:5])
         assert_frame_equal(dfx.iloc[10:], df_c.iloc[0:])
         # check we can update previously appended data
-        df_d = pd.DataFrame({
-            'x': range(16, 18)
-        }, index=range(12, 14))
+        df_d = pd.DataFrame({'x': range(16, 18)}, index=range(12, 14))
         meta = om.datasets.put(df_d, 'revtest')
         dfx = om.datasets.get('revtest', revision=-1)
         assert_frame_equal(dfx.iloc[5:10], df_a.iloc[5:10])
@@ -69,19 +69,28 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_revision_store_retrieve_multiple(self):
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        }, index=range(0, 10))
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+            index=range(0, 10),
+        )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
         # update with new data
-        df_b = pd.DataFrame({
-            'x': range(3, 6)
-        }, index=range(3, 6))
+        df_b = pd.DataFrame(
+            {
+                'x': range(3, 6),
+            },
+            index=range(3, 6),
+        )
         meta = om.datasets.put(df_b, 'revtest')
         # update with new data
-        df_c = pd.DataFrame({
-            'x': range(6, 10)
-        }, index=range(6, 10))
+        df_c = pd.DataFrame(
+            {
+                'x': range(6, 10),
+            },
+            index=range(6, 10),
+        )
         meta = om.datasets.put(df_c, 'revtest')
         # get back original revision
         dfx = om.datasets.get('revtest', revision=0)
@@ -100,15 +109,19 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_revisions_bydate(self):
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        })
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+        )
         dt_a = datetime.utcnow()
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True, revision_dt=dt_a)
         # update idx data 0-5 with new data
-        df_b = pd.DataFrame({
-            'x': range(5, 10)
-        })
+        df_b = pd.DataFrame(
+            {
+                'x': range(5, 10),
+            },
+        )
         dt_b = datetime.utcnow()
         meta = om.datasets.put(df_b, 'revtest', revision_dt=dt_b)
         # get back original revision by date
@@ -123,17 +136,18 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         assert_frame_equal(dfx, df_a)
         # retrieve by name@dt
         revision = dt_a.isoformat()
-        dfx = om.datasets.get(f'revtest@{revision}', )
+        dfx = om.datasets.get(f'revtest@{revision}')
         assert_frame_equal(dfx, df_a)
 
     def test_revisions_bytag(self):
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        })
-        meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True,
-                               tag='rev_a')
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+        )
+        meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True, tag='rev_a')
         # get back original revision by atag
         dfx = om.datasets.get('revtest', revision='rev_a')
         assert_frame_equal(dfx, df_a)
@@ -144,19 +158,28 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_revisions_bynegativeindex(self):
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        }, index=range(0, 10))
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+            index=range(0, 10),
+        )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
         # update with new data
-        df_b = pd.DataFrame({
-            'x': range(3, 6)
-        }, index=range(3, 6))
+        df_b = pd.DataFrame(
+            {
+                'x': range(3, 6),
+            },
+            index=range(3, 6),
+        )
         meta = om.datasets.put(df_b, 'revtest')
         # update with new data
-        df_c = pd.DataFrame({
-            'x': range(6, 10)
-        }, index=range(6, 10))
+        df_c = pd.DataFrame(
+            {
+                'x': range(6, 10),
+            },
+            index=range(6, 10),
+        )
         meta = om.datasets.put(df_c, 'revtest')
         # get back original revision
         # -- same as df_a
@@ -183,14 +206,17 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_revisions_list(self):
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        })
-        meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True,
-                               tag='rev_a')
-        df_b = pd.DataFrame({
-            'x': range(0, 2)
-        })
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+        )
+        meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True, tag='rev_a')
+        df_b = pd.DataFrame(
+            {
+                'x': range(0, 2),
+            },
+        )
         om.datasets.put(df_b, 'revtest')
         # check revisions list
         revs = om.datasets.revisions('revtest', raw=True)
@@ -200,13 +226,18 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_revisions_delete_byindex(self):
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        })
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+        )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
-        df_b = pd.DataFrame({
-            'x': range(5, 8),
-        }, index=range(5, 8))
+        df_b = pd.DataFrame(
+            {
+                'x': range(5, 8),
+            },
+            index=range(5, 8),
+        )
         # apply deletions
         df_b['_delete_'] = True
         meta = om.datasets.put(df_b, 'revtest', tag='with-deletions')
@@ -216,9 +247,12 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         assert_frame_equal(dfx.iloc[0:5], df_a.iloc[0:5])
         assert_frame_equal(dfx.iloc[5:], df_a.iloc[8:])
         # check deletions are applied on getting a revision
-        df_c = pd.DataFrame({
-            'x': range(5, 8),
-        }, index=range(5, 8))
+        df_c = pd.DataFrame(
+            {
+                'x': range(5, 8),
+            },
+            index=range(5, 8),
+        )
         # -- add the deleted rows again
         om.datasets.put(df_c, 'revtest')
         dfx = om.datasets.get('revtest', revision=-1)
@@ -233,13 +267,18 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_revisions_delete_byflag(self):
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        })
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+        )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
-        df_b = pd.DataFrame({
-            'x': range(5, 8),
-        }, index=range(5, 8))
+        df_b = pd.DataFrame(
+            {
+                'x': range(5, 8),
+            },
+            index=range(5, 8),
+        )
         # apply deletions
         meta = om.datasets.put(df_b, 'revtest', delete=True, tag='with-deletions')
         # check deletion happened
@@ -248,9 +287,7 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         assert_frame_equal(dfx.iloc[0:5], df_a.iloc[0:5])
         assert_frame_equal(dfx.iloc[5:], df_a.iloc[8:])
         # check deletions are applied on getting a revision
-        df_c = pd.DataFrame({
-            'x': range(5, 8),
-        }, index=range(5, 8))
+        df_c = pd.DataFrame({'x': range(5, 8)}, index=range(5, 8))
         # -- add the deleted rows again
         om.datasets.put(df_c, 'revtest')
         dfx = om.datasets.get('revtest', revision=-1)
@@ -265,11 +302,12 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_revisions_trace(self):
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        })
-        meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True,
-                               tag='rev_a')
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+        )
+        meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True, tag='rev_a')
         # get back original revision by atag
         dfx = om.datasets.get('revtest', revision='rev_a', trace_revisions=True)
         assert_frame_equal(dfx[['x']], df_a)
@@ -280,13 +318,17 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # test for fix on issue #400
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10),
-        })
-        df_b = pd.DataFrame({
-            'x': range(0, 10),
-            'y': range(0, 10),
-        })
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+        )
+        df_b = pd.DataFrame(
+            {
+                'x': range(0, 10),
+                'y': range(0, 10),
+            },
+        )
         om.datasets.put(df_a, 'revtest', append=False, revisions=True, tag='rev_a')
         om.datasets.put(df_b, 'revtest', tag='rev_b')
         # check we can get back revisions
@@ -302,14 +344,15 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('_delete_', dfx.columns)
 
     def test_revision_revision_existing(self):
-        """ check storing revisions works as expected"""
+        """check storing revisions works as expected"""
         om = self.om
         # storing dataset by numeric index, 0-9
-        df_a = pd.DataFrame({
-            'x': range(0, 10)
-        })
+        df_a = pd.DataFrame(
+            {
+                'x': range(0, 10),
+            },
+        )
         om.datasets.put(df_a, 'revtest', append=False)
         with self.assertRaises(ValueError) as cm:
             om.datasets.put(df_a, 'revtest', revisions=True)
-        self.assertEqual(str(cm.exception),
-                         "adding revisions to existing dataset revtest is not supported")
+        self.assertEqual(str(cm.exception), "adding revisions to existing dataset revtest is not supported")

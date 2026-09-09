@@ -19,7 +19,7 @@ class ObjectHelperTests(OmegaTestMixin, TestCase):
         self.clean()
 
     def test_dataset_helper(self):
-        """ test using a helper for datasets """
+        """test using a helper for datasets"""
         om = self.om
 
         @virtualobj
@@ -89,7 +89,7 @@ class ObjectHelperTests(OmegaTestMixin, TestCase):
         self.assertEqual(model.predict(), 42)
 
     def test_job_helper(self):
-        """ test using a helper for jobs """
+        """test using a helper for jobs"""
         om = self.om
 
         @virtualobj
@@ -97,6 +97,7 @@ class ObjectHelperTests(OmegaTestMixin, TestCase):
             # print("helper", inspect.getargvalues(inspect.currentframe()))
             from nbformat.v4 import new_code_cell
             from omegaml.util import utcnow
+
             if method == "get":
                 # e.g. add a "created cell"
                 nb = backend.get(meta.name)
@@ -115,7 +116,7 @@ class ObjectHelperTests(OmegaTestMixin, TestCase):
         self.assertRegex(nb.cells[-1]['source'], r'\d{4}-\d{2}-\d{2}.*')
 
     def test_supports(self):
-        """ test using helper selection by supports= conditions """
+        """test using helper selection by supports= conditions"""
         om = self.om
 
         @virtualobj
@@ -168,8 +169,8 @@ class ObjectHelperTests(OmegaTestMixin, TestCase):
         # explicit get returns SomeModel
         model = om.models.get('mymodel')
         self.assertTrue('SomeModel' in str(model))
-        assert_allclose(model.predict([[1]]), np.array([1. * 5 + 10 + 42]))
+        assert_allclose(model.predict([[1]]), np.array([1.0 * 5 + 10 + 42]))
         # implicit predict returns just the result
         model = om.runtime.model('mymodel')
         result = model.predict([[1]])
-        assert_allclose(result.get(), np.array([1. * 5 + 10 + 42]))
+        assert_allclose(result.get(), np.array([1.0 * 5 + 10 + 42]))

@@ -1,7 +1,7 @@
 from os import abort
 
 import flask
-from flask import Blueprint, app, render_template, url_for, render_template_string
+from flask import Blueprint, app, render_template, render_template_string, url_for
 from werkzeug.utils import redirect
 
 from omegaml.server.dashboard.views import genai
@@ -9,17 +9,12 @@ from omegaml.server.dashboard.views.admin import users
 from omegaml.server.dashboard.views.cards import plotcards
 from omegaml.server.util import debug_only, stripblocks
 
-omega_bp = Blueprint('omega-server', __name__,
-                     static_folder='static',
-                     template_folder='templates')
+omega_bp = Blueprint('omega-server', __name__, static_folder='static', template_folder='templates')
+omega_ai_bp = Blueprint('omega-ai', __name__, static_folder='static', template_folder='templates')
 
-omega_ai_bp = Blueprint('omega-ai', __name__,
-                        static_folder='static',
-                        template_folder='templates')
-
-from omegaml.server.dashboard.views.respository import scripts, datasets, jobs, models, dashboard
-from omegaml.server.dashboard.views.runtime import summary, streams, tracking
-from omegaml.server.dashboard.views.genai import prompts, chatapps
+from omegaml.server.dashboard.views.genai import chatapps, prompts
+from omegaml.server.dashboard.views.respository import dashboard, datasets, jobs, models, scripts
+from omegaml.server.dashboard.views.runtime import streams, summary, tracking
 
 
 def add_common_routes(bp):
@@ -47,6 +42,7 @@ def modal_test(template):
 @omega_bp.route('/explain/<string:segment>')
 def explain(segment):
     from omegaml.store import OmegaStore
+
     name = flask.request.args.get('name')
     om = getattr(flask.current_app, 'current_om')
     # several places to specify contents of explain tab
@@ -103,8 +99,9 @@ def explain(segment):
             else:
                 result = render_template(fixed_segment_template, segment=segment, metadata=obj_meta, defaults=defaults)
         except Exception as e:
-            result = render_template(fixed_default_template, segment=segment, metadata=obj_meta, error=e,
-                                     defaults=defaults)
+            result = render_template(
+                fixed_default_template, segment=segment, metadata=obj_meta, error=e, defaults=defaults
+            )
     return result
 
 

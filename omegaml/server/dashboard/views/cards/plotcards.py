@@ -1,4 +1,4 @@
-from flask import render_template, abort
+from flask import abort, render_template
 
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.server import flaskview as fv
@@ -49,24 +49,28 @@ def myplots(*args, **kwargs):
     # Example plot 1
     df1 = px.data.iris()
     fig1 = px.scatter(df1, x="sepal_width", y="sepal_length", color="species")
-    plots.append({
-        'content': pio.to_html(fig1, full_html=False),
-        'title': 'Iris Sepal Width vs Sepal Length',
-    })
+    plots.append(
+        {
+            'content': pio.to_html(fig1, full_html=False),
+            'title': 'Iris Sepal Width vs Sepal Length',
+        },
+    )
     # Example plot 2
     df2 = px.data.gapminder()
     fig2 = px.line(df2, x="year", y="lifeExp", color="continent")
-    plots.append({
-        'content': pio.to_html(fig2, full_html=False),
-        'title': 'Gapminder Life Expectancy',
-    })
+    plots.append(
+        {
+            'content': pio.to_html(fig2, full_html=False),
+            'title': 'Gapminder Life Expectancy',
+        },
+    )
     fig1.update_layout(
         margin=dict(l=20, r=20, t=20, b=20),
-        autosize=True
+        autosize=True,
     )
     fig2.update_layout(
         margin=dict(l=20, r=20, t=20, b=20),
-        autosize=True
+        autosize=True,
     )
     return plots
 

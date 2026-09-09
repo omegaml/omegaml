@@ -10,6 +10,7 @@ from omegaml.util import temp_filename
 
 import pandas as pd
 
+
 class CliDatasetsTests(CliTestScenarios, OmegaTestMixin, TestCase):
     def setUp(self):
         super().setUp()
@@ -110,15 +111,3 @@ class CliDatasetsTests(CliTestScenarios, OmegaTestMixin, TestCase):
         self.assertLogContains('info', expected)
         expected = self.pretend_log('"name": "test"')
         self.assertLogContains('info', expected)
-
-
-
-
-
-
-
-
-
-
-
-

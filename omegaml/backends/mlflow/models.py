@@ -13,7 +13,7 @@ from omegaml.util import tarfile_safe_extractall
 
 
 class MLFlowModelBackend(BaseModelBackend):
-    """ A backend for mlflow models
+    """A backend for mlflow models
 
     This provides storage support for mlflow models. The following
     semantics are supported:
@@ -65,6 +65,7 @@ class MLFlowModelBackend(BaseModelBackend):
         om.runtime.model() as well as throught the REST API as any
         other model.
     """
+
     KIND = 'mlflow.model'
     MLFLOW_TYPES = (mlflow.models.Model, mlflow.pyfunc.PythonModel)
     MLFLOW_PREFIX = 'mlflow://'
@@ -82,13 +83,12 @@ class MLFlowModelBackend(BaseModelBackend):
 
     def _infer_model_flavor(self, model):
         from google.protobuf.message import Message
+
         model_type = type(model).__module__
         model_flavor = model_type.split('.', 1)[0]
         mlflow_flavors = [k for k in dir(mlflow) if isinstance(getattr(mlflow, k), mlflow.LazyLoader)]
         flavor_supported = model_flavor in mlflow_flavors
-        non_models = (
-            lambda m: isinstance(m, Message),
-        )
+        non_models = (lambda m: isinstance(m, Message),)
         not_a_model = any(test(model) for test in non_models)
         return not not_a_model and flavor_supported, getattr(mlflow, model_flavor, None)
 
@@ -98,10 +98,8 @@ class MLFlowModelBackend(BaseModelBackend):
         if isinstance(model, mlflow.models.Model):
             model.save(model, tmpfn)
         elif isinstance(model, mlflow.pyfunc.PythonModel):
-            mlflow.pyfunc.save_model(model_path, python_model=model,
-                                     artifacts=kwargs.get('artifacts'))
-        elif isinstance(model, str) and (self._is_path(model)
-                                         or model.startswith(self.MLFLOW_PREFIX)):
+            mlflow.pyfunc.save_model(model_path, python_model=model, artifacts=kwargs.get('artifacts'))
+        elif isinstance(model, str) and (self._is_path(model) or model.startswith(self.MLFLOW_PREFIX)):
             # a mlflow model local storage
             # https://www.mlflow.org/docs/latest/models.html#storage-format
             if model.startswith(self.MLFLOW_PREFIX):

@@ -46,7 +46,7 @@ class NotebookBackend(BaseDataBackend):
         return self.store.fs
 
     def put(self, obj, name, attributes=None, **kwargs):
-        """ store a notebook job
+        """store a notebook job
 
         Args:
             obj (str|NotebookNode|filelike): the notebook object or the notebook's code as a string
@@ -82,12 +82,14 @@ class NotebookBackend(BaseDataBackend):
         if not meta:
             filename = uuid4().hex
             fileid = self._store_to_file(self.store, bbuf, filename)
-            meta = self.store._make_metadata(name=name,
+            meta = self.store._make_metadata(
+                name=name,
                 prefix=self.store.prefix,
                 bucket=self.store.bucket,
                 kind=self.KIND,
                 attributes=attributes,
-                gridfile=fileid)
+                gridfile=fileid,
+            )
             meta = meta.save()
         else:
             filename = uuid4().hex
@@ -95,7 +97,10 @@ class NotebookBackend(BaseDataBackend):
             meta = meta.save()
         # set config
         nb_config = self.store.get_notebook_config(name)
-        meta_config = meta.attributes.get('config', {})
+        meta_config = meta.attributes.get(
+            'config',
+            {},
+        )
         if nb_config:
             meta_config.update(dict(**nb_config))
             meta.attributes['config'] = meta_config
@@ -127,13 +132,11 @@ class NotebookBackend(BaseDataBackend):
             nb = nbread(sbuf, as_version=4)
             return nb
         else:
-            raise gridfs.errors.NoFile(
-                ">{0}< does not exist in jobs bucket '{1}'".format(
-                    name, self.store.bucket))
+            raise gridfs.errors.NoFile(">{0}< does not exist in jobs bucket '{1}'".format(name, self.store.bucket))
 
 
 class NotebookMixin:
-    """ om.jobs storage methods
+    """om.jobs storage methods
 
     Mixin to OmegaStore to provide om.jobs-specific methods
 
@@ -150,6 +153,7 @@ class NotebookMixin:
         # run a notebook immediately
         om.jobs.run('name')
     """
+
     _nb_config_magic = 'omega-ml', 'schedule', 'run-at', 'cron'
     _dir_placeholder = '_placeholder.ipynb'
 
@@ -163,7 +167,7 @@ class NotebookMixin:
         return store.prefix == 'jobs/'
 
     def __repr__(self):
-        return 'OmegaJobs(store={})'.format(super().__repr__())
+        return 'OmegaJobs(store={},)'.format(super().__repr__())
 
     def collection(self, name):
         if not name.endswith('.ipynb'):
@@ -171,7 +175,7 @@ class NotebookMixin:
         return super().collection(name)
 
     def metadata(self, name, **kwargs):
-        """ retrieve metadata of a notebook
+        """retrieve metadata of a notebook
 
         Args:
             name (str): the name of the notebook
@@ -186,7 +190,7 @@ class NotebookMixin:
         return meta
 
     def exists(self, name):
-        """ check if the notebook exists
+        """check if the notebook exists
 
         Args:
             name (str): the name of the notebook
@@ -282,15 +286,12 @@ class NotebookMixin:
                 config_cell = cell
         if not config_cell:
             return {}
-        yaml_conf = '\n'.join(
-            [re.sub('#', '', x, 1) for x in str(
-                config_cell.source).splitlines()])
+        yaml_conf = '\n'.join([re.sub('#', '', x, 1) for x in str(config_cell.source).splitlines()])
         try:
             yaml_conf = yaml.safe_load(yaml_conf)
             config = yaml_conf.get(self._nb_config_magic[0], yaml_conf)
         except Exception:
-            raise ValueError(
-                'Notebook configuration cannot be parsed')
+            raise ValueError('Notebook configuration cannot be parsed')
         # translate config to canonical form
         # TODO refactor to seperate method / mapped translation functions
         if 'schedule' in config:
@@ -346,7 +347,7 @@ class NotebookMixin:
         return self.run_notebook(name, event=event, timeout=timeout)
 
     def run_notebook(self, name, event=None, timeout=None):
-        """ run a given notebook immediately.
+        """run a given notebook immediately.
 
         Args:
             name (str): the name of the jobfile
@@ -421,12 +422,15 @@ class NotebookMixin:
             'kernel_manager_class': AsyncKernelManager,
         }
         # overrides from metadata
-        ep_kwargs.update(meta_job.kind_meta.get('ep_kwargs', {}))
+        ep_kwargs.update(
+            meta_job.kind_meta.get(
+                'ep_kwargs',
+                {},
+            )
+        )
         try:
             resources = {
-                'metadata': {
-                    'path': self.defaults.OMEGA_TMP,
-                }
+                'metadata': {'path': self.defaults.OMEGA_TMP},
             }
             if not meta_job.kind_meta.get('keep_output', False):
                 # https://nbconvert.readthedocs.io/en/latest/api/preprocessors.html
@@ -445,8 +449,7 @@ class NotebookMixin:
             message = f'{message[0:80]}...{message[-80:]}'
             del ep
         # record results
-        meta_results = self.put(notebook,
-            'results/{name}_{ts}'.format(**locals()))
+        meta_results = self.put(notebook, 'results/{name}_{ts}'.format(**locals()))
         meta_results.attributes['source_job'] = name
         meta_results.save()
         job_results = meta_job.attributes.get('job_results', [])
@@ -458,7 +461,7 @@ class NotebookMixin:
             'status': status,
             'ts': ts,
             'message': message,
-            'results': meta_results.name
+            'results': meta_results.name,
         }
         job_runs.append(runstate)
         meta_job.attributes['job_runs'] = job_runs
@@ -466,8 +469,7 @@ class NotebookMixin:
         if event:
             attrs = meta_job.attributes
             triggers = attrs['triggers'] = attrs.get('triggers', [])
-            scheduled = (trigger for trigger in triggers
-                         if trigger['event-kind'] == 'scheduled')
+            scheduled = (trigger for trigger in triggers if trigger['event-kind'] == 'scheduled')
             for trigger in scheduled:
                 if event == trigger['event']:
                     trigger['status'] = status
@@ -503,7 +505,10 @@ class NotebookMixin:
         meta = self.metadata(nb_file)
         attrs = meta.attributes
         # get/set run-at spec
-        config = attrs.get('config', {})
+        config = attrs.get(
+            'config',
+            {},
+        )
         # see what we have as a schedule
         # -- a dictionary of JobSchedule
         if isinstance(run_at, dict):
@@ -541,7 +546,7 @@ class NotebookMixin:
             'event-kind': 'scheduled',
             'event': run_at.isoformat(),
             'run-at': run_at,
-            'status': 'PENDING'
+            'status': 'PENDING',
         }
         # remove all pending triggers, add new triggers
         past_triggers = [cur for cur in triggers if cur.get('status') != 'PENDING']
@@ -569,8 +574,7 @@ class NotebookMixin:
         config = attrs.get('config')
         triggers = attrs.get('triggers', [])
         if only_pending:
-            triggers = [trigger for trigger in triggers
-                        if trigger['status'] == 'PENDING']
+            triggers = [trigger for trigger in triggers if trigger['status'] == 'PENDING']
         if config and 'run-at' in config:
             run_at = config.get('run-at')
         else:
@@ -623,11 +627,26 @@ class NotebookMixin:
         # https://nbconvert.readthedocs.io/en/latest/nbconvert_library.html
         # (exporter class, filemode, config-values
         EXPORTERS = {
-            'html': (HTMLExporter, '', {}),
-            'htmlbody': (HTMLExporter, '', {}),
-            'pdf': (PDFExporter, 'b', {}),
-            'slides': (SlidesExporter, '', {'RevealHelpPreprocessor.url_prefix':
-                                                'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/'}),
+            'html': (
+                HTMLExporter,
+                '',
+                {},
+            ),
+            'htmlbody': (
+                HTMLExporter,
+                '',
+                {},
+            ),
+            'pdf': (
+                PDFExporter,
+                'b',
+                {},
+            ),
+            'slides': (
+                SlidesExporter,
+                '',
+                {'RevealHelpPreprocessor.url_prefix': 'https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/'},
+            ),
         }
         # get exporter according to format
         if format not in EXPORTERS:
@@ -650,7 +669,7 @@ class NotebookMixin:
         return data, resources
 
     def help(self, name_or_obj=None, kind=None, raw=False):
-        """ get help for a notebook
+        """get help for a notebook
 
         Args:
             name_or_obj (str|obj): the name or actual object to get help for

@@ -41,6 +41,7 @@ class JobsCommandBase(StoresCommandMixin, CommandBase):
 
 
     """
+
     command = 'jobs'
 
     def put(self):
@@ -115,13 +116,17 @@ class JobsCommandBase(StoresCommandMixin, CommandBase):
                     self.logger.info(f"Cannot parse {interval}, error was {e}")
                     raise
             if not spec:
-                cron_repr = ('{0._orig_minute} {0._orig_hour} {0._orig_day_of_month} '
-                             '{0._orig_month_of_year} {0._orig_day_of_week}')
-                sched = om.jobs.Schedule(minute=minute or '*',
-                                         hour=hour or '*',
-                                         monthday=monthday or '*',
-                                         weekday=weekday or '*',
-                                         month=month or '*')
+                cron_repr = (
+                    '{0._orig_minute} {0._orig_hour} {0._orig_day_of_month} '
+                    '{0._orig_month_of_year} {0._orig_day_of_week}'
+                )
+                sched = om.jobs.Schedule(
+                    minute=minute or '*',
+                    hour=hour or '*',
+                    monthday=monthday or '*',
+                    weekday=weekday or '*',
+                    month=month or '*',
+                )
                 cron_sched = sched.cron
             else:
                 cron_sched = spec

@@ -5,8 +5,7 @@ from types import FunctionType
 from unittest import TestCase, mock, skipUnless
 from unittest.mock import patch
 
-from omegaml.backends.genai import GenAIBaseBackend, GenAIModel, GenAIModelHandler, \
-    virtual_genai
+from omegaml.backends.genai import GenAIBaseBackend, GenAIModel, GenAIModelHandler, virtual_genai
 from omegaml.backends.genai.models.conversation import ConversationModel, ConversationModelBackend
 from omegaml.backends.genai.models.textmodel import TextModelBackend
 from omegaml.backends.genai.retrieval import SimpleEmbeddingModel
@@ -149,9 +148,19 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
         model = self.om.models.get('mymodel')
         # mock openai call
-        openai_response = AttrDict({
-            'choices': [AttrDict({'message': AttrDict({'role': 'assistant', 'content': 'hello how are you'})})]
-        })
+        openai_response = AttrDict(
+            {
+                'choices': [
+                    AttrDict(
+                        {
+                            'message': AttrDict(
+                                {'role': 'assistant', 'content': 'hello how are you'},
+                            )
+                        },
+                    )
+                ]
+            },
+        )
         model.provider = OpenAIProvider
         model.provider.complete.return_value = openai_response
         # check call to openai would be ok
@@ -181,9 +190,19 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         meta = self.om.models.put('openai+http://localhost/mymodel', 'mymodel')
         model = self.om.models.get('mymodel', data_store=self.om.datasets)
         # mock openai call
-        openai_response = AttrDict({
-            'choices': [AttrDict({'message': AttrDict({'role': 'assistant', 'content': 'hello how are you'})})]
-        })
+        openai_response = AttrDict(
+            {
+                'choices': [
+                    AttrDict(
+                        {
+                            'message': AttrDict(
+                                {'role': 'assistant', 'content': 'hello how are you'},
+                            )
+                        },
+                    )
+                ]
+            },
+        )
         model.provider = OpenAIProvider
         model.provider.complete.return_value = openai_response
         # check call to openai would be ok
@@ -223,14 +242,20 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         # -- simulate tokenized responses, one character at a time
         assistant_response = 'hello how are you'
         openai_responses = [
-            AttrDict({
-                'choices': [
-                    AttrDict({
-                        'finish_reason': 'stop' if i == len(assistant_response) - 1 else None,
-                        'delta': AttrDict({'role': 'assistant', 'content': c}),
-                    })
-                ]
-            })
+            AttrDict(
+                {
+                    'choices': [
+                        AttrDict(
+                            {
+                                'finish_reason': 'stop' if i == len(assistant_response) - 1 else None,
+                                'delta': AttrDict(
+                                    {'role': 'assistant', 'content': c},
+                                ),
+                            },
+                        )
+                    ]
+                },
+            )
             for i, c in enumerate(assistant_response)
         ]
         model.provider = OpenAIProvider
@@ -261,14 +286,18 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         # -- simulate tokenized responses, one character at a time
         assistant_response = 'hello how are you'
         openai_responses = [
-            AttrDict({
-                'choices': [
-                    AttrDict({
-                        'finish_reason': 'stop' if i == len(assistant_response) - 1 else None,
-                        'delta': [],  # invalid delta object (wrong type, should be {'content': ...} )
-                    })
-                ]
-            })
+            AttrDict(
+                {
+                    'choices': [
+                        AttrDict(
+                            {
+                                'finish_reason': 'stop' if i == len(assistant_response) - 1 else None,
+                                'delta': [],  # invalid delta object (wrong type, should be {'content': ...} )
+                            },
+                        )
+                    ]
+                },
+            )
             for i, c in enumerate(assistant_response)
         ]
         model.provider = OpenAIProvider
@@ -347,37 +376,12 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         # mock openai call
         # -- Ref: https://platform.openai.com/docs/api-reference/chat/get
         # -- the model's response to initial prompt (calling a tool)
-        openai_response_to_call_tool = dotable({
-            "choices": [
-                {
-                    "finish_reason": "tool_calls",
-                    "message": {
-                        "role": "assistant",
-                        "content": None,
-                        'tool_calls': [
-                            {
-                                'id': "call_tool_1",
-                                "type": "function",
-                                "function": {"name": "weather", "arguments": "{}"},
-                            }
-                        ],
-                    },
-                }
-            ]
-        })
-        # -- the model's response upon receiving tool results
-        openai_response_to_tool_result = dotable({
-            "choices": [
-                {"finish_reason": "tool_calls", "message": {"role": "assistant", "content": "the weather is sunny"}}
-            ]
-        })
-        # the streamed response to call tools
-        openai_response_to_call_tool_stream = [
-            dotable({
+        openai_response_to_call_tool = dotable(
+            {
                 "choices": [
                     {
                         "finish_reason": "tool_calls",
-                        "delta": {
+                        "message": {
                             "role": "assistant",
                             "content": None,
                             'tool_calls': [
@@ -390,17 +394,50 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
                         },
                     }
                 ]
-            })
+            },
+        )
+        # -- the model's response upon receiving tool results
+        openai_response_to_tool_result = dotable(
+            {
+                "choices": [
+                    {"finish_reason": "tool_calls", "message": {"role": "assistant", "content": "the weather is sunny"}}
+                ]
+            },
+        )
+        # the streamed response to call tools
+        openai_response_to_call_tool_stream = [
+            dotable(
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "tool_calls",
+                            "delta": {
+                                "role": "assistant",
+                                "content": None,
+                                'tool_calls': [
+                                    {
+                                        'id': "call_tool_1",
+                                        "type": "function",
+                                        "function": {"name": "weather", "arguments": "{}"},
+                                    }
+                                ],
+                            },
+                        }
+                    ]
+                },
+            )
         ]
         openai_response_to_tool_result_stream = [
-            dotable({
-                "choices": [
-                    {
-                        "finish_reason": "tool_calls",  # fmt:asis
-                        "delta": {"role": "assistant", "content": "the weather is sunny"},
-                    }
-                ]
-            })
+            dotable(
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "tool_calls",  # fmt:asis
+                            "delta": {"role": "assistant", "content": "the weather is sunny"},
+                        }
+                    ]
+                },
+            )
         ]
         model.provider = OpenAIProvider
         model.provider.complete.side_effect = [
@@ -472,9 +509,9 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         # mock model provider response
         # -- we test our ConverstaionModel(GenAIModel), not the provider
         model.provider = OpenAIProvider
-        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
-            "choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": dotable(kwargs)}}]
-        })
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": dotable(kwargs)}}]},
+        )
         # check mocked provider responses
         result = model.complete('hello')
         self.assertEqual(
@@ -483,7 +520,9 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         )
         # using a single message as input
         # -- message is in system template
-        result = model.complete({'role': 'user', 'content': 'hello'})
+        result = model.complete(
+            {'role': 'user', 'content': 'hello'},
+        )
         self.assertEqual(
             subdict(result.get('content').messages[1], ['role', 'content']),
             {'role': 'user', 'content': 'user documents: the quick brown fox jumps over the lazy dog prompt: hello'},
@@ -504,9 +543,9 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model = self.om.models.get('mymodel')
         self.assertEqual(model.prompt, 'you are a test assistant')
         model.provider = OpenAIProvider
-        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
-            "choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": 'hello'}}]
-        })
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": 'hello'}}]},
+        )
         model.complete('hello')
         model.provider.complete.assert_called()
         messages = model.provider.complete.call_args.kwargs.get('messages')
@@ -520,13 +559,16 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         meta = self.om.models.put(
             'openai+http://localhost/mymodel', 'mymodel', strategy={'complete': {'extra_body': {'reasoning': False}}}
         )
-        self.assertEqual(meta.attributes.get('strategy'), {'complete': {'extra_body': {'reasoning': False}}})
+        self.assertEqual(
+            meta.attributes.get('strategy'),
+            {'complete': {'extra_body': {'reasoning': False}}},
+        )
         model = self.om.models.get('mymodel')
         self.assertIn('extra_body', model.strategy['complete'])
         model.provider = OpenAIProvider
-        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
-            "choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": 'hello'}}]
-        })
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": 'hello'}}]},
+        )
         model.complete('hello')
         model.provider.complete.assert_called()
         provider_kwargs = model.provider.complete.call_args.kwargs
@@ -542,9 +584,9 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         model = self.om.models.get('mymodel')
         self.assertEqual(model.template, template)
         model.provider = OpenAIProvider
-        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
-            "choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": 'hello'}}]
-        })
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": 'hello'}}]},
+        )
         model.complete('hello')
         model.provider.complete.assert_called()
         messages = model.provider.complete.call_args.kwargs.get('messages')
@@ -557,9 +599,9 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         om.models.put('openai+http://localhost/mymodel', 'mymodel')
         model = om.models.get('mymodel')
         model.provider = OpenAIProvider
-        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
-            "choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": 'hello'}}]
-        })
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": 'hello'}}]},
+        )
         messages = [{"role": "user", "content": "test"}]
         model.complete('', messages=messages, raw=True)
         model.provider.complete.assert_called()
@@ -629,21 +671,26 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         om.models.put('openai+http://localhost/mymodel', 'mymodel', pipeline='pipeline')
         model = om.models.get('mymodel')
         model.provider = OpenAIProvider
-        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
-            "choices": [
-                {
-                    "finish_reason": "stop",
-                    "message": {"role": "assistant", "content": 'hello ' + kwargs['messages'][-1]['content']},
-                }
-            ]
-        })
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable(
+            {
+                "choices": [
+                    {
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": 'hello ' + kwargs['messages'][-1]['content']},
+                    }
+                ]
+            },
+        )
         # call completion
         result = model.complete('hello')
         # check input and outputs have actually been processed by the pipeline
         # -- all pipeline steps are logged
         exp = om.runtime.experiment('test')
         steps = exp.data(event='pipeline')['key'].unique()
-        self.assertEqual(set(steps), {'template', 'prepare', 'complete', 'process'})
+        self.assertEqual(
+            set(steps),
+            {'template', 'prepare', 'complete', 'process'},
+        )
         # -- result reflects input (prepare)
         self.assertIn('**modified message**', result['content'])
         # -- pipeline reflects output (process)

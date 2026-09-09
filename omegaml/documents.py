@@ -4,9 +4,7 @@ import datetime
 
 from mongoengine.base.fields import ObjectIdField
 from mongoengine.document import Document
-from mongoengine.fields import (
-    StringField, FileField, DictField, DateTimeField
-)
+from mongoengine.fields import StringField, FileField, DictField, DateTimeField
 from mongoengine.pymongo_support import LEGACY_JSON_OPTIONS
 from pymongo.errors import OperationFailure
 
@@ -78,24 +76,21 @@ def make_Metadata(db_alias='omega', collection=None):
     # this is to create context specific Metadata class that takes the
     # database from the given alias at the time of use
     from omegaml.documents import Metadata as Metadata_base
+
     collection = collection or settings().OMEGA_MONGO_COLLECTION
 
     class Metadata(Metadata_base, Document):
         # override db_alias in gridfile
-        gridfile = FileField(
-            db_alias=db_alias,
-            collection_name=collection)
+        gridfile = FileField(db_alias=db_alias, collection_name=collection)
         # the actual db is defined at runtime
         meta = {
             'db_alias': db_alias,
             'strict': False,
             'indexes': [
                 # unique entry
-                {
-                    'fields': ['bucket', 'prefix', 'name'],
-                },
+                {'fields': ['bucket', 'prefix', 'name']},
                 'created',  # most recent is last, i.e. [-1]
-            ]
+            ],
         }
 
         def __new__(cls, *args, **kwargs):
@@ -108,9 +103,8 @@ def make_Metadata(db_alias='omega', collection=None):
 
         def __unicode__(self):
             fields = ('name', 'bucket', 'prefix', 'created', 'kind')
-            kwargs = ('%s=%s' % (k, getattr(self, k))
-                      for k in self._fields.keys() if k in fields)
-            return u"Metadata(%s)" % ','.join(kwargs)
+            kwargs = ('%s=%s' % (k, getattr(self, k)) for k in self._fields.keys() if k in fields)
+            return "Metadata(%s)" % ','.join(kwargs)
 
         def save(self, *args, **kwargs):
             assert self.name is not None, "a dataset name is needed before saving"
@@ -118,8 +112,7 @@ def make_Metadata(db_alias='omega', collection=None):
             return super(Metadata_base, self).save(*args, **kwargs)
 
         def to_json(self, **kwargs):
-            kwargs['json_options'] = kwargs.get('json_options',
-                                                LEGACY_JSON_OPTIONS)
+            kwargs['json_options'] = kwargs.get('json_options', LEGACY_JSON_OPTIONS)
             return super().to_json(**kwargs)
 
         def to_dict(self):
@@ -142,12 +135,7 @@ def make_QueryCache(db_alias='omega'):
         collection = StringField()
         key = StringField()
         value = DictField()
-        meta = {
-            'db_alias': db_alias,
-            'indexes': [
-                'key',
-            ]
-        }
+        meta = {'db_alias': db_alias, 'indexes': ['key']}
 
     return QueryCache
 

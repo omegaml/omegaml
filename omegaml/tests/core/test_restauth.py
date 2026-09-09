@@ -5,8 +5,7 @@ from omegaml.client.auth import OmegaRestApiAuth
 
 class OmegaRestApiAuthTests(TestCase):
     def test_omegaauth(self):
-        """ test OmegaRestApiAuth works ok
-        """
+        """test OmegaRestApiAuth works ok"""
         auth = OmegaRestApiAuth("foo", "bar")
         self.assertEqual(auth.username, 'foo')
         self.assertEqual(auth.apikey, 'bar')
@@ -28,4 +27,3 @@ class OmegaRestApiAuthTests(TestCase):
         auth(r)
         self.assertEqual(r.headers['Authorization'], 'ApiKey foo:bar')
         self.assertEqual(r.headers['Qualifier'], 'xyz')
-

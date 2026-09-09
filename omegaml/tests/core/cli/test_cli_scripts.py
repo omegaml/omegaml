@@ -50,4 +50,3 @@ class CliScriptsTest(CliTestScenarios, OmegaTestMixin, TestCase):
         self.cli(f'scripts list')
         self.assertLogSize('info', 1)
         self.assertLogContains('info', 'six')
-

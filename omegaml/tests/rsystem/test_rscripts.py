@@ -11,8 +11,7 @@ from omegaml.tests.util import OmegaTestMixin
 
 @unittest.skipUnless(r_available or inside_r, "results consolidated as RSystemTestCase.test_inside_r result")
 class RSystemScriptTests(OmegaTestMixin, unittest.TestCase):
-    """ test running R functionality from within Python
-    """
+    """test running R functionality from within Python"""
 
     def setUp(self):
         om = self.om = Omega()
@@ -23,13 +22,14 @@ class RSystemScriptTests(OmegaTestMixin, unittest.TestCase):
 
     def _write_helloR(self):
         import omegaml
+
         om = self.om
-        package_path = (Path(omegaml.__file__).parent / 'example' / 'demo' / 'helloR')
+        package_path = Path(omegaml.__file__).parent / 'example' / 'demo' / 'helloR'
         meta = om.scripts.put(f'R://{package_path}/app.R', 'helloR')
         return meta
 
     def test_rpackage(self):
-        """ test we can store and retrieve R packages """
+        """test we can store and retrieve R packages"""
         om = self.om
         meta = self._write_helloR()
         mod = om.scripts.get('helloR')
@@ -43,7 +43,7 @@ class RSystemScriptTests(OmegaTestMixin, unittest.TestCase):
         self.assertEqual(output['scripts'], ['helloR'])
 
     def test_rpackage_runtime(self):
-        """ test we can run R packages on the runtime """
+        """test we can run R packages on the runtime"""
         om = self.om
         meta = self._write_helloR()
         result = om.runtime.script('helloR').run().get()
@@ -53,4 +53,3 @@ class RSystemScriptTests(OmegaTestMixin, unittest.TestCase):
         self.assertIn('message', output)
         self.assertEqual(output['message'], ['hello from R'])
         self.assertEqual(output['scripts'], ['helloR'])
-

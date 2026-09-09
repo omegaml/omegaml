@@ -1,14 +1,15 @@
 from __future__ import absolute_import
 
-import numpy as np
 import os
-import pandas as pd
 import random
 import string
 import unittest
 from datetime import datetime
-from pandas.testing import assert_frame_equal, assert_series_equal
 from unittest.case import TestCase, skip
+
+import numpy as np
+import pandas as pd
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 from omegaml import Omega
 from omegaml.mdataframe import MDataFrame
@@ -17,11 +18,12 @@ from omegaml.util import flatten_columns
 
 
 class MDataFrameTests(OmegaTestMixin, TestCase):
-
     def setUp(self):
         TestCase.setUp(self)
-        df = self.df = pd.DataFrame({'x': list(range(0, 10)) + list(range(0, 10)),
-                                     'y': random.sample(list(range(0, 100)), 20)})
+        df = self.df = pd.DataFrame({
+            'x': list(range(0, 10)) + list(range(0, 10)),
+            'y': random.sample(list(range(0, 100)), 20),
+        })
         om = self.om = Omega()
         self.clean()
         om.datasets.put(df, 'sample', append=False)
@@ -90,8 +92,7 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         df = self.df
         mdf = MDataFrame(coll)
         result = mdf.value
-        self.assertEqual(set(MDataFrame(coll).columns),
-                         set(list(df.columns)))
+        self.assertEqual(set(MDataFrame(coll).columns), set(list(df.columns)))
         self.assertTrue(result.equals(df))
         self.assertEqual(mdf.shape, df.shape)
 
@@ -105,14 +106,13 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
     def test_mdataframe_xlarge(self):
         df = pd.DataFrame({
             'a': list(range(0, int(1e6 + 1))),
-            'b': list(range(0, int(1e6 + 1)))
+            'b': list(range(0, int(1e6 + 1))),
         })
         store = self.om.datasets
         store.put(df, 'mydata-xlarge', append=False)
         coll = store.collection('mydata-xlarge')
         result = MDataFrame(coll).value
-        self.assertEqual(set(MDataFrame(coll).columns),
-                         set(list(df.columns)))
+        self.assertEqual(set(MDataFrame(coll).columns), set(list(df.columns)))
         self.assertTrue(result.equals(df))
 
     def test_mdataframe_column_attribute(self):
@@ -137,17 +137,18 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         coll = self.coll
         df = self.df
         result = MDataFrame(coll).sort(['-x', '-y']).value
-        df = df.sort_values(
-            ['x', 'y'], ascending=[False, False])
+        df = df.sort_values(['x', 'y'], ascending=[False, False])
         assert_frame_equal(df, result)
 
     def test_mdataframe_merge(self):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': list(range(0, 20)),
-                              'y': list(range(0, 20)),
-                              'z': list(range(0, 20))})
+        other = pd.DataFrame({
+            'x': list(range(0, 20)),
+            'y': list(range(0, 20)),
+            'z': list(range(0, 20)),
+        })
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='left').value
@@ -158,13 +159,14 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'s': list(range(0, 20)),
-                              'y': list(range(0, 20)),
-                              'z': list(range(0, 20))})
+        other = pd.DataFrame({
+            's': list(range(0, 20)),
+            'y': list(range(0, 20)),
+            'z': list(range(0, 20)),
+        })
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
-        result = MDataFrame(coll).merge(coll2, left_on='x',
-                                        right_on='s', how='left').value
+        result = MDataFrame(coll).merge(coll2, left_on='x', right_on='s', how='left').value
         testdf = df.merge(other, left_on='x', right_on='s', how='left')
         testdf = testdf[result.columns]
         self.assertTrue(result.equals(testdf))
@@ -173,9 +175,11 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': list(range(50, 55)),
-                              'y': list(range(0, 5)),
-                              'z': list(range(0, 5))})
+        other = pd.DataFrame({
+            'x': list(range(50, 55)),
+            'y': list(range(0, 5)),
+            'z': list(range(0, 5)),
+        })
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='left').value
@@ -189,9 +193,11 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': list(range(0, 5)),
-                              'y': list(range(0, 5)),
-                              'z': list(range(0, 5))})
+        other = pd.DataFrame({
+            'x': list(range(0, 5)),
+            'y': list(range(0, 5)),
+            'z': list(range(0, 5)),
+        })
         om.datasets.put(other, 'samplez', append=False)
         mdf = om.datasets.getl('samplez')
         mdf.append(mdf)
@@ -205,9 +211,11 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': list(range(0, 5)),
-                              'y': list(range(0, 5)),
-                              'z': list(range(0, 5))})
+        other = pd.DataFrame({
+            'x': list(range(0, 5)),
+            'y': list(range(0, 5)),
+            'z': list(range(0, 5)),
+        })
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
         result = MDataFrame(coll).merge(coll2, on='x', how='left').value
@@ -219,13 +227,10 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': list(range(0, 5)),
-                              'y': list(range(0, 5)),
-                              'z': list(range(0, 5))})
+        other = pd.DataFrame({'x': list(range(0, 5)), 'y': list(range(0, 5)), 'z': list(range(0, 5))})
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
-        result = MDataFrame(coll).merge(coll2, on='x', how='inner',
-                                        sort=True).value
+        result = MDataFrame(coll).merge(coll2, on='x', how='inner', sort=True).value
         testdf = df.merge(other, on='x', how='inner', sort=True)
         testdf = testdf[result.columns]
         self.assertTrue(result.equals(testdf))
@@ -234,13 +239,10 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': list(range(0, 5)),
-                              'y': list(range(0, 5)),
-                              'z': list(range(0, 5))})
+        other = pd.DataFrame({'x': list(range(0, 5)), 'y': list(range(0, 5)), 'z': list(range(0, 5))})
         om.datasets.put(other, 'samplez', append=False)
         coll2 = om.datasets.collection('samplez')
-        result = MDataFrame(coll).merge(coll2, on='x', how='left',
-                                        sort=True).value
+        result = MDataFrame(coll).merge(coll2, on='x', how='left', sort=True).value
         testdf = df.merge(other, on='x', how='left', sort=True)
         testdf = testdf[result.columns]
         self.assertTrue(result.equals(testdf))
@@ -249,15 +251,16 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': list(range(0, 5)),
-                              'y': list(range(0, 5)),
-                              'z': list(range(0, 5))})
+        other = pd.DataFrame({
+            'x': list(range(0, 5)),
+            'y': list(range(0, 5)),
+            'z': list(range(0, 5)),
+        })
         om.datasets.put(other, 'samplez', append=False)
         om.datasets.put(other, 'samplez', append=True)
         other = om.datasets.get('samplez')
         coll2 = om.datasets.collection('samplez')
-        result = MDataFrame(coll).merge(coll2, on='x', how='left',
-                                        sort=True).value
+        result = MDataFrame(coll).merge(coll2, on='x', how='left', sort=True).value
         testdf = df.merge(other, on='x', how='left', sort=True)
         testdf = testdf[result.columns]
         self.assertTrue(result.equals(testdf))
@@ -266,15 +269,16 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         coll = self.coll
         df = self.df
         om = self.om
-        other = pd.DataFrame({'x': list(range(0, 5)),
-                              'y': list(range(0, 5)),
-                              'z': list(range(0, 5))})
+        other = pd.DataFrame({
+            'x': list(range(0, 5)),
+            'y': list(range(0, 5)),
+            'z': list(range(0, 5)),
+        })
         om.datasets.put(other, 'samplez', append=False)
         om.datasets.put(other, 'samplez', append=True)
         other = om.datasets.get('samplez')
         coll2 = om.datasets.collection('samplez')
-        result = MDataFrame(coll).merge(coll2, on='x', how='left',
-                                        sort=True, filter=dict(x__in=[1, 2])).value
+        result = MDataFrame(coll).merge(coll2, on='x', how='left', sort=True, filter=dict(x__in=[1, 2])).value
         q = df['x'].isin([1, 2])
         testdf = df[q].merge(other, on='x', how='left', sort=True)
         testdf = testdf[result.columns]
@@ -283,14 +287,15 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
     def test_verylarge_dataframe(self):
         if not os.environ.get('TEST_LARGE'):
             return
-        other = pd.DataFrame({'x': list(range(0, int(10e6))),
-                              'y': list(range(0, int(10e6))),
-                              'z': list(range(0, int(10e6)))})
+        other = pd.DataFrame({
+            'x': list(range(0, int(10e6))),
+            'y': list(range(0, int(10e6))),
+            'z': list(range(0, int(10e6))),
+        })
         coll = self.coll
         df = self.df
         result = MDataFrame(coll).value
-        self.assertEqual(set(MDataFrame(coll).columns),
-                         set(list(df.columns)))
+        self.assertEqual(set(MDataFrame(coll).columns), set(list(df.columns)))
         self.assertTrue(result.equals(df))
 
     def test_unique_series(self):
@@ -304,8 +309,10 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
 
     def test_query_null(self):
         om = self.om
-        df = pd.DataFrame({'x': list(range(0, 5)),
-                           'y': [1, 2, 3, None, None]})
+        df = pd.DataFrame({
+            'x': list(range(0, 5)),
+            'y': [1, 2, 3, None, None],
+        })
         om.datasets.put(df, 'foox', append=False)
         result = om.datasets.get('foox', y__isnull=True, lazy=True).value
         test = df[df.isnull().any(axis=1)]
@@ -313,8 +320,10 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
 
     def test_query_pandas_style(self):
         om = self.om
-        df = pd.DataFrame({'x': list(range(0, 5)),
-                           'y': [1, 2, 3, None, None]})
+        df = pd.DataFrame({
+            'x': list(range(0, 5)),
+            'y': [1, 2, 3, None, None],
+        })
         om.datasets.put(df, 'foox', append=False)
         mdf = om.datasets.getl('foox')
         # simple subset
@@ -338,8 +347,10 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
     @skip
     def test_partial_negative_query(self):
         om = self.om
-        df = pd.DataFrame({'x': list(range(0, 5)),
-                           'y': [1, 2, 3, None, None]})
+        df = pd.DataFrame({
+            'x': list(range(0, 5)),
+            'y': [1, 2, 3, None, None],
+        })
         om.datasets.put(df, 'foox', append=False)
         mdf = om.datasets.getl('foox')
         # TODO this fails and should not
@@ -351,7 +362,7 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         om = self.om
         data = {
             'a': list(range(1, 10)),
-            'b': list(range(1, 10))
+            'b': list(range(1, 10)),
         }
         df = pd.DataFrame(data)
         om.datasets.put(df, 'foo', append=False)
@@ -373,7 +384,7 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         om = self.om
         data = {
             'a': list(range(1, 10)),
-            'b': list(range(1, 10))
+            'b': list(range(1, 10)),
         }
         idx = string.ascii_lowercase[0:9]
         df = pd.DataFrame(data, index=(c for c in idx))
@@ -392,10 +403,13 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         om = self.om
         # create some dataframe
         tsidx = pd.date_range(datetime(2016, 1, 1), datetime(2016, 4, 1))
-        df = pd.DataFrame({
-            'a': list(range(0, len(tsidx))),
-            'b': list(range(0, len(tsidx)))
-        }, index=tsidx)
+        df = pd.DataFrame(
+            {
+                'a': list(range(0, len(tsidx))),
+                'b': list(range(0, len(tsidx))),
+            },
+            index=tsidx,
+        )
         om.datasets.put(df, 'foo', append=False)
         # by label
         dfx = om.datasets.getl('foo').loc[datetime(2016, 2, 3)].value
@@ -408,24 +422,30 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
     def test_locindexer_multiindex(self):
         # create some dataframe
         om = self.om
-        midx = pd.MultiIndex(levels=[[u'bar', u'baz', u'foo', u'qux'],
-                                     [u'one', u'two']],
-                             codes=[
-                                 [0, 0, 1, 1, 2, 2, 3, 3],
-                                 [0, 1, 0, 1, 0, 1, 0, 1]],
-                             names=[u'first', u'second'])
+        midx = pd.MultiIndex(
+            levels=[
+                ['bar', 'baz', 'foo', 'qux'],
+                ['one', 'two'],
+            ],
+            codes=[
+                [0, 0, 1, 1, 2, 2, 3, 3],
+                [0, 1, 0, 1, 0, 1, 0, 1],
+            ],
+            names=['first', 'second'],
+        )
         df = pd.DataFrame({'x': range(0, len(midx))}, index=midx)
         om.datasets.put(df, 'foomidx', append=False)
         dfx = om.datasets.getl('foomidx').loc['bar', 'one'].value
         assert_series_equal(dfx, df.loc['bar', 'one'])
 
     def test_locindexer_series(self):
-        """ test storing a pandas series with it's own index """
+        """test storing a pandas series with it's own index"""
         om = self.om
-        series = pd.Series(range(10),
-                           name='foo',
-                           index=pd.date_range(datetime(2016, 1, 1),
-                                               datetime(2016, 1, 10)))
+        series = pd.Series(
+            range(10),
+            name='foo',
+            index=pd.date_range(datetime(2016, 1, 1), datetime(2016, 1, 10)),
+        )
         om.datasets.put(series, 'fooseries', append=False)
         # try data range
         daterange = slice(datetime(2016, 1, 5), datetime(2016, 1, 10))
@@ -440,7 +460,7 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         om = self.om
         data = {
             'a': list(range(1, 10)),
-            'b': list(range(1, 10))
+            'b': list(range(1, 10)),
         }
         idx = string.ascii_lowercase[0:9]
         df = pd.DataFrame(data, index=(c for c in idx))
@@ -459,7 +479,7 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         om = self.om
         data = {
             'a': list(range(1, 10)),
-            'b': list(range(1, 10))
+            'b': list(range(1, 10)),
         }
         idx = string.ascii_lowercase[0:9]
         df = pd.DataFrame(data, index=(c for c in idx))
@@ -479,7 +499,7 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         om = self.om
         data = {
             'a': list(range(1, 10)),
-            'b': list(range(1, 10))
+            'b': list(range(1, 10)),
         }
         idx = string.ascii_lowercase[0:9]
         df = pd.DataFrame(data, index=(c for c in idx))
@@ -503,7 +523,7 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         om = self.om
         data = {
             'a': list(range(1, 10)),
-            'b': list(range(1, 10))
+            'b': list(range(1, 10)),
         }
         idx = string.ascii_lowercase[0:9]
         df = pd.DataFrame(data, index=(c for c in idx))
@@ -546,16 +566,18 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         om = self.om
         # check that where statements are not executed
         injected = {
-            "$where": "function() { return true; }"
+            "$where": "function() { return true; }",
         }
         mdf = om.datasets.getl('sample', filter=injected)
         self.assertEqual(len(mdf.value), 0)
         # check that $operators are not executed by default
         injected = {
-            "$or": [{
-                "x": -1,
-                "$where": "function() { return true; }"
-            }]
+            "$or": [
+                {
+                    "x": -1,
+                    "$where": "function() { return true; }",
+                }
+            ]
         }
         mdf = om.datasets.getl('sample', filter=injected, sanitize=False)
         # if $where is executed we get rows back, else None (x == -1 is never true)
@@ -563,10 +585,10 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         # check variable replacements that contain filters are detected
         # -- lazy eval
         injected = {
-            "$gt": 0
+            "$gt": 0,
         }
         query = {
-            'x': injected
+            'x': injected,
         }
         with self.assertLogs('omegaml', 'DEBUG') as cm:
             mdf = om.datasets.getl('sample', filter=query)
@@ -577,10 +599,10 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         self.assertEqual(len(result), 0)
         # -- direct eval
         injected = {
-            "$gt": 0
+            "$gt": 0,
         }
         query = {
-            'x': injected
+            'x': injected,
         }
         with self.assertLogs('omegaml', 'DEBUG') as cm:
             result = om.datasets.get('sample', filter=query)
@@ -590,9 +612,11 @@ class MDataFrameTests(OmegaTestMixin, TestCase):
         self.assertEqual(len(result), 0)
         # check we can ask $operators other than $where to be executed
         injected = {
-            "$and": [{
-                "x": {"$gte": 0},
-            }]
+            "$and": [
+                {
+                    "x": {"$gte": 0},
+                }
+            ],
         }
         mdf = om.datasets.getl('sample', filter=injected, sanitize=False)
         df = om.datasets.get('sample')

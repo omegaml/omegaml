@@ -24,7 +24,6 @@ from omegaml.util import reshaped
 
 
 class RuntimeTests(OmegaTestMixin, TestCase):
-
     def setUp(self):
         TestCase.setUp(self)
         om = self.om = Omega()
@@ -38,8 +37,12 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
+        df = pd.DataFrame(
+            {
+                'x': x,
+                'y': y,
+            },
+        )
         X = df[['x']]
         Y = df[['y']]
         # put into Omega
@@ -66,17 +69,19 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         #        om.runtimes.model('mymodel').predict('foo')
         result = om.runtime.model('mymodel').predict(X)
         pred2 = result.get()
-        self.assertTrue(
-            (pred == pred1).all(), "runtimes prediction is different(1)")
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(2)")
+        self.assertTrue((pred == pred1).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_fit(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
+        df = pd.DataFrame(
+            {
+                'x': x,
+                'y': y,
+            },
+        )
         X = df[['x']]
         Y = df[['y']]
         # put into Omega
@@ -121,17 +126,19 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         self.assertIn('Ymeta', meta.attributes['dataset'])
         self.assertIn('_fitX', meta.attributes['dataset'].get('Xmeta').get('name'))
         self.assertIn('_fitY', meta.attributes['dataset'].get('Ymeta').get('name'))
-        self.assertTrue(
-            (pred == pred1).all(), "runtimes prediction is different(1)")
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(2)")
+        self.assertTrue((pred == pred1).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_partial_fit(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
+        df = pd.DataFrame(
+            {
+                'x': x,
+                'y': y,
+            },
+        )
         X = df[['x']][0:2]
         Y = df[['y']][0:2]
         # put into Omega
@@ -146,6 +153,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # create a model locally, store (unfitted) in Omega
         # -- ignore warnings on y shape
         import warnings
+
         warnings.filterwarnings("ignore", category=DataConversionWarning)
         lr = SGDRegressor(max_iter=1000, tol=1e-3)
         om.models.put(lr, 'mymodel2')
@@ -161,12 +169,11 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         batch_size = 2
         for i, start in enumerate(range(0, len(df))):
             previous_mse = mse
-            X = df[['x']][start:start + batch_size]
-            Y = df[['y']][start:start + batch_size]
+            X = df[['x']][start : start + batch_size]
+            Y = df[['y']][start : start + batch_size]
             om.datasets.put(X, 'datax-update', append=False)
             om.datasets.put(Y, 'datay-update', append=False)
-            result = om.runtime.model('mymodel2').partial_fit(
-                'datax-update', 'datay-update')
+            result = om.runtime.model('mymodel2').partial_fit('datax-update', 'datay-update')
             result.get()
             # check the new model version metadata includes the datax/y
             # references
@@ -179,8 +186,9 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # create some data
         x = np.array(list(range(0, 100)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
+        df = pd.DataFrame(
+            {'x': x, 'y': y},
+        )
         # put into Omega
         os.environ['DJANGO_SETTINGS_MODULE'] = ''
         om = Omega()
@@ -191,6 +199,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # create a model locally, store (unfitted) in Omega
         # -- ignore warnings on y shape
         import warnings
+
         warnings.filterwarnings("ignore", category=DataConversionWarning)
         lr = SGDRegressor(max_iter=1000, tol=1e-3, random_state=42)
         om.models.put(lr, 'mymodel2')
@@ -213,8 +222,12 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y}).astype('O')
+        df = pd.DataFrame(
+            {
+                'x': x,
+                'y': y,
+            },
+        ).astype('O')
         X = [[x] for x in list(df.x)]
         Y = [[y] for y in list(df.y)]
         # put into Omega -- assume a client with pandas, scikit learn
@@ -239,17 +252,19 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         #        om.runtimes.model('mymodel2').predict('foo')
         result = om.runtime.model('mymodel2').predict(reshaped(X))
         pred2 = result.get()
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(1)")
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(2)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_predict_hdf_dataframe(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
+        df = pd.DataFrame(
+            {
+                'x': x,
+                'y': y,
+            },
+        )
         X = df['x']
         Y = df['y']
         # put into Omega -- assume a client with pandas, scikit learn
@@ -270,17 +285,19 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         #        om.runtimes.model('mymodel2').predict('foo')
         result = om.runtime.model('mymodel2').predict('datax')
         pred2 = result.get()
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(1)")
-        self.assertTrue(
-            (pred == pred2).all(), "runtimes prediction is different(2)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred2).all(), "runtimes prediction is different(2)")
 
     def test_fit_pipeline(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
+        df = pd.DataFrame(
+            {
+                'x': x,
+                'y': y,
+            },
+        )
         X = df[['x']]
         Y = df[['y']]
         # put into Omega
@@ -292,9 +309,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om.datasets.get('datax')
         om.datasets.get('datay')
         # create a pipeline locally, store (unfitted) in Omega
-        p = Pipeline([
-            ('lr', LinearRegression()),
-        ])
+        p = Pipeline([('lr', LinearRegression())])
         om.models.put(p, 'mymodel2')
         self.assertIn('mymodel2', om.models.list('*'))
         # predict locally for comparison
@@ -305,15 +320,18 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         result.get()
         result = om.runtime.model('mymodel2').predict('datax')
         pred1 = result.get()
-        self.assertTrue(
-            (pred == pred1).all(), "runtimes prediction is different(1)")
+        self.assertTrue((pred == pred1).all(), "runtimes prediction is different(1)")
 
     def test_score(self):
         # create some data
         x = np.array(list(range(0, 10)))
         y = x * 2
-        df = pd.DataFrame({'x': x,
-                           'y': y})
+        df = pd.DataFrame(
+            {
+                'x': x,
+                'y': y,
+            },
+        )
         X = df[['x']]
         Y = df[['y']]
         # put into Omega
@@ -341,7 +359,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om.runtime.celeryapp.conf.CELERY_ALWAYS_EAGER = True
         om.models.put(logreg, 'logreg')
         params = {
-            'C': [0.1, 0.5, 1.0]
+            'C': [0.1, 0.5, 1.0],
         }
         # gridsearch on runtimes
         om.runtime.model('logreg').gridsearch(X, y, parameters=params).get()
@@ -357,11 +375,13 @@ class RuntimeTests(OmegaTestMixin, TestCase):
     def test_gridsearch_iris(self):
         om = Omega()
         from sklearn.datasets import load_iris
+
         X, y = load_iris(return_X_y=True)
         df = pd.DataFrame(X)
         df['y'] = y
         om.datasets.put(df, 'iris', append=False)
         from sklearn.cluster import KMeans
+
         model = KMeans(n_clusters=8, n_init='auto')
         # fit & predict remote
         om.models.drop('iris-model', True)
@@ -381,8 +401,12 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_task_sequence(self):
         om = Omega()
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame(
+            {
+                'x': range(1, 10),
+                'y': range(5, 14),
+            },
+        )
         lr = LinearRegression()
         om.datasets.put(df, 'sample')
         om.models.put(lr, 'regmodel')
@@ -397,8 +421,9 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_task_parallel(self):
         om = Omega()
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame(
+            {'x': range(1, 10), 'y': range(5, 14)},
+        )
         lr = LinearRegression()
         om.datasets.put(df, 'sample')
         om.models.put(lr, 'regmodel')
@@ -414,8 +439,9 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_task_mapreduce_virtualfn(self):
         om = Omega()
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame(
+            {'x': range(1, 10), 'y': range(5, 14)},
+        )
         lr = LinearRegression()
         om.datasets.put(df, 'sample')
         om.models.put(lr, 'regmodel')
@@ -460,8 +486,9 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_task_mapreduce_script(self):
         om = Omega()
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame(
+            {'x': range(1, 10), 'y': range(5, 14)},
+        )
         lr = LinearRegression()
         om.datasets.put(df, 'sample')
         om.models.put(lr, 'regmodel')
@@ -499,23 +526,16 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
         pkgsrc = 'pkg://{}'.format(pkgpath)
         om.scripts.put(pkgsrc, 'callback')
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame(
+            {'x': range(1, 10), 'y': range(5, 14)},
+        )
         lr = LinearRegression()
         lr.fit(df[['x']], df['y'])
         om.datasets.put(df, 'sample')
         om.models.put(lr, 'regmodel')
-        result = (om.runtime
-                  .callback('callback')
-                  .model('regmodel')
-                  .predict('sample[x]')
-                  .get())
+        result = om.runtime.callback('callback').model('regmodel').predict('sample[x]').get()
         self.assertEqual(len(om.datasets.get('callback_results')), 1)
-        result = (om.runtime
-                  .callback('callback')
-                  .model('regmodel')
-                  .predict('sample[x]')
-                  .get())
+        result = om.runtime.callback('callback').model('regmodel').predict('sample[x]').get()
         self.assertEqual(len(om.datasets.get('callback_results')), 2)
 
     def test_bucket_switch(self):
@@ -540,27 +560,20 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
         pkgsrc = 'pkg://{}'.format(pkgpath)
         omb.scripts.put(pkgsrc, 'callback')
-        df = pd.DataFrame({'x': range(1, 10),
-                           'y': range(5, 14)})
+        df = pd.DataFrame(
+            {'x': range(1, 10), 'y': range(5, 14)},
+        )
         lr = LinearRegression()
         lr.fit(df[['x']], df['y'])
         omb.datasets.put(df, 'sample')
         omb.models.put(lr, 'regmodel')
-        result = (omb.runtime
-                  .callback('callback')
-                  .model('regmodel')
-                  .predict('sample[x]')
-                  .get())
+        result = omb.runtime.callback('callback').model('regmodel').predict('sample[x]').get()
         self.assertEqual(len(omb.datasets.get('callback_results')), 1)
-        result = (omb.runtime
-                  .callback('callback')
-                  .model('regmodel')
-                  .predict('sample[x]')
-                  .get())
+        result = omb.runtime.callback('callback').model('regmodel').predict('sample[x]').get()
         self.assertEqual(len(omb.datasets.get('callback_results')), 2)
 
     def test_task_logging(self):
-        """ test task python output can be logged per-request """
+        """test task python output can be logged per-request"""
         om = Omega()
         om.logger.reset()
         # no python logging, only om.logger
@@ -580,7 +593,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         self.assertEqual(len(om.logger.dataset.get()), 4)
 
     def test_task_logging_bucket(self):
-        """ test task python output can be logged per-request """
+        """test task python output can be logged per-request"""
         om = Omega()['test']
         om.logger.reset()
         # no python logging, only om.logger
@@ -600,7 +613,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         self.assertEqual(len(om.logger.dataset.get()), 4)
 
     def test_logging_mode(self):
-        """ test task python output can be logged for all requests """
+        """test task python output can be logged for all requests"""
         om = Omega()
         om.logger.reset()
         # -- request logging
@@ -651,7 +664,10 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         results = om.jobs.get(om.jobs.list('results/*')[-1])
         self.assertNotIn(env_pass, str(results['cells']))
         # check that runtime uses auth env to prepare notebook env
-        with patch.dict(om.defaults, {'OMEGA_AUTH_ENV': env_pass}) as m:
+        with patch.dict(
+            om.defaults,
+            {'OMEGA_AUTH_ENV': env_pass},
+        ) as m:
             om.jobs.create(code, 'myjob')
             om.runtime.job('myjob').run().get()
             results = om.jobs.get(om.jobs.list('results/*')[-1])
@@ -697,7 +713,9 @@ class RuntimeTests(OmegaTestMixin, TestCase):
     def test_predict_multiple_samples(self):
         om = Omega()
         reg = LinearRegression()
-        df = pd.DataFrame({'x': range(10)})
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         df['y'] = df['x'] * 2 + 3
         reg.fit(df[['x']], df['y'])
         om.models.put(reg, 'regmodel')
@@ -753,7 +771,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om.runtime.require(routing=dict(label='foo'))
         task = om.runtime.task('omegaml.tasks.omega_ping')
         self.assertEqual(task.kwargs['routing']['label'], 'foo')
-        om.runtime.require(routing=dict(label='bar', ))
+        om.runtime.require(routing=dict(label='bar'))
         task = om.runtime.task('omegaml.tasks.omega_ping')
         self.assertEqual(task.kwargs['routing']['label'], 'bar')
 

@@ -8,4 +8,3 @@ class MyBackend(BaseDataBackend):
     def supports(self, obj, name, **kwargs):
         print("Yeah, we support anything!")
         return True
-

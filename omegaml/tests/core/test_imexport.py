@@ -34,7 +34,9 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_dataframe_export(self):
         om = self.om
         # export
-        df = pd.DataFrame({'x': range(10)})
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         om.datasets.put(df, 'mydf', append=False)
         om.datasets.to_archive('mydf', '/tmp/test')
         # import
@@ -181,7 +183,9 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         om = self.om
         om_restore = self.om_restore
         # export
-        df = pd.DataFrame({'x': range(10)})
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         om.datasets.put(df, 'mydf', append=False)
         arc = om.datasets.to_archive('mydf', '/tmp/test')
         # create an archive
@@ -200,7 +204,9 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_runtime_exporter_export_import(self):
         om = self.om
         om_restore = self.om_restore
-        df = pd.DataFrame({'x': range(10)})
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         om.datasets.put(df, 'mydf', append=False)
         OmegaExporter(om).to_archive('/tmp/test', ['data/mydf'])
         imported = OmegaExporter(om_restore).from_archive('/tmp/test')
@@ -211,7 +217,9 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_runtime_exporter_export_import_compressed(self):
         om = self.om
         om_restore = self.om_restore
-        df = pd.DataFrame({'x': range(10)})
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         om.datasets.put(df, 'mydf', append=False)
         arcfile = OmegaExporter(om).to_archive('/tmp/test', ['data/mydf'], compress=True)
         with self.assertRaises(FileNotFoundError):
@@ -224,7 +232,9 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
     def test_runtime_exporter_export_import_bare_tarfile(self):
         om = self.om
         om_restore = self.om_restore
-        df = pd.DataFrame({'x': range(10)})
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         om.datasets.put(df, 'mydf', append=False)
         arcfile = OmegaExporter(om).to_archive('/tmp/test', ['data/mydf'], compress='tar')
         with self.assertRaises(FileNotFoundError):
@@ -240,7 +250,9 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         om = self.om
         om_restore = self.om_restore
         # dataset
-        df = pd.DataFrame({'x': range(10)})
+        df = pd.DataFrame(
+            {'x': range(10)},
+        )
         om.datasets.put(df, 'mydf', append=False)
         # models
         model = LinearRegression()
@@ -252,19 +264,16 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         code = "print('hello')"
         om.jobs.create(code, 'myjob')
         # export
-        OmegaExporter(om).to_archive('/tmp/test', ['data/mydf',
-                                                   'models/mymodel@version1',
-                                                   'models/mymodel@version2',
-                                                   'jobs/myjob'])
+        OmegaExporter(om).to_archive(
+            '/tmp/test', ['data/mydf', 'models/mymodel@version1', 'models/mymodel@version2', 'jobs/myjob']
+        )
         # import
         # -- mock temp bucket retrieval in order to test promotion
         temp_bucket = om[OmegaExporter._temp_bucket]
         self._apply_store_mixin(temp_bucket)
         with patch.object(om_restore, '_get_bucket') as meth:
             meth.return_value = temp_bucket
-            OmegaExporter(om_restore).from_archive('/tmp/test',
-                                                   pattern='data/.*|models/.*',
-                                                   promote_to=om_restore)
+            OmegaExporter(om_restore).from_archive('/tmp/test', pattern='data/.*|models/.*', promote_to=om_restore)
             self.assertIn('mydf', om_restore.datasets.list())
             self.assertIn('mymodel', om_restore.models.list())
             # expected model versions @latest, @version1, @version2 + base version
@@ -281,8 +290,7 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
             # check jobs were not restored yet
             self.assertEqual(om_restore.jobs.list(), [])
             # restore jobs explicitly
-            OmegaExporter(om_restore).from_archive('/tmp/test',
-                                                   pattern='jobs/.*')
+            OmegaExporter(om_restore).from_archive('/tmp/test', pattern='jobs/.*')
             self.assertEqual(om_restore.jobs.list(), ['myjob.ipynb'])
             # ensure models were not touched
             # -- expect @latest, @version1, @version2 + base version

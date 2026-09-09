@@ -64,6 +64,7 @@ class CustomModelBackend(BaseModelBackend):
     """
     Minimalist model backend
     """
+
     KIND = 'custom.foo'
 
     @classmethod
@@ -75,6 +76,7 @@ class CustomDataBackend(BaseDataBackend):
     """
     Minimalist dataset backend
     """
+
     KIND = 'custom.bar'
 
     @classmethod
@@ -83,6 +85,4 @@ class CustomDataBackend(BaseDataBackend):
 
     def put(self, obj, name, attributes=None):
         kind = 'custom.bar'
-        return self.model_store.make_metadata(name, kind, bucket=None,
-                                              prefix=None,
-                                              attributes=attributes).save()
+        return self.model_store.make_metadata(name, kind, bucket=None, prefix=None, attributes=attributes).save()

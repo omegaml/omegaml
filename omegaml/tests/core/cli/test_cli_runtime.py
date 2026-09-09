@@ -190,16 +190,20 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         om.runtime.auth.apikey = 'apikey'
         self.make_model('reg')
         # use the default REST API as the /apps url
-        with patch('omegaml.client.cli.runtime.requests') as requests, \
-                patch('omegaml.client.cli.runtime.get_omega') as get_omega:
+        with (
+            patch('omegaml.client.cli.runtime.requests') as requests,
+            patch('omegaml.client.cli.runtime.get_omega') as get_omega,
+        ):
             get_omega.return_value = om
             self.cli('runtime restart app apps/test')
             requests.get.assert_called()
             self.assertEqual(requests.get.call_args_list[0][0], ('local/apps/api/stop/testuser/test',))
             self.assertEqual(requests.get.call_args_list[1][0], ('local/apps/api/start/testuser/test',))
         # use a specific apphub URL
-        with patch('omegaml.client.cli.runtime.requests') as requests, \
-                patch('omegaml.client.cli.runtime.get_omega') as get_omega:
+        with (
+            patch('omegaml.client.cli.runtime.requests') as requests,
+            patch('omegaml.client.cli.runtime.get_omega') as get_omega,
+        ):
             get_omega.return_value = om
             self.cli('runtime restart app apps/test --apphub-url http://myapphub.com')
             requests.get.assert_called()
@@ -213,12 +217,15 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         om.scripts.put(s, '.system/requirements.txt', replace=True)
         # test envinstall as a pure in-process function
         from omegaml.runtimes.envinstall import envinstall
-        for kwargs in (dict(package='pip', requirements=None),
-                       dict(package='pip', requirements='.system/requirements.txt'),
-                       dict(package=None, requirements='.system/requirements.txt'),
-                       dict(package=None, requirements=None),
-                       dict(package=['pip', 'build'], requirements=None),
-                       dict(package=['pip', 'build'], requirements='./system/requirements.txt')):
+
+        for kwargs in (
+            dict(package='pip', requirements=None),
+            dict(package='pip', requirements='.system/requirements.txt'),
+            dict(package=None, requirements='.system/requirements.txt'),
+            dict(package=None, requirements=None),
+            dict(package=['pip', 'build'], requirements=None),
+            dict(package=['pip', 'build'], requirements='./system/requirements.txt'),
+        ):
             result = envinstall.run(om, **kwargs)
             expected = 'Requirement already satisfied: pip in'
             self.assertIn(expected, result + f'(using {kwargs=})')

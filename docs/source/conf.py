@@ -74,9 +74,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'omega-ml'
-copyright = u'2025 (c) omegaml.io by one2seven GmbH'
-author = u'omegaml.io'
+project = 'omega-ml'
+copyright = '2025 (c) omegaml.io by one2seven GmbH'
+author = 'omegaml.io'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -185,9 +185,7 @@ html_static_path = ['_static']
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
-html_css_files = [
-    'custom.css',
-]
+html_css_files = ['custom.css']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -210,11 +208,7 @@ html_css_files = [
 #
 # html_sidebars = {}
 # https://sphinx-contrib.github.io/multiversion/main/index.html
-html_sidebars = {
-    '**': [
-        'versioning.html',
-    ],
-}
+html_sidebars = {'**': ['versioning.html']}
 
 # Whitelist pattern for tags (set to None to ignore all tags)
 # smv_tag_whitelist = r'^(release/0.15.3|release/0.16.3)|latest|stable$' #r'^release/[0-9]*.*$'
@@ -297,15 +291,12 @@ latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     #
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
-
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
@@ -314,10 +305,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, 'omegaml.tex', u'omegaml Documentation',
-     u'omegaml.io', 'manual'),
-]
+latex_documents = [(master_doc, 'omegaml.tex', 'omegaml Documentation', 'omegaml.io', 'manual')]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -356,10 +344,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'omegaml', u'omegaml Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, 'omegaml', 'omegaml Documentation', [author], 1)]
 
 # If true, show URL addresses after external links.
 #
@@ -372,9 +357,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'omegaml', u'omegaml Documentation',
-     author, 'omegaml', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        'omegaml',
+        'omegaml Documentation',
+        author,
+        'omegaml',
+        'One line description of project.',
+        'Miscellaneous',
+    )
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -401,5 +392,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 def setup(app):
     from omegaml import settings
+
     os.environ.pop('DJANGO_SETTINGS_MODULE', None)
     defaults = settings()

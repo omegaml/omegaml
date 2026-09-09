@@ -1,6 +1,7 @@
 """
 A parser/processor to simplify modular docopt cli
 """
+
 import inspect
 import logging
 import os
@@ -298,8 +299,18 @@ class CommandParser:
 
     """
 
-    def __init__(self, docs, commands, argv=None, version=None, logger=None,
-                 command_tag=None, catchall='catchall', askfn=None, debug=False):
+    def __init__(
+        self,
+        docs,
+        commands,
+        argv=None,
+        version=None,
+        logger=None,
+        command_tag=None,
+        catchall='catchall',
+        askfn=None,
+        debug=False,
+    ):
         self.docs = docs
         self.commands = commands  # available command implementations
         self.command = None  # chosen command implementation, see parse_command
@@ -377,7 +388,8 @@ class CommandParser:
                 # see
                 left = inspect.trace()[-1][0].f_locals.get('left')
                 print(
-                    "*** DocoptExit indicates that your command was not parsed. Did you add [options] to the command?")
+                    "*** DocoptExit indicates that your command was not parsed. Did you add [options] to the command?"
+                )
                 print(f"*** The following arguments were not parsed: {left}")
                 raise e
             # by specifying docopt(help=False) we get to control what happens on parse failure
@@ -394,9 +406,7 @@ class CommandParser:
                     raise SystemExit
                 # custom handling should be provided by a Command with command='catchall'
                 elif self.argv[0] == '--copyright':
-                    self.args = {
-                        '--copyright': True,
-                    }
+                    self.args = {'--copyright': True}
                 else:
                     # this re-raises DocoptExit which prints usage
                     raise
@@ -416,7 +426,8 @@ class CommandParser:
                 # see
                 left = inspect.trace()[-1][0].f_locals.get('left')
                 print(
-                    "*** DocoptExit indicates that your command was not parsed. Did you add [options] to the command?")
+                    "*** DocoptExit indicates that your command was not parsed. Did you add [options] to the command?"
+                )
                 print(f"*** The following arguments were not parsed: {left}")
             raise e
         if self.should_debug:
@@ -454,8 +465,7 @@ class CommandParser:
 
     def _command_instance(self, commandcls):
         # instantiate the commandcls given current arguments and a parsed global instance
-        command = commandcls(commandcls.__doc__, argv=self.argv,
-                             logger=self.logger, parser=self)
+        command = commandcls(commandcls.__doc__, argv=self.argv, logger=self.logger, parser=self)
         return command
 
     def process(self):
@@ -546,8 +556,7 @@ class CommandParser:
         """
         value = default
         if self._askfn:
-            return self._askfn(prompt, hide=hide, options=options, default=default,
-                               parser=self)
+            return self._askfn(prompt, hide=hide, options=options, default=default, parser=self)
         if not self.silent:
             if not select:
                 options_text = f'{options} ' if options else ''
@@ -617,6 +626,7 @@ class CommandBase:
 
         See CommandParser for a complete example.
     """
+
     command = 'unspecified'
     action_tag = '<action>'
     usage_header = 'Usage of {self.command}'
@@ -799,9 +809,7 @@ class CommandBase:
         description = (description_header + description) if description.strip() else ''
         return usage, options, description
 
-    def parse_kwargs(self, argname, resolve_bool=True, splitby=None,
-                     pyeval=False, literal_escape=None,
-                     **defaults):
+    def parse_kwargs(self, argname, resolve_bool=True, splitby=None, pyeval=False, literal_escape=None, **defaults):
         """
         Parse [<kw=value>] and [<kw=value>...] kind arguments
 
@@ -855,13 +863,16 @@ class CommandBase:
         if not isinstance(values, list):
             values = [values]  # allow single values
         # seperate method to make it reusable by parse_kwargs and parse_kwarg
-        BOOLMAP = {'true': True, 'yes': True,
-                   'no': False, 'false': False,
-                   'y': True, 'n': False}
+        BOOLMAP = {
+            'true': True,
+            'yes': True,
+            'y': True,
+            'false': False,
+            'no': False,
+            'n': False,
+        }
         doeval = lambda v: pyeval(v) if callable(pyeval) else (eval(v) if pyeval else v)
-        split = lambda v: ([v for v in v.split(splitby) if v]
-                           if splitby and (len(v) > 1 and splitby in v)
-                           else v)
+        split = lambda v: [v for v in v.split(splitby) if v] if splitby and (len(v) > 1 and splitby in v) else v
         literal = lambda v: v.replace(literal_escape, '') if literal_escape else v
         truefalse = lambda v: BOOLMAP.get(v.lower()) if resolve_bool else v
         resolve = lambda v: truefalse(v) if resolve_bool and v in BOOLMAP else doeval(split(literal(v)))
@@ -879,7 +890,7 @@ class CommandBase:
         self.logger.info(msg)
 
     def unquote(self, v):
-        """ remove quotes from value
+        """remove quotes from value
 
         Args:
             v (str): possibly quoted value, e.g. '"foo"' or "'foo'"

@@ -97,8 +97,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def get_delegate(self, name, kind='models', pass_as='model_store'):
         get_delegate_provider = getattr(self.om, kind)
         self.enable_delegate_tracking(name, kind, get_delegate_provider)
-        kwargs = dict(data_store=self.om.datasets,
-                      tracking=self.tracking)
+        kwargs = dict(data_store=self.om.datasets, tracking=self.tracking)
         kwargs[pass_as] = get_delegate_provider
         result = get_delegate_provider.get_backend(name, **kwargs)
         return result
@@ -187,10 +186,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 logger.setLevel(level)
                 save_stdout, save_stderr = sys.stdout, sys.stderr
                 self.app.log.redirect_stdouts_to_logger(logger, loglevel=level)
-                handler = OmegaLoggingHandler.setup(store=self.om.datasets,
-                                                    logger=logger,
-                                                    exit_hook=True,
-                                                    level=level)
+                handler = OmegaLoggingHandler.setup(store=self.om.datasets, logger=logger, exit_hook=True, level=level)
             else:
                 logger = None
             try:
@@ -199,6 +195,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 # in case of DEBUG logging enabled, output exception
                 if logger and logger.isEnabledFor(logging.ERROR):
                     import traceback
+
                     tb = traceback.format_exc() if logger.isEnabledFor(logging.DEBUG) else ''
                     msg = f'{e}\n{tb}'
                     logger.error(msg)
@@ -220,8 +217,11 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 # log task call event
                 # -- only log delegate args, kwargs
                 # -- avoid logging internal arguments
-                exp.log_event(f'task_call', self.name, {'args': self.delegate_args,
-                                                        'kwargs': self.delegate_kwargs})
+                exp.log_event(
+                    f'task_call',
+                    self.name,
+                    {'args': self.delegate_args, 'kwargs': self.delegate_kwargs},
+                )
                 if self.request.id is not None:
                     # PERFTUNED
                     # if we have a request, avoid super().__call__()
@@ -255,10 +255,11 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         try:
             with self.tracking as exp:
-                exp.log_event(f'task_failure', self.name, {
-                    'exception': repr(exc),
-                    'task_id': task_id,
-                })
+                exp.log_event(
+                    f'task_failure',
+                    self.name,
+                    {'exception': repr(exc), 'task_id': task_id},
+                )
                 exp.log_extra(taskid=None, userid=None, remove=True)
                 exp.flush()
         finally:
@@ -268,10 +269,11 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         try:
             with self.tracking as exp:
-                exp.log_event(f'task_retry', self.name, {
-                    'exception': repr(exc),
-                    'task_id': task_id,
-                })
+                exp.log_event(
+                    f'task_retry',
+                    self.name,
+                    {'exception': repr(exc), 'task_id': task_id},
+                )
                 exp.log_extra(taskid=None, userid=None, remove=True)
                 exp.flush()
         finally:
@@ -282,10 +284,11 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         # on task success the experiment is stopped already (if we started it)
         try:
             exp = self.tracking
-            exp.log_event(f'task_success', self.name, {
-                'result': sanitized(retval),
-                'task_id': task_id,
-            })
+            exp.log_event(
+                f'task_success',
+                self.name,
+                {'result': sanitized(retval), 'task_id': task_id},
+            )
             exp.log_extra(taskid=None, userid=None, remove=True)
             exp.flush()
         finally:

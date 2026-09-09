@@ -5,15 +5,13 @@ from omegaml.backends.genai.models.conversation import ConversationModel, Conver
 
 class TextModel(ConversationModel):
     """
-       .. deprecated:: NEXT
-          Use ConversationModel instead. TextModel will be removed in the next release.
-       """
+    .. deprecated:: NEXT
+       Use ConversationModel instead. TextModel will be removed in the next release.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        warnings.warn(
-            "TextModel is deprecated. Use ConversationModel instead.", DeprecationWarning,
-            stacklevel=2)
+        warnings.warn("TextModel is deprecated. Use ConversationModel instead.", DeprecationWarning, stacklevel=2)
 
 
 class TextModelBackend(ConversationModelBackend):

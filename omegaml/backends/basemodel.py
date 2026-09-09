@@ -51,6 +51,7 @@ class BaseModelBackend(BackendBaseCommon):
         score() - score fitted classifier vv test dataset
 
     """
+
     _backend_version_tag = '_om_backend_version'
     _backend_version = '1'
 
@@ -250,9 +251,9 @@ class BaseModelBackend(BackendBaseCommon):
             infile = smart_open.open(uri, 'rb')
         else:
             infile = meta.gridfile
-        model = self._extract_model(infile, storekey,
-                                    self._tmp_packagefn(self.model_store, storekey),
-                                    loader=loader, **kwargs)
+        model = self._extract_model(
+            infile, storekey, self._tmp_packagefn(self.model_store, storekey), loader=loader, **kwargs
+        )
         infile.close()
         return model
 
@@ -265,9 +266,7 @@ class BaseModelBackend(BackendBaseCommon):
         packagefname = self._package_model(obj, storekey, tmpfn, **kwargs) or tmpfn
         gridfile = self._store_to_file(self.model_store, packagefname, storekey, uri=uri)
         self._remove_path(packagefname)
-        kind_meta = {
-            self._backend_version_tag: self._backend_version,
-        }
+        kind_meta = {self._backend_version_tag: self._backend_version}
         return self.model_store._make_metadata(
             name=name,
             prefix=self.model_store.prefix,
@@ -276,10 +275,10 @@ class BaseModelBackend(BackendBaseCommon):
             kind_meta=kind_meta,
             attributes=attributes,
             uri=str(uri or ''),
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
-    def predict(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         """
         predict using data stored in Xname
 
@@ -296,8 +295,7 @@ class BaseModelBackend(BackendBaseCommon):
         infer = getattr(self.infer, '__func__')  # __func__ is the unbound method
         reshape = getattr(self.reshape, '__func__')
         result = infer(model)(reshape(data))
-        return self._prepare_result('predict', result, rName=rName,
-                                    pure_python=pure_python, **kwargs)
+        return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 
     def _resolve_input_data(self, method, Xname, key, **kwargs):
         data = self.data_store.get(Xname)
@@ -313,12 +311,12 @@ class BaseModelBackend(BackendBaseCommon):
             meta = self.data_store.put(result, rName)
             result = meta
         if self.tracking and getattr(self.tracking, 'autotrack', False):
-            self.tracking.log_data('Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind,
-                                   event=method)
+            self.tracking.log_data(
+                'Y', result, dataset=rName, kind=str(type(result)) if rName is None else meta.kind, event=method
+            )
         return result
 
-    def predict_proba(
-            self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+    def predict_proba(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         """
         predict the probability using data stored in Xname
 
@@ -346,8 +344,7 @@ class BaseModelBackend(BackendBaseCommon):
         """
         raise NotImplementedError
 
-    def partial_fit(
-            self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
+    def partial_fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
         """
         partially fit the model with data (online)
 
@@ -362,9 +359,7 @@ class BaseModelBackend(BackendBaseCommon):
 
         raise NotImplementedError
 
-    def fit_transform(
-            self, modelname, Xname, Yname=None, rName=None, pure_python=True,
-            **kwargs):
+    def fit_transform(self, modelname, Xname, Yname=None, rName=None, pure_python=True, **kwargs):
         """
         fit and transform using data
 
@@ -391,9 +386,7 @@ class BaseModelBackend(BackendBaseCommon):
         """
         raise NotImplementedError
 
-    def score(
-            self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-            **kwargs):
+    def score(self, modelname, Xname, Yname=None, rName=True, pure_python=True, **kwargs):
         """
         score using data
 

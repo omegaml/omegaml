@@ -6,6 +6,7 @@ from omegaml import defaults
 class AlertRule:
     def __init__(self, monitor=None, event=None, action=None, recipients=None, since=None):
         from omegaml.backends.monitoring.base import DriftMonitorBase
+
         self.monitor: DriftMonitorBase = monitor
         self.event = event or 'drift'
         self.action = action
@@ -23,5 +24,4 @@ class AlertRule:
 
     def notify(self, recipients, data):
         # log and send notification
-        self.monitor.tracking.log_event('alert', self.monitor._drift_alert_key, data,
-                                        recipients=recipients)
+        self.monitor.tracking.log_event('alert', self.monitor._drift_alert_key, data, recipients=recipients)

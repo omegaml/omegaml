@@ -2,8 +2,7 @@ import warnings
 
 
 class TrackableMetadataMixin:
-    """ plugin for models store to allow linking experiments
-    """
+    """plugin for models store to allow linking experiments"""
 
     @classmethod
     def supports(cls, store, **kwargs):
@@ -36,12 +35,11 @@ class TrackableMetadataMixin:
             tracking['experiments'].append(experiment)
         if label:
             tracking.update({
-                label: experiment
+                label: experiment,
             })
         return meta.save()
 
-    def link_monitor(self, name, experiment, provider=None, event='drift',
-                     alerts=None, schedule=None):
+    def link_monitor(self, name, experiment, provider=None, event='drift', alerts=None, schedule=None):
         """
         This links a model to a monitor by adding the experiment name to the
         list of metadata.tracking.monitors.
@@ -69,17 +67,20 @@ class TrackableMetadataMixin:
                 mon.update({
                     'provider': provider or mon.get('provider'),
                     'alerts': alerts or mon.get('alerts'),
-                    'schedule': schedule or mon.get('schedule')
+                    'schedule': schedule or mon.get('schedule'),
                 })
                 break
         else:
             specs = {
                 'experiment': experiment,
                 'provider': provider or 'default',
-                'alerts': alerts or [{
-                    'event': event,
-                    'recipients': [],
-                }],
+                'alerts': alerts
+                or [
+                    {
+                        'event': event,
+                        'recipients': [],
+                    }
+                ],
                 'schedule': schedule or 'daily',
             }
             monitors.append(specs)
@@ -87,7 +88,7 @@ class TrackableMetadataMixin:
 
 
 class UntrackableMetadataMixin(TrackableMetadataMixin):
-    """ placeholder for objects other than models (future use)
+    """placeholder for objects other than models (future use)
 
     Issues a warning on calling .link_experiment(), .link_monitor() for
     objects outside the models store
