@@ -30,10 +30,9 @@ class PassthroughMixinTests(OmegaTestMixin, unittest.TestCase):
 
     def test_passthrough_runtime(self):
         om = self.om
-        data = pd.DataFrame({
-            'x': range(10),
-            'y': range(10, 20)
-        })
+        data = pd.DataFrame(
+            {'x': range(10), 'y': range(10, 20)},
+        )
         reg = LinearRegression()
         reg.fit(data[['x']], data[['y']])
         om.models.put(reg, 'test')
@@ -47,5 +46,3 @@ class PassthroughMixinTests(OmegaTestMixin, unittest.TestCase):
         result = om.runtime.model('test').predict([2]).get()
         self.assertEqual(len(om.datasets.list(include_temp=True, hidden=True)), 0)
         self.assertEqual(result, [[12]])
-
-

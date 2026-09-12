@@ -16,7 +16,7 @@ class BareObj(object):
 class ConfigurationTests(TestCase):
     def setUp(self):
         self.defaults = {
-            'OMEGA_MONGO_URL': 'foo'
+            'OMEGA_MONGO_URL': 'foo',
         }
 
     def tearDown(self):
@@ -73,7 +73,7 @@ class ConfigurationTests(TestCase):
 
     def test_update_from_dict(self):
         data = {
-            'OMEGA_MONGO_URL': 'updated-foo'
+            'OMEGA_MONGO_URL': 'updated-foo',
         }
         update_from_dict(data, self.defaults)
         self.assertIn('OMEGA_MONGO_URL', self.defaults)
@@ -86,8 +86,10 @@ class ConfigurationTests(TestCase):
         """
         import omegaml as om
         from omegaml.util import settings
+
         # check we get default without patching
         from omegaml import _base_config as _real_base_config
+
         with patch('omegaml._base_config', new=BareObj) as defaults:
             # link callbacks used by get_omega_from_api_key
             _real_base_config.update_from_obj(_real_base_config, attrs=defaults)
@@ -118,13 +120,14 @@ class ConfigurationTests(TestCase):
                             'OMEGA_MY_OWN_SETTING': 'updated-foo',
                             'OMEGA_CELERY_CONFIG': {
                                 'TEST_SETTING': 'pickle',
-                            }
+                            },
                         }
                     }
                 ]
             }
             with patch('omegaml._base_config', new=BareObj) as defaults:
                 from omegaml.client.userconf import get_omega_from_apikey
+
                 # link callbacks used by get_omega_from_api_key
                 _real_base_config.update_from_obj(_real_base_config, attrs=defaults)
                 defaults.update_from_dict = _real_base_config.update_from_dict
@@ -155,6 +158,7 @@ class ConfigurationTests(TestCase):
         # check we get default without patching
         from omegaml.util import settings
         from omegaml import _base_config as _real_base_config
+
         with patch('omegaml.client.userconf._get_userconfig_from_api') as mock:
             mock.return_value = {
                 'objects': [
@@ -163,10 +167,15 @@ class ConfigurationTests(TestCase):
                             "OMEGA_USER_EXTENSIONS": {
                                 "OMEGA_STORE_BACKENDS": {
                                     "test.backend": 'omegaml.backends.npndarray.NumpyNDArrayBackend'
-                                }}}}]
+                                }
+                            }
+                        }
+                    }
+                ]
             }
             with patch('omegaml._base_config', new=BareObj) as defaults:
                 from omegaml.client.userconf import get_omega_from_apikey
+
                 # link callbacks used by get_omega_from_api_key
                 _real_base_config.update_from_obj(_real_base_config, attrs=defaults)
                 defaults.update_from_dict = _real_base_config.update_from_dict

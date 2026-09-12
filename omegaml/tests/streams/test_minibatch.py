@@ -13,13 +13,14 @@ try:
 except ModuleNotFoundError:
     print("minibatch not available - not testing streams")
 else:
+
     class MiniBatchTests(TestCase):
         def setUp(self):
             delete_database()
             self.om = Omega()
             db = self.om.datasets.mongodb
             self.url = self.om.mongo_url + '?authSource=admin'
-            
+
         def tearDown(self):
             disconnect(alias='minibatch')
 
@@ -28,6 +29,7 @@ else:
             Test a stream writes to a buffer
             """
             from minibatch import stream
+
             om = self.om
             om.datasets.mongodb
             s = stream('test', url=self.url)
@@ -47,8 +49,7 @@ else:
                 # function asynchronously upon the window criteria is satisfied
                 om = Omega(mongo_url=url)
 
-                @streaming('test', size=2, url=url, keep=True, queue=q,
-                           sink=DatasetSink(om, 'consumer'))
+                @streaming('test', size=2, url=url, keep=True, queue=q, sink=DatasetSink(om, 'consumer'))
                 def myprocess(window):
                     return {'myprocess': True, 'data': window.data}
 
@@ -80,16 +81,16 @@ else:
                 # function asynchronously upon the window criteria is satisfied
                 om = Omega(mongo_url=url)
 
-                @streaming('test', interval=1, keep=True, url=url, queue=q,
-                           relaxed=True,
-                           sink=DatasetSink(om, 'consumer'))
+                @streaming(
+                    'test', interval=1, keep=True, url=url, queue=q, relaxed=True, sink=DatasetSink(om, 'consumer')
+                )
                 def myprocess(window):
                     return {'myprocess': True, 'data': window.data}
 
             # start stream and consumer
             q = Queue()
             s = stream('test', url=self.url)
-            proc = Process(target=consumer, args=(q, self.url,))
+            proc = Process(target=consumer, args=(q, self.url))
             proc.start()
             # fill stream
             for i in range(10):
@@ -118,16 +119,16 @@ else:
                 # function asynchronously upon the window criteria is satisfied
                 om = Omega(mongo_url=url)
 
-                @streaming('test', interval=1, relaxed=False,
-                           keep=True, url=url, queue=q,
-                           sink=DatasetSink(om, 'consumer'))
+                @streaming(
+                    'test', interval=1, relaxed=False, keep=True, url=url, queue=q, sink=DatasetSink(om, 'consumer')
+                )
                 def myprocess(window):
                     return {'myprocess': True, 'data': window.data}
 
             # start stream and consumer
             s = stream('test', url=self.url)
             q = Queue()
-            proc = Process(target=consumer, args=(q, self.url,))
+            proc = Process(target=consumer, args=(q, self.url))
             proc.start()
             # fill stream
             for i in range(10):

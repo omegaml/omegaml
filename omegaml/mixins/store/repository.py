@@ -8,7 +8,7 @@ from omegaml.store import OmegaStore
 
 
 class RepositoryStorageMixin:
-    """ Enable storing arbitrary serialized objects to OCI artifact repositories
+    """Enable storing arbitrary serialized objects to OCI artifact repositories
 
     How it works:
         * models can be stored using om.models.put(), as usualy

@@ -2,6 +2,7 @@ class PythonPackageMixin(object):
     """
     Install and load scripts
     """
+
     def install(self, specs=None, keep=False):
         """
         install and load packages

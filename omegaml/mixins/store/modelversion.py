@@ -1,5 +1,4 @@
 from collections import defaultdict
-
 from copy import deepcopy
 from hashlib import sha1
 
@@ -55,9 +54,7 @@ class ModelVersionMixin(object):
         actual_name = name
         if meta:
             self._ensure_versioned(meta)
-            actual_name = self._model_version_actual_name(name, tag=tag,
-                                                          commit=commit,
-                                                          version=version)
+            actual_name = self._model_version_actual_name(name, tag=tag, commit=commit, version=version)
         return super().get(actual_name, **kwargs)
 
     def drop(self, name, force=False, version=-1, commit=None, tag=None, **kwargs):
@@ -68,7 +65,7 @@ class ModelVersionMixin(object):
         return super().drop(name, force=force, **kwargs)
 
     def metadata(self, name, bucket=None, prefix=None, version=None, commit=None, tag=None, raw=False, **kwargs):
-        """ returns a version's Metadata
+        """returns a version's Metadata
 
         Args:
             name (str): the name of the objecst
@@ -93,11 +90,9 @@ class ModelVersionMixin(object):
         version = base_version or version or -1
         if raw and base_meta and 'versions' in base_meta.attributes:
             # the actual version's metadata is requested
-            actual_name = self._model_version_actual_name(name, tag=tag,
-                                                          commit=commit,
-                                                          version=version,
-                                                          bucket=bucket,
-                                                          prefix=prefix)
+            actual_name = self._model_version_actual_name(
+                name, tag=tag, commit=commit, version=version, bucket=bucket, prefix=prefix
+            )
             meta = super().metadata(actual_name, bucket=bucket, prefix=prefix)
             ModelVersionMixin._versioned_meta(meta, self)
         elif base_meta:
@@ -112,19 +107,20 @@ class ModelVersionMixin(object):
     def revisions(self, name, raw=False):
         meta = self.metadata(name)
         if meta and self._model_version_applies(name):
-            versions = meta.attributes.get('versions', {})
+            versions = meta.attributes.get(
+                'versions',
+                {},
+            )
             commits = versions.get('commits', [])
-            tags = versions.get('tags', {})
+            tags = versions.get(
+                'tags',
+                {},
+            )
             commit_tags = defaultdict(list)
             for k, v in tags.items():
                 commit_tags[v].append(k)
-            tagged_revs = [
-                f'{name}@{tag}' for tag in tags.keys()
-            ]
-            non_tagged_revs = [
-                f'{name}@{commit["ref"]}' for commit in commits
-                if not commit_tags.get(commit['ref'])
-            ]
+            tagged_revs = [f'{name}@{tag}' for tag in tags.keys()]
+            non_tagged_revs = [f'{name}@{commit["ref"]}' for commit in commits if not commit_tags.get(commit['ref'])]
             revisions = tagged_revs + non_tagged_revs
             as_raw = lambda v: [self.metadata(m, raw=True) for m in revisions]
             return as_raw(revisions) if raw else revisions
@@ -169,8 +165,7 @@ class ModelVersionMixin(object):
             name, tag = name.split('@')
         return name, tag, version
 
-    def _model_version_actual_name(self, name, tag=None, commit=None,
-                                   version=None, bucket=None, prefix=None):
+    def _model_version_actual_name(self, name, tag=None, commit=None, version=None, bucket=None, prefix=None):
         meta, name_tag, name_version = self._base_metadata(name, bucket=bucket, prefix=prefix)
         tag = tag or name_tag
         commit = commit or tag
@@ -225,14 +220,18 @@ class ModelVersionMixin(object):
             # -- copy gridfile and kind_meta to have an exact copy of the previuos version
             version_meta.gridfile = deepcopy(meta.gridfile)
             version_meta.kind_meta = deepcopy(meta.kind_meta)
-            version_meta.kind_meta.update(kwargs.get('kind_meta') or {})
+            version_meta.kind_meta.update(
+                kwargs.get('kind_meta') or {},
+            )
         else:
             # Metadata.save(version=False) => add a commit from an actual object
             # -- kind_meta is created by backend on .put()
             version_meta = self.put(obj, version_name, noversion=True, **kwargs)
         # -- copy attributes for least surprise (user expects similar attributes for new versions)
         version_meta.attributes = deepcopy(meta.attributes)
-        version_meta.attributes.update(kwargs.get('attributes') or {})
+        version_meta.attributes.update(
+            kwargs.get('attributes') or {},
+        )
         if 'versions' in version_meta.attributes:
             del version_meta.attributes['versions']
         version_meta.save()

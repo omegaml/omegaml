@@ -6,6 +6,7 @@ class ProjectedMixin(object):
     """
     A OmegaStore mixin to process column specifications in dataset name
     """
+
     colspec_pattern = re.compile(r"(?P<name>.*)\[(?P<colspec>.*)\].*$")
 
     def metadata(self, name, *args, **kwargs):
@@ -89,14 +90,11 @@ def columnset(colspec, all_columns):
     if colspec is not None:
         if ':' in colspec:
             from_col, to_col = colspec.split(':')
-            from_i = (all_columns.index(from_col)
-                      if from_col else 0)
-            to_i = (all_columns.index(to_col)
-                    if to_col else len(all_columns)) + 1
+            from_i = all_columns.index(from_col) if from_col else 0
+            to_i = (all_columns.index(to_col) if to_col else len(all_columns)) + 1
             columns = all_columns[from_i:to_i]
         elif colspec.startswith('^'):
-            columns = [col for col in all_columns
-                       if col not in colspec[1:].split(',')]
+            columns = [col for col in all_columns if col not in colspec[1:].split(',')]
         else:
             columns = colspec.split(',')
     else:

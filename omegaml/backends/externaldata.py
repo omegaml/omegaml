@@ -4,10 +4,10 @@ from omegaml.backends.basedata import BaseDataBackend
 
 
 class PandasExternalData(BaseDataBackend):
-
     """
     external data is stored as a uri on some external medium
     """
+
     SCHEMES = ['http', 'https', 'ftp', 'file', 's3']
     KIND = 'pandas.csv'
 
@@ -57,15 +57,13 @@ class PandasExternalData(BaseDataBackend):
         if _is_supported_scheme(obj, **kwargs):
             if uri is None:
                 # store object as a location pointer with given name
-                metadata = self.data_store.make_metadata(name, self.KIND,
-                                                         attributes=attributes)
+                metadata = self.data_store.make_metadata(name, self.KIND, attributes=attributes)
                 metadata.uri = obj
             else:
                 # read object, store in given location
                 # then store as a location pointer with given name
                 df = pd.read_csv(uri)
-                metadata = self.data_store.put(df, name, uri=obj,
-                                               attributes=attributes)
+                metadata = self.data_store.put(df, name, uri=obj, attributes=attributes)
         # case object is a supported object type
         elif _is_supported_type(obj, **kwargs) and uri:
             # if object is None we read the file from the URI first
@@ -76,27 +74,23 @@ class PandasExternalData(BaseDataBackend):
             # store in supported location
             if uri.startswith('s3://'):
                 import s3fs
+
                 data = obj.to_csv()
                 fs = s3fs.S3FileSystem()
                 with fs.open(uri, 'wb') as fout:
                     fout.write(data.encode(encoding='utf-8'))
-                metadata = self.data_store.make_metadata(
-                    name, self.KIND, attributes=attributes)
+                metadata = self.data_store.make_metadata(name, self.KIND, attributes=attributes)
                 metadata.uri = uri
             elif uri.startswith('file'):
                 obj.to_csv(uri.replace('file://', ''))
-                metadata = self.data_store.make_metadata(
-                    name, self.KIND, attributes=attributes)
+                metadata = self.data_store.make_metadata(name, self.KIND, attributes=attributes)
                 metadata.uri = uri
             # case erroneous
             else:
-                raise ValueError(
-                    ('Not supported type obj={} with '
-                     'name={} and uri={}').format(type(obj), name, uri))
+                raise ValueError(('Not supported type obj={} with name={} and uri={}').format(type(obj), name, uri))
         # case erroneous parameters
         else:
-            raise ValueError(('Not supported type obj={} '
-                              'with name={}').format(type(obj), name))
+            raise ValueError(('Not supported type obj={} with name={}').format(type(obj), name))
         return metadata.save()
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
@@ -104,10 +98,18 @@ class PandasExternalData(BaseDataBackend):
         Get a csv stored at an external location
         """
         meta = self.data_store.metadata(name)
-        read_kwargs = meta.kind_meta.get('pandas_kwargs', {})
+        read_kwargs = meta.kind_meta.get(
+            'pandas_kwargs',
+            {},
+        )
         read_kwargs.update(dict(usecols=kwargs.get('columns')))
         read_kwargs.update(kwargs)
-        read_kwargs.update(kwargs.get('pandas_kwargs', {}))
+        read_kwargs.update(
+            kwargs.get(
+                'pandas_kwargs',
+                {},
+            )
+        )
         df = pd.read_csv(meta.uri, **read_kwargs)
         return df
 
@@ -128,4 +130,3 @@ def _is_supported_type(obj, **kwargs):
     supported_type = isinstance(obj, (pd.Series, pd.DataFrame))
     supported_scheme = _is_supported_scheme(uri)
     return supported_type & supported_scheme
-

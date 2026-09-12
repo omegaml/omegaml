@@ -23,8 +23,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
 
     """
 
-    def __init__(self, defaults=None, mongo_url=None, celeryconf=None, bucket=None,
-                 **kwargs):
+    def __init__(self, defaults=None, mongo_url=None, celeryconf=None, bucket=None, **kwargs):
         """
         Initialize the client API
 
@@ -39,6 +38,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         :param celeryconf: the celery configuration dictionary
         """
         from omegaml.util import settings
+
         # celery and mongo configuration
         self.defaults = defaults or settings()
         self.mongo_url = mongo_url or self.defaults.OMEGA_MONGO_URL
@@ -64,42 +64,47 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         return f'Omega(bucket={self.bucket})'
 
     def _clone(self, **kwargs):
-        return self.__class__(defaults=self.defaults,
-                              mongo_url=self.mongo_url,
-                              **kwargs)
+        return self.__class__(defaults=self.defaults, mongo_url=self.mongo_url, **kwargs)
 
     def _make_runtime(self, celeryconf):
         from omegaml.runtimes import OmegaRuntime
+
         return OmegaRuntime(self, bucket=self.bucket, defaults=self.defaults, celeryconf=celeryconf)
 
     def _make_store(self, prefix):
         from omegaml.store import OmegaStore
-        return OmegaStore(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults,
-                          dbalias=self._dbalias)
+
+        return OmegaStore(
+            mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults, dbalias=self._dbalias
+        )
 
     def _make_dbalias(self):
         return 'omega-{}'.format(uuid4().hex)
 
     def _make_streams(self, prefix):
         from omegaml.store.streams import StreamsProxy
+
         return StreamsProxy(mongo_url=self.mongo_url, bucket=self.bucket, prefix=prefix, defaults=self.defaults)
 
     def _make_monitor(self):
         import weakref
         from omegaml.client.lunamon import LunaMonitor, OmegaMonitors
+
         status_logger = self.runtime.experiment('.system')
         for_keys = lambda event, keys: {k: event[k] for k in keys if k in event}
-        on_status = lambda event: (status_logger.use().log_event('monitor', event['check'],
-                                                                 for_keys(event,
-                                                                          ('status', 'message', 'error',
-                                                                           'elapsed')))
-                                   if event['check'] == 'health' else None)
+        on_status = lambda event: (
+            status_logger.use().log_event(
+                'monitor', event['check'], for_keys(event, ('status', 'message', 'error', 'elapsed'))
+            )
+            if event['check'] == 'health'
+            else None
+        )
         monitor = LunaMonitor(checks=OmegaMonitors.on(self), on_status=on_status, interval=15)
         weakref.finalize(self, monitor.stop)
         return monitor
 
     def status(self, check=None, data=False, by_status=False, wait=False):
-        """ get the status of the omegaml cluster
+        """get the status of the omegaml cluster
 
         Args:
             check (str): the check to run, e.g. 'storage', 'runtime'
@@ -108,7 +113,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
             wait (bool): wait for the check to complete
 
         Returns:
-            dict 
+            dict
         """
         if self._monitor is None:
             # we defer the creation of the monitor to the first access
@@ -147,6 +152,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
     @property
     def buckets(self):
         from itertools import chain
+
         return list(set(chain(*[getattr(store, 'buckets', []) for store in self._stores])))
 
     def _get_bucket(self, bucket):
@@ -191,6 +197,7 @@ class OmegaDeferredInstance(object):
         @inprogress(text='loading base ...')
         def setup_base():
             from omegaml import _base_config
+
             _base_config.load_framework_support()
             _base_config.load_user_extensions()
             return Omega(*args, **kwargs)
@@ -198,25 +205,35 @@ class OmegaDeferredInstance(object):
         @inprogress(text='loading cloud ...')
         def setup_cloud():
             from omegaml.client.cloud import setup
+
             return setup(*args, **kwargs)
 
         @inprogress(text='loading cloud from env ...')
         def setup_env():
             from omegaml.client.cloud import setup
-            return setup(userid=os.environ['OMEGA_USERID'], apikey=os.environ['OMEGA_APIKEY'],
-                         qualifier=os.environ.get('OMEGA_QUALIFIER'))
+
+            return setup(
+                userid=os.environ['OMEGA_USERID'],
+                apikey=os.environ['OMEGA_APIKEY'],
+                qualifier=os.environ.get('OMEGA_QUALIFIER'),
+            )
 
         @inprogress(text='loading cloud from config ...')
         def setup_cloud_config():
             from omegaml.client.cloud import setup_from_config
+
             return setup_from_config(fallback=setup_base)
 
         omega = None
         from_args = len(args) > 0 or any(kw in kwargs for kw in ('userid', 'apikey', 'api_url', 'qualifier'))
         from_env = {'OMEGA_USERID', 'OMEGA_APIKEY'} < set(os.environ)
         from_config = _base_config.OMEGA_CONFIG_FILE and os.path.exists(_base_config.OMEGA_CONFIG_FILE)
-        loaders = ((from_args, setup_cloud), (from_env, setup_env),
-                   (from_config, setup_cloud_config), (True, setup_base))
+        loaders = (
+            (from_args, setup_cloud),
+            (from_env, setup_env),
+            (from_config, setup_cloud_config),
+            (True, setup_base),
+        )
         must_load = (from_env, setup_env), (from_config, setup_cloud_config)
         errors = []
         for condition, loader in loaders:

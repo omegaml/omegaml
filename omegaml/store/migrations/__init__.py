@@ -3,6 +3,7 @@ from importlib import import_module
 
 from pathlib import Path
 
+
 def migrate(om):
     for modfile in Path(__file__).parent.glob('*.py'):
         modname = modfile.name.replace('.py', '')

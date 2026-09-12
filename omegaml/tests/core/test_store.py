@@ -36,7 +36,6 @@ from omegaml.util import delete_database, json_normalize, migrate_unhashed_datas
 
 
 class StoreTests(unittest.TestCase):
-
     def setUp(self):
         unittest.TestCase.setUp(self)
         delete_database()
@@ -64,8 +63,7 @@ class StoreTests(unittest.TestCase):
         lr.fit(X, Y)
         result = lr.predict(X)
         # package locally
-        backend = ScikitLearnBackend(model_store=store,
-            data_store=store)
+        backend = ScikitLearnBackend(model_store=store, data_store=store)
         # v2 of the ScikitLearnBackend no longer supports testing these methods
         # test put(), get() instead
         zipfname = backend._v1_package_model(lr, 'models/foo')
@@ -112,10 +110,9 @@ class StoreTests(unittest.TestCase):
         """
         this is to test if store prefixes work
         """
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10))},
+        )
         datasets = self._make_store(prefix='teststore')
         models = self._make_store(prefix='models', kind=MDREGISTRY.SKLEARN_JOBLIB)
         datasets.put(df, 'test')
@@ -126,10 +123,9 @@ class StoreTests(unittest.TestCase):
         """
         this is to test if custom path and levels can be provided ok
         """
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10))},
+        )
         datasets = self._make_store(prefix='data')
         models = self._make_store(prefix='models', kind=MDREGISTRY.SKLEARN_JOBLIB)
         # directory-like levels
@@ -162,10 +158,9 @@ class StoreTests(unittest.TestCase):
 
     def test_put_dataframe(self):
         # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10))},
+        )
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         df2 = store.get('mydata')
@@ -173,10 +168,9 @@ class StoreTests(unittest.TestCase):
 
     def test_put_dataframe_multiple(self):
         # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10))},
+        )
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         df2 = store.get('mydata')
@@ -189,10 +183,9 @@ class StoreTests(unittest.TestCase):
     def test_put_dataframe_xtra_large(self):
         # create some dataframe
         # force fast insert
-        df = pd.DataFrame({
-            'a': list(range(0, int(1e4 + 1))),
-            'b': list(range(0, int(1e4 + 1)))
-        })
+        df = pd.DataFrame(
+            {'a': list(range(0, int(1e4 + 1))), 'b': list(range(0, int(1e4 + 1)))},
+        )
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         df2 = store.get('mydata')
@@ -201,32 +194,29 @@ class StoreTests(unittest.TestCase):
     def test_put_dataframe_timestamp(self):
         # create some dataframe
         from datetime import datetime
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
+
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10))},
+        )
         store = self._make_store(prefix='')
         # -- check default timestamp
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp=True)
         df2 = store.get('mydata')
         _created = pd.to_datetime(df2['_created'].unique()[0])
-        self.assertEqual(_created.replace(second=0, microsecond=0),
-            now.replace(second=0, microsecond=0))
+        self.assertEqual(_created.replace(second=0, microsecond=0), now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, default value
         now = datetime.utcnow()
         store.put(df, 'mydata', append=False, timestamp='CREATED')
         df2 = store.get('mydata')
         _created = pd.to_datetime(df2['CREATED'].unique()[0])
-        self.assertEqual(_created.replace(second=0, microsecond=0),
-            now.replace(second=0, microsecond=0))
+        self.assertEqual(_created.replace(second=0, microsecond=0), now.replace(second=0, microsecond=0))
         # -- check custom timestamp column, value as tuple
         now = datetime.utcnow() - timedelta(days=1)
         store.put(df, 'mydata', append=False, timestamp=('CREATED', now))
         df2 = store.get('mydata')
         _created = pd.to_datetime(df2['CREATED'].unique()[0])
-        self.assertEqual(_created.replace(second=0, microsecond=0),
-            now.replace(second=0, microsecond=0))
+        self.assertEqual(_created.replace(second=0, microsecond=0), now.replace(second=0, microsecond=0))
         # set a day in the past to avoid accidentally creating the current
         # datetime in mongo
         now = datetime.now() - timedelta(days=1)
@@ -234,15 +224,13 @@ class StoreTests(unittest.TestCase):
         df2 = store.get('mydata')
         # compare the data
         _created = pd.to_datetime(df2['_created'].unique()[0])
-        self.assertEqual(_created.replace(microsecond=0),
-            now.replace(microsecond=0))
+        self.assertEqual(_created.replace(microsecond=0), now.replace(microsecond=0))
 
     def test_get_dataframe_filter(self):
         # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10))},
+        )
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # filter in mongodb
@@ -253,10 +241,9 @@ class StoreTests(unittest.TestCase):
 
     def test_get_dataframe_project(self):
         # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10))},
+        )
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # filter in mongodb
@@ -267,11 +254,9 @@ class StoreTests(unittest.TestCase):
 
     def test_get_dataframe_projected_mixin(self):
         # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10)),
-            'c': list(range(1, 10)),
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10)), 'c': list(range(1, 10))},
+        )
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # filter in mongodb
@@ -296,11 +281,9 @@ class StoreTests(unittest.TestCase):
 
     def test_get_dataframe_opspec(self):
         # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10)),
-            'c': list(range(1, 10)),
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10)), 'c': list(range(1, 10))},
+        )
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # check # op returns iterchunks by default
@@ -333,11 +316,9 @@ class StoreTests(unittest.TestCase):
 
     def test_get_dataframe_colspec_opspec(self):
         # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10)),
-            'c': list(range(1, 10)),
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10)), 'c': list(range(1, 10))},
+        )
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         # check we can specify [] and # qualifiers
@@ -361,10 +342,9 @@ class StoreTests(unittest.TestCase):
 
     def test_put_dataframe_with_index(self):
         # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10))},
+        )
         store = self._make_store(prefix='')
         store.put(df, 'mydata', index=['a', '-b'])
         idxs = store.collection('mydata').index_information()
@@ -374,10 +354,7 @@ class StoreTests(unittest.TestCase):
     def test_put_dataframe_timeseries(self):
         # create some dataframe
         tsidx = pd.date_range(datetime(2016, 1, 1), datetime(2016, 4, 1))
-        df = pd.DataFrame({
-            'a': list(range(0, len(tsidx))),
-            'b': list(range(0, len(tsidx)))
-        }, index=tsidx)
+        df = pd.DataFrame({'a': list(range(0, len(tsidx))), 'b': list(range(0, len(tsidx)))}, index=tsidx)
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         dfx = store.get('mydata')
@@ -389,12 +366,11 @@ class StoreTests(unittest.TestCase):
     def test_put_dataframe_multiindex(self):
         # create some dataframe
         store = self._make_store(prefix='')
-        midx = pd.MultiIndex(levels=[[u'bar', u'baz', u'foo', u'qux'],
-                                     [u'one', u'two']],
-            codes=[
-                [0, 0, 1, 1, 2, 2, 3, 3],
-                [0, 1, 0, 1, 0, 1, 0, 1]],
-            names=[u'first', u'second'])
+        midx = pd.MultiIndex(
+            levels=[['bar', 'baz', 'foo', 'qux'], ['one', 'two']],
+            codes=[[0, 0, 1, 1, 2, 2, 3, 3], [0, 1, 0, 1, 0, 1, 0, 1]],
+            names=['first', 'second'],
+        )
         df = pd.DataFrame({'x': range(0, len(midx))}, index=midx)
         store.put(df, 'mydata')
         dfx = store.get('mydata')
@@ -415,10 +391,7 @@ class StoreTests(unittest.TestCase):
 
     def test_put_python_dict(self):
         # create some data
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         store = self._make_store(prefix='')
         store.put(data, 'mydata')
         data2 = store.get('mydata')
@@ -431,10 +404,7 @@ class StoreTests(unittest.TestCase):
 
     def test_put_python_dict_with_index(self):
         # create some data
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         store = self._make_store(prefix='')
         store.put(data, 'mydata', index=['a'])
         coll = store.collection('mydata')
@@ -445,10 +415,7 @@ class StoreTests(unittest.TestCase):
 
     def test_put_python_dict_multiple(self):
         # create some data
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         store = self._make_store(prefix='')
         store.put(data, 'mydata')
         store.put(data, 'mydata')
@@ -466,26 +433,21 @@ class StoreTests(unittest.TestCase):
         """
         store = self._make_store(prefix='')
         # pure data
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         meta = store.put(data, 'data')
         data2 = store.get('data', force_python=True)
         self.assertEqual(data, data2)
         # dataframe
         # create some dataframe
-        df = pd.DataFrame({
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        })
+        df = pd.DataFrame(
+            {'a': list(range(1, 10)), 'b': list(range(1, 10))},
+        )
         store.put(df, 'mydata')
         df2 = store.get('mydata', force_python=True)
         df2 = pd.DataFrame(df2)
-        real_cols = [col for col in df2.columns
-                     if (col != '_id'
-                         and not col.startswith('_idx')
-                         and not col.startswith('_om'))]
+        real_cols = [
+            col for col in df2.columns if (col != '_id' and not col.startswith('_idx') and not col.startswith('_om'))
+        ]
         df2 = df2[real_cols]
         self.assertTrue(df.equals(df2), "expected dataframes to be equal")
         # model
@@ -504,10 +466,7 @@ class StoreTests(unittest.TestCase):
     def test_store_with_metadata(self):
         om = OmegaStore(prefix='')
         # dict
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         attributes = {'foo': 'bar'}
         meta = om.put(data, 'data', attributes=attributes)
         self.assertEqual(meta.kind, 'python.data')
@@ -530,16 +489,13 @@ class StoreTests(unittest.TestCase):
         self.assertIsInstance(lr2, LogisticRegression)
 
     def test_store_metadata_notstrict(self):
-        """ ensure Metadata attributes are not strictly checked
+        """ensure Metadata attributes are not strictly checked
 
         this is to allow metadata extensions between omegaml versions
         """
         om = OmegaStore(prefix='')
         # dict
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         attributes = {'foo': 'bar'}
         meta = om.put(data, 'data', attributes=attributes)
         meta_collection = om.mongodb['metadata']
@@ -556,14 +512,8 @@ class StoreTests(unittest.TestCase):
         self.assertTrue(not_raised)
 
     def test_store_dataframe_as_dfgroup(self):
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
-        result_data = {
-            'a': list(range(1, 2)),
-            'b': 1,
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
+        result_data = {'a': list(range(1, 2)), 'b': 1}
         df = pd.DataFrame(data)
         result_df = pd.DataFrame(result_data)
         store = self._make_store()
@@ -571,54 +521,57 @@ class StoreTests(unittest.TestCase):
         meta = store.put(df, 'dfgroup', groupby=groupby_columns)
         self.assertEqual(meta.kind, 'pandas.dfgroup')
         # make sure the collection is created
-        self.assertIn(
-            meta.collection, store.mongodb.list_collection_names())
+        self.assertIn(meta.collection, store.mongodb.list_collection_names())
         # note column order can differ due to insertion order since pandas 0.25.1
         # hence using [] to ensure same column order for both expected, result
         # old kwargs= syntax
-        df1 = store.get('dfgroup', kwargs={'b': 1})
+        df1 = store.get(
+            'dfgroup',
+            kwargs={'b': 1},
+        )
         self.assertTrue(df1.equals(result_df[df1.columns]))
         # new **kwargs filter spec
-        df2 = store.get('dfgroup', **{'b': 1})
+        df2 = store.get(
+            'dfgroup',
+            **{'b': 1},
+        )
         self.assertTrue(df2.equals(result_df[df2.columns]))
         df3 = store.get('dfgroup')
         self.assertTrue(df3.equals(df[df3.columns]))
-        df4 = store.get('dfgroup', **{'a': 1})
+        df4 = store.get(
+            'dfgroup',
+            **{'a': 1},
+        )
         self.assertTrue(df4.equals(result_df[df4.columns]))
 
     def test_store_dataframe_as_dfgroup_injected(self):
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
-        result_data = {
-            'a': list(range(1, 2)),
-            'b': 1,
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
+        result_data = {'a': list(range(1, 2)), 'b': 1}
         df = pd.DataFrame(data)
         result_df = pd.DataFrame(result_data)
         store = self._make_store()
         groupby_columns = ['b']
         meta = store.put(df, 'dfgroup', groupby=groupby_columns)
-        injected = {
-            '$gt': 0,
-        }
+        injected = {'$gt': 0}
         with warnings.catch_warnings(record=True) as wrn:
             warnings.simplefilter('always')
-            df2 = store.get('dfgroup', kwargs={'b': injected})
+            df2 = store.get(
+                'dfgroup',
+                kwargs={'b': injected},
+            )
             warnlog = str(list(w.message for w in wrn))
         self.assertIn('$gt clauses are not permitted', warnlog)
         with self.assertLogs('omegaml', 'DEBUG') as cm:
-            df2 = store.get('dfgroup', kwargs={'b': injected})
+            df2 = store.get(
+                'dfgroup',
+                kwargs={'b': injected},
+            )
             log = cm.output
         self.assertIn("{'b': {'-gt': 0}}", str(log))
         self.assertEqual(len(df2), 0)
 
     def test_store_dataframe_as_hdf(self):
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         df = pd.DataFrame(data)
         store = self._make_store()
         meta = store.put(df, 'foo', as_hdf=True)
@@ -631,8 +584,7 @@ class StoreTests(unittest.TestCase):
         # test for non-existent file raises exception
         meta = store.put(df2, 'foo_will_be_removed', as_hdf=True)
         meta = store.metadata('foo_will_be_removed')
-        file_id = store.fs.get_last_version(
-            meta.gridfile.name)._id
+        file_id = store.fs.get_last_version(meta.gridfile.name)._id
         store.fs.delete(file_id)
         store2 = OmegaStore()
         with self.assertRaises(gridfs.errors.NoFile):
@@ -641,11 +593,8 @@ class StoreTests(unittest.TestCase):
         self.assertNotIn('hdfdf.hdf', store2.fs.list())
 
     def test_put_same_name(self):
-        """ test if metadata is updated instead of a new created """
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        """test if metadata is updated instead of a new created"""
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         df = pd.DataFrame(data)
         store = self._make_store()
         # store the object
@@ -657,18 +606,14 @@ class StoreTests(unittest.TestCase):
         self.assertNotEqual(meta.pk, meta2.pk)
         # Meta is to silence lint on import error
         Meta = store._Metadata
-        metas = Meta.objects(name='foo', prefix=store.prefix,
-            bucket=store.bucket).all()
+        metas = Meta.objects(name='foo', prefix=store.prefix, bucket=store.bucket).all()
         self.assertEqual(len(metas), 1)
         df2 = store.get('foo')
         self.assertTrue(df.equals(df2))
 
     def test_put_append_false(self):
-        """ test if we can create a new dataframe without previous metadata """
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        """test if we can create a new dataframe without previous metadata"""
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         df = pd.DataFrame(data)
         store = self._make_store()
         # store the object
@@ -677,26 +622,39 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(meta['name'], unique_name)
 
     def test_store_with_attributes(self):
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         df = pd.DataFrame(data)
         store = self._make_store()
         # store the object, no attributes
         store.put(df, 'foo', append=False)
         meta = store.metadata('foo')
-        self.assertEqual(meta.attributes, {})
+        self.assertEqual(
+            meta.attributes,
+            {},
+        )
         # update attributes
-        store.put(df, 'foo', append=False, attributes={'foo': 'bar'})
-        meta = store.metadata('foo')
-        self.assertEqual(meta.attributes, {'foo': 'bar'})
         store.put(
-            df, 'foo', append=False, attributes={'foo': 'bax',
-                                                 'foobar': 'barbar'})
+            df,
+            'foo',
+            append=False,
+            attributes={'foo': 'bar'},
+        )
         meta = store.metadata('foo')
-        self.assertEqual(meta.attributes, {'foo': 'bax',
-                                           'foobar': 'barbar'})
+        self.assertEqual(
+            meta.attributes,
+            {'foo': 'bar'},
+        )
+        store.put(
+            df,
+            'foo',
+            append=False,
+            attributes={'foo': 'bax', 'foobar': 'barbar'},
+        )
+        meta = store.metadata('foo')
+        self.assertEqual(
+            meta.attributes,
+            {'foo': 'bax', 'foobar': 'barbar'},
+        )
 
     def test_replace(self):
         store = self._make_store()
@@ -706,18 +664,14 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(data, [{'fox': 'bax'}])
 
     def test_drop(self):
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         df = pd.DataFrame(data)
         store = self._make_store()
         meta = store.put(df, 'hdfdf', as_hdf=True)
         self.assertTrue(store.drop('hdfdf'))
         meta = store.put(df, 'datadf')
         self.assertTrue(store.drop('datadf'))
-        self.assertEqual(
-            store.list('datadf'), [], 'expected the store to be empty')
+        self.assertEqual(store.list('datadf'), [], 'expected the store to be empty')
         with self.assertRaises(DoesNotExist):
             store.drop('nxstore', force=False)
         try:
@@ -728,10 +682,7 @@ class StoreTests(unittest.TestCase):
         self.assertFalse(raised)
 
     def test_drop_many(self):
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         df = pd.DataFrame(data)
         store = self._make_store()
         store.put(df, 'foo', as_hdf=True)
@@ -739,7 +690,10 @@ class StoreTests(unittest.TestCase):
         # drop multiple objects
         # -- get a report
         results = store.drop('fo*', report=True)
-        self.assertEqual(results, {'foo': True, 'fox': True})
+        self.assertEqual(
+            results,
+            {'foo': True, 'fox': True},
+        )
         self.assertEqual(store.list('foo'), [])
         self.assertEqual(store.list('fox'), [])
         # -- just drop, as usually expect true or false
@@ -758,10 +712,7 @@ class StoreTests(unittest.TestCase):
         self.assertFalse(raised)
 
     def test_list_raw(self):
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         df = pd.DataFrame(data)
         store = self._make_store()
         meta = store.put(df, 'hdfdf', as_hdf=True)
@@ -787,11 +738,8 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(len(entries), 1)
 
     def test_lazy_unique(self):
-        """ test getting a MDataFrame and unique values """
-        data = {
-            'a': list(range(1, 10)),
-            'b': list(range(1, 10))
-        }
+        """test getting a MDataFrame and unique values"""
+        data = {'a': list(range(1, 10)), 'b': list(range(1, 10))}
         df = pd.DataFrame(data)
         store = self._make_store()
         meta = store.put(df, 'foo', append=False)
@@ -799,8 +747,9 @@ class StoreTests(unittest.TestCase):
         self.assertListEqual(data['a'], list(val))
 
     def test_store_series(self):
-        """ test storing a pandas series with it's own index """
+        """test storing a pandas series with it's own index"""
         from string import ascii_lowercase
+
         series = pd.Series(range(10), index=(c for c in ascii_lowercase[0:10]))
         store = self._make_store()
         store.put(series, 'fooseries', append=False)
@@ -808,51 +757,48 @@ class StoreTests(unittest.TestCase):
         assert_series_equal(series, series2)
 
     def test_store_named_series(self):
-        """ test storing a pandas series with it's own index """
+        """test storing a pandas series with it's own index"""
         from string import ascii_lowercase
-        series = pd.Series(range(10),
-            name='foo',
-            index=(c for c in ascii_lowercase[0:10]))
+
+        series = pd.Series(range(10), name='foo', index=(c for c in ascii_lowercase[0:10]))
         store = self._make_store()
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
         assert_series_equal(series, series2)
 
     def test_store_series_timeindex(self):
-        """ test storing a pandas series with it's own index """
-        series = pd.Series(range(10),
-            name='foo',
-            index=pd.date_range(datetime(2016, 1, 1),
-                datetime(2016, 1, 10)))
+        """test storing a pandas series with it's own index"""
+        series = pd.Series(range(10), name='foo', index=pd.date_range(datetime(2016, 1, 1), datetime(2016, 1, 10)))
         store = self._make_store()
         store.put(series, 'fooseries', append=False)
         series2 = store.get('fooseries')
         assert_series_equal(series, series2)
 
     def test_store_irregular_column_names(self):
-        """ test storing irregular column names """
-        df = pd.DataFrame({'x_1': range(10)})
+        """test storing irregular column names"""
+        df = pd.DataFrame(
+            {'x_1': range(10)},
+        )
         store = self._make_store()
         store.put(df, 'foo', append=False)
         df2 = store.get('foo')
         self.assertEqual(df.columns, df2.columns)
 
     def test_store_datetime(self):
-        """ test storing naive datetimes """
-        df = pd.DataFrame({
-            'x': pd.date_range(datetime(2016, 1, 1),
-                datetime(2016, 1, 10))
-        })
+        """test storing naive datetimes"""
+        df = pd.DataFrame(
+            {'x': pd.date_range(datetime(2016, 1, 1), datetime(2016, 1, 10))},
+        )
         store = self._make_store()
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
         assert_frame_equal(df, df2)
 
     def test_store_tz_datetime(self):
-        """ test storing timezoned datetimes """
-        df = pd.DataFrame({
-            'y': pd.date_range('2019-10-01', periods=5, tz='US/Eastern', normalize=True)
-        })
+        """test storing timezoned datetimes"""
+        df = pd.DataFrame(
+            {'y': pd.date_range('2019-10-01', periods=5, tz='US/Eastern', normalize=True)},
+        )
         store = self._make_store()
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
@@ -861,15 +807,15 @@ class StoreTests(unittest.TestCase):
     # TODO support DST-crossing datetime objects. use UTC to avoid the issue
     @skip('date ranges across dst period start/end do not return the original DatetimeIndex values')
     def test_store_tz_datetime_dst(self):
-        """ test storing timezoned datetimes """
+        """test storing timezoned datetimes"""
         # 2019 11 03 02:00 is the end of US DST https://www.timeanddate.com/time/dst/2019.html
         # pymongo will transform the object into a naive dt at UTC time at +3h (arguably incorrectly so)
         # while pandas creates the Timestamp as UTC -4 (as the day starts at 00:00, not 02:00).
         # On rendering back to a tz-aware datetime, this yields the wrong date (1 day eaerlier) because
         # pandas applies -4 on converting from UTC to US/Eastern (correctly).
-        df = pd.DataFrame({
-            'y': pd.date_range('2019-11-01', periods=5, tz='US/Eastern', normalize=True)
-        })
+        df = pd.DataFrame(
+            {'y': pd.date_range('2019-11-01', periods=5, tz='US/Eastern', normalize=True)},
+        )
         store = self._make_store()
         store.put(df, 'test-date', append=False)
         df2 = store.get('test-date')
@@ -877,17 +823,16 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(df, df2)
 
     def test_store_dict_in_df(self):
-        df = pd.DataFrame({
-            'x': [{'foo': 'bar '}],
-        })
+        df = pd.DataFrame(
+            {'x': [{'foo': 'bar '}]},
+        )
         store = self._make_store()
         store.put(df, 'test-dict', append=False)
         df2 = store.get('test-dict')
         assert_frame_equal(df, df2)
 
     def test_existing_arbitrary_collection_flat(self):
-        data = {'foo': 'bar',
-                'bax': 'fox'}
+        data = {'foo': 'bar', 'bax': 'fox'}
         store = self._make_store()
         foo_coll = store.mongodb['foo']
         foo_coll.insert_one(data)
@@ -903,10 +848,7 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(json_normalize(data)[cols], data_[cols])
 
     def test_existing_arbitrary_collection_nested(self):
-        data = {'foo': 'bar',
-                'bax': {
-                    'fox': 'fax',
-                }}
+        data = {'foo': 'bar', 'bax': {'fox': 'fax'}}
         store = self._make_store()
         foo_coll = store.mongodb['foo']
         foo_coll.insert_one(data)
@@ -922,10 +864,7 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(json_normalize(data)[cols], data_[cols])
 
     def test_existing_arbitrary_collection_mdataframe(self):
-        data = {'foo': 'bar',
-                'bax': {
-                    'fox': 'fax',
-                }}
+        data = {'foo': 'bar', 'bax': {'fox': 'fax'}}
         store = self._make_store()
         foo_coll = store.mongodb['foo']
         foo_coll.insert_one(data)
@@ -946,8 +885,7 @@ class StoreTests(unittest.TestCase):
         assert_frame_equal(json_normalize(data)[cols], data_df[cols])
 
     def test_arbitrary_collection_new(self):
-        data = {'foo': 'bar',
-                'bax': 'fox'}
+        data = {'foo': 'bar', 'bax': 'fox'}
         store = self._make_store()
         # create the collection
         foo_coll = store.mongodb['foo']
@@ -1043,6 +981,7 @@ class StoreTests(unittest.TestCase):
         import zipfile
 
         import omegaml
+
         store = self._make_store()
         # save a complete directory, zip up
         # -- expect gridfile to store a zip file
@@ -1087,6 +1026,7 @@ class StoreTests(unittest.TestCase):
         import zipfile
 
         import omegaml
+
         store = self._make_store()
         # save a complete directory to a uri path, zip up
         # -- expect gridfile to store a zip file
@@ -1120,10 +1060,8 @@ class StoreTests(unittest.TestCase):
         # -- data
         foo_store = self._make_store(bucket='foo')
         bar_store = self._make_store(bucket='bar')
-        foo_data = {'foo': 'bar',
-                    'bax': 'fox'}
-        bar_data = {'foo': 'bax',
-                    'bax': 'foz'}
+        foo_data = {'foo': 'bar', 'bax': 'fox'}
+        bar_data = {'foo': 'bax', 'bax': 'foz'}
         foo_store.put(foo_data, 'data')
         bar_store.put(bar_data, 'data')
         self.assertEqual(foo_store.get('data')[0], foo_data)
@@ -1166,9 +1104,11 @@ class StoreTests(unittest.TestCase):
     def test_help_docs(self):
         foo_store = self._make_store(bucket='foo')
         reg = LinearRegression()
-        foo_store.put(reg, 'regmodel', attributes={
-            'docs': 'this is some text'
-        })
+        foo_store.put(
+            reg,
+            'regmodel',
+            attributes={'docs': 'this is some text'},
+        )
         # get backend for different signatures
         backend = foo_store._resolve_help_backend('regmodel')
         self.assertEqual(backend.__doc__, 'this is some text')
@@ -1199,7 +1139,9 @@ class StoreTests(unittest.TestCase):
     def test_long_index_name(self):
         store = self._make_store(bucket='foo', prefix='foo/')
         store.defaults.OMEGA_STORE_HASHEDNAMES = True
-        df = pd.DataFrame({'xyz' * 100: range(100), 'yyz' * 300: range(100)})
+        df = pd.DataFrame(
+            {'xyz' * 100: range(100), 'yyz' * 300: range(100)},
+        )
         df = df.set_index('yyz' * 300)
         # name is limited by index key limit in MongoDB
         # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
@@ -1215,7 +1157,9 @@ class StoreTests(unittest.TestCase):
 
     def test_long_dataset_name(self):
         store = self._make_store(bucket='foo', prefix='foo/')
-        df = pd.DataFrame({'xyz' * 100: range(100)})
+        df = pd.DataFrame(
+            {'xyz' * 100: range(100)},
+        )
         # limited by index key limit in MongoDB
         # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
         long_name = 'a' * 990
@@ -1237,7 +1181,9 @@ class StoreTests(unittest.TestCase):
 
     def test_long_dataset_name_hdf(self):
         store = self._make_store(bucket='foo', prefix='foo/')
-        df = pd.DataFrame({'xyz' * 100: range(100)})
+        df = pd.DataFrame(
+            {'xyz' * 100: range(100)},
+        )
         # limited by index key limit in MongoDB
         # see https://docs.mongodb.com/manual/reference/limits/#Index-Key-Limit
         long_name = 'a' * 990
@@ -1258,7 +1204,9 @@ class StoreTests(unittest.TestCase):
 
     def test_migrate_unhashed_name(self):
         store = self._make_store(bucket='foo', prefix='foo/')
-        df = pd.DataFrame({'x': range(100)})
+        df = pd.DataFrame(
+            {'x': range(100)},
+        )
         long_name = 'a' * 10
         raised = False
         error = ''
@@ -1285,7 +1233,9 @@ class StoreTests(unittest.TestCase):
 
     def test_migrate_unhashed_name_hdf(self):
         store = self._make_store(bucket='foo', prefix='foo/')
-        df = pd.DataFrame({'x': range(100)})
+        df = pd.DataFrame(
+            {'x': range(100)},
+        )
         long_name = 'a' * 10
         raised = False
         error = ''

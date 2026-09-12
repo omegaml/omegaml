@@ -8,7 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from shutil import rmtree
 
-from bson.json_util import dumps as bson_dumps, loads as bson_loads
+from bson.json_util import dumps as bson_dumps
+from bson.json_util import loads as bson_loads
 
 from omegaml.backends.repository.basereg import chdir
 from omegaml.backends.repository.orasreg import OrasOciRegistry
@@ -17,11 +18,11 @@ from omegaml.documents import Metadata
 from omegaml.mixins.store.promotion import PromotionMixin
 from omegaml.omega import Omega
 from omegaml.store import OmegaStore
-from omegaml.util import IterableJsonDump, load_class, SystemPosixPath, tarfile_safe_extractall
+from omegaml.util import IterableJsonDump, SystemPosixPath, load_class, tarfile_safe_extractall
 
 
 class ObjectImportExportMixin:
-    """ Provide generic import() and export() methods """
+    """Provide generic import() and export() methods"""
 
     @classmethod
     def supports(cls, store, **kwargs):
@@ -61,10 +62,13 @@ class ObjectImportExportMixin:
             # -- exact name matches
             # -- name@version matches
             # -- base for name@version matches
-            members = [(m, m.replace(self.prefix, '')) for m in arc.members
-                       if m == f'{self.prefix}{name}'
-                       or (f'{self.prefix}{name}'.startswith(m) and '@' in name)
-                       or (m.startswith(f'{self.prefix}{name}@') and (not '@' in name))]
+            members = [
+                (m, m.replace(self.prefix, ''))
+                for m in arc.members
+                if m == f'{self.prefix}{name}'
+                or (f'{self.prefix}{name}'.startswith(m) and '@' in name)
+                or (m.startswith(f'{self.prefix}{name}@') and (not '@' in name))
+            ]
             # note we restored in opposite order so we restore versioned objects first
             # this avoids replacing the main object with a versioned object by accident
             for arc_member, member in members[::-1]:
@@ -75,11 +79,8 @@ class ObjectImportExportMixin:
     def _load_metadata(self, name, attributes=None, gridfile=None):
         existing_meta = self.metadata(name, raw=True)
         return existing_meta or self._make_metadata(
-            name=name,
-            prefix=self.prefix,
-            bucket=self.bucket,
-            attributes=attributes,
-            gridfile=gridfile)
+            name=name, prefix=self.prefix, bucket=self.bucket, attributes=attributes, gridfile=gridfile
+        )
 
 
 class OmegaExportArchive:
@@ -173,15 +174,19 @@ class OmegaExportArchive:
             meta_dict['gridfile'] = lpaths.gridfile.name  # basename
         # data in collection
         if meta.collection:
+
             def remove_id(obj):
                 obj.pop('_id', None)
                 return obj
 
             data = store.collection(name).find()
             with lpaths.collection.open('w') as fout:
-                IterableJsonDump.dump(data, fout,
-                                      transform=remove_id,
-                                      default=bson_dumps)
+                IterableJsonDump.dump(
+                    data,
+                    fout,
+                    transform=remove_id,
+                    default=bson_dumps,
+                )
         # metadata
         lpaths.meta.write_text(bson_dumps(meta_dict))
         self.manifest['members'][self._manifest_key(name, store)] = lpaths.key
@@ -237,11 +242,13 @@ class OmegaExportArchive:
         local_gridfile = Path(local_dir) / 'gridfile.bin'
         local_collection = Path(local_dir) / 'collection.json'
         local_dir.mkdir(parents=True, exist_ok=True)
-        return AttrDict(dir=local_dir,
-                        key=str(local_key),
-                        meta=local_meta,
-                        gridfile=local_gridfile,
-                        collection=local_collection)
+        return AttrDict(
+            dir=local_dir,
+            key=str(local_key),
+            meta=local_meta,
+            gridfile=local_gridfile,
+            collection=local_collection,
+        )
 
     def _read_manifest(self):
         manifest_path = self.path / 'manifest.json'
@@ -249,10 +256,7 @@ class OmegaExportArchive:
             with manifest_path.open('r') as fin:
                 manifest = json.loads(fin.read())
         else:
-            manifest = {
-                'members': {},
-                'format': 'omega',
-            }
+            manifest = {'members': {}, 'format': 'omega'}
         return manifest
 
     def _write_manifest(self):
@@ -315,7 +319,7 @@ class OmegaExporter:
         self.omega = omega
 
     def to_archive(self, path, objects=None, fmt='auto', compress=False, progressfn=None):
-        """ write export archive
+        """write export archive
 
         Export archives can be either uncompressed or compressed. Uncompressed archives
         are written as a directory tree on the filesystem, suitable for tracking in version
@@ -354,7 +358,8 @@ class OmegaExporter:
                     except ValueError:
                         prefixes = [s.prefix for s in self.omega._stores]
                         raise ValueError(
-                            f'Cannot parse {obj}. Specify objects as prefix/name, prefix is one of {prefixes}')
+                            f'Cannot parse {obj}. Specify objects as prefix/name, prefix is one of {prefixes}'
+                        )
                     store = self.omega.store_by_prefix(f'{prefix}/')
                     # if the pattern does not match in list, use it as a name
                     # e.g. mymodel@version1 will not show in list()
@@ -369,8 +374,7 @@ class OmegaExporter:
             archive_path = path
         return archive_path
 
-    def from_archive(self, path, pattern=None, fmt='auto', promote=False,
-                     promote_to: Omega = None, progressfn=None):
+    def from_archive(self, path, pattern=None, fmt='auto', promote=False, promote_to: Omega = None, progressfn=None):
         # for promotion, use a temp bucket for import and promotion source
         promote = promote or (promote_to is not None)
         promote_to = None if not promote else (promote_to or self.omega)

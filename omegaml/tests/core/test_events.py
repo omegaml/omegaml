@@ -18,7 +18,7 @@ class EventsTestClass(TestCase):
         pass
 
     def test_connection_checks(self):
-        monitor = LunaMonitor(checks=OmegaMonitors.on(self.om), interval=.1)
+        monitor = LunaMonitor(checks=OmegaMonitors.on(self.om), interval=0.1)
         reports = []
         monitor.notify(on_status=lambda status: reports.append(status))
         sleep(2)

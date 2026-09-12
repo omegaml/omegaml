@@ -8,6 +8,7 @@ from omegaml.tests.features.util import get_admin_secrets
 @given('we have a connection to omegaml')
 def connection(ctx):
     import omegaml as om
+
     ctx.feature.om = om.setup()
     assert ctx.feature.om is not None
 
@@ -15,10 +16,9 @@ def connection(ctx):
 @when('we ingest data')
 def ingest(ctx):
     import pandas as pd
+
     om = ctx.feature.om
-    data = {
-        'x': range(10),
-    }
+    data = {'x': range(10)}
     df = pd.DataFrame(data)
     df['y'] = df['x'] * 2
     om.datasets.put(df, 'sample', append=False)
@@ -28,6 +28,7 @@ def ingest(ctx):
 @when('we build a model')
 def model(ctx):
     from sklearn.linear_model import LinearRegression
+
     om = ctx.feature.om
     reg = LinearRegression()
     om.models.put(reg, 'regmodel')
@@ -38,6 +39,7 @@ def model(ctx):
 @then('we can predict a result')
 def predict(ctx):
     import numpy as np
+
     om = ctx.feature.om
     resp = om.runtime.model('regmodel').predict([1])
     result = resp.get()

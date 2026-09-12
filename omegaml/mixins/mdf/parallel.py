@@ -19,9 +19,17 @@ class ParallelApplyMixin:
         om.datasets.getl('verylarge').transform(myfunc).persist('transformed')
     """
 
-    def transform(self, fn=None, n_jobs=-2, maxobs=None,
-                  chunksize=50000, chunkfn=None, outname=None,
-                  resolve='worker', backend='omegaml'):
+    def transform(
+        self,
+        fn=None,
+        n_jobs=-2,
+        maxobs=None,
+        chunksize=50000,
+        chunkfn=None,
+        outname=None,
+        resolve='worker',
+        backend='omegaml',
+    ):
         """
 
         Args:
@@ -68,7 +76,7 @@ class ParallelApplyMixin:
                 yield mdf.skip(i).head(i + chunksize)
         else:
             for i in range(0, maxobs, chunksize):
-                yield mdf.iloc[i:i + chunksize]
+                yield mdf.iloc[i : i + chunksize]
 
     def _do_transform(self, verbose=0):
         # setup mdf and parameters
@@ -87,15 +95,13 @@ class ParallelApplyMixin:
         if not append:
             outcoll.drop()
         non_transforming = lambda mdf: mdf._clone()
-        with Parallel(n_jobs=n_jobs, backend=backend,
-                      verbose=verbose) as p:
+        with Parallel(n_jobs=n_jobs, backend=backend, verbose=verbose) as p:
             # prepare for serialization to remote worker
             chunks = chunkfn(non_transforming(mdf), chunksize, maxobs)
             runner = delayed(pyapply_process_chunk)
             worker_resolves_mdf = resolve in ('worker', 'w')
             # run in parallel
-            jobs = [runner(mdf, i, chunksize, applyfn, outcoll, worker_resolves_mdf)
-                    for i, mdf in enumerate(chunks)]
+            jobs = [runner(mdf, i, chunksize, applyfn, outcoll, worker_resolves_mdf) for i, mdf in enumerate(chunks)]
             p._backend._job_count = len(jobs)
             if verbose:
                 print("Submitting {} tasks".format(len(jobs)))
@@ -183,6 +189,7 @@ def pyapply_process_chunk(mdf, i, chunksize, applyfn, outcoll, worker_resolves):
     # chunk processor
     import pandas as pd
     from inspect import signature
+
     # fix pickling issues
     mdf._parser = getattr(mdf, '_parser', None)
     mdf._raw = getattr(mdf, '_raw', None)
@@ -200,7 +207,7 @@ def pyapply_process_chunk(mdf, i, chunksize, applyfn, outcoll, worker_resolves):
         raise e
         raise RuntimeError(f".value on {mdf} cause exception {e})")
     else:
-        applyfn_args = [chunkdf, i][0:len(params)]
+        applyfn_args = [chunkdf, i][0 : len(params)]
     # call applyfn
     if len(chunkdf):
         try:
@@ -212,9 +219,7 @@ def pyapply_process_chunk(mdf, i, chunksize, applyfn, outcoll, worker_resolves):
             if isinstance(chunkdf, dict):
                 chunkdf = pd.DataFrame(chunkdf)
             if isinstance(chunkdf, pd.Series):
-                chunkdf = pd.DataFrame(chunkdf,
-                                       index=chunkdf.index,
-                                       columns=[str(chunkdf.name)])
+                chunkdf = pd.DataFrame(chunkdf, index=chunkdf.index, columns=[str(chunkdf.name)])
         start = i * chunksize
         if chunkdf is not None and len(chunkdf):
             end = start + len(chunkdf)

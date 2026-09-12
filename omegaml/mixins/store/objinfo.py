@@ -32,13 +32,13 @@ class ObjectInformationMixin:
             'docs': meta.attributes.get('docs'),
             'revisions': self.revisions(name) if hasattr(self, 'revisions') else None,
             'size': stats.get('totalSize', 0),  # size in bytes
-            'count': max(stats.get('count', 0), 1)  # count of rows, always count at least 1 (the object itself)
+            'count': max(stats.get('count', 0), 1),  # count of rows, always count at least 1 (the object itself)
         }
         data.update(contrib)
         return data
 
     def stats(self, pattern=None, scale=1.0, as_dict=False, **kwargs):
-        """ get statistics for all objects in the store
+        """get statistics for all objects in the store
 
         Args:
             pattern (str): pattern to match object names
@@ -65,8 +65,7 @@ class ObjectInformationMixin:
         _stats = self._get_database_stats(scale=scale)
         _stats.setdefault('fsUsedSize%', _stats.get('fsUsedSize', 0) / _stats.get('fsTotalSize', 1))
         _stats.setdefault('fsAvailableSize%', _stats.get('fsAvailableSize', 0) / _stats.get('fsTotalSize', 1))
-        return _stats if as_dict else self._get_stats_dataframe(_stats, scale=scale,
-                                                                index=['db'], totals='fsTotalSize')
+        return _stats if as_dict else self._get_stats_dataframe(_stats, scale=scale, index=['db'], totals='fsTotalSize')
 
     def _get_stats_dataframe(self, _stats, index=None, totals=None, scale=1.0):
         # transform to dataframe with totals and percentages of each statistic
@@ -74,13 +73,15 @@ class ObjectInformationMixin:
         # -- columns: count, totalSize, count%, totalSize%, ...
         # -- values: the actual values, and % values of total for each column
         import pandas as pd
+
         if not _stats:
             return pd.DataFrame()
         df = pd.DataFrame(_stats, index=index).T
         totals = df.sum() if totals is None else df.loc[totals].sum()
-        df_pct = ((df / totals)
-                  .rename(columns={k: k + '%' for k in df.columns}))
-        _stats = (pd.concat([df, df_pct], axis=1))
+        df_pct = (df / totals).rename(
+            columns={k: k + '%' for k in df.columns},
+        )
+        _stats = pd.concat([df, df_pct], axis=1)
         _stats['units'] = scale
         return _stats
 
@@ -93,10 +94,7 @@ class ObjectInformationMixin:
             _stats = self.mongodb.command('collstats', collection, scale=scale)
         except:
             _stats = {}
-        return {
-            k: _stats[k]
-            for k in keys
-        } if _stats else {}
+        return {k: _stats[k] for k in keys} if _stats else {}
 
     def _get_database_stats(self, scale=1.0, keys=None):
         self: OmegaStore | ObjectInformationMixin
@@ -110,10 +108,7 @@ class ObjectInformationMixin:
             _stats.setdefault('totalSize', _stats['dataSize'] + _stats['indexSize'])
         except:
             _stats = {'totalSize': 0, 'fsUsedSize': 0, 'fsTotalSize': 0, 'fsAvailableSize': 0}
-        return {
-            k: _stats[k]
-            for k in keys
-        }
+        return {k: _stats[k] for k in keys}
 
     def _ensure_numeric_scale(self, scale):
         scale = self._scale_map.get(scale[0].lower(), scale) if isinstance(scale, str) else scale

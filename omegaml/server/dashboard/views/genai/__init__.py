@@ -4,7 +4,7 @@ import time
 from datetime import timezone
 from pathlib import Path
 
-from flask import render_template, jsonify, abort, redirect, url_for
+from flask import abort, jsonify, redirect, render_template, url_for
 from werkzeug.utils import secure_filename
 
 from omegaml.server import flaskview as fv
@@ -20,25 +20,23 @@ class GenAIView(BaseView):
         om = self.om
         models = om.models.list(kind=['genai.text', 'genai.llm'], raw=True)
         indices = om.datasets.list(kind='pgvector.conx', raw=True)
-        return render_template('dashboard/genai/index.html',
-                               default=models[0] if models else None,
-                               models=models,
-                               indices=indices,
-                               segment=self.segment)
+        return render_template(
+            'dashboard/genai/index.html',
+            default=models[0] if models else None,
+            models=models,
+            indices=indices,
+            segment=self.segment,
+        )
 
     @fv.route('/{self.segment}/chat/<path:name>')
     def chat(self, name):
-        return render_template('dashboard/genai/conversations.html',
-                               name=name,
-                               segment=self.segment)
+        return render_template('dashboard/genai/conversations.html', name=name, segment=self.segment)
 
     @fv.route('/{self.segment}/docs')
     def documents(self):
         om = self.om
         indices = om.datasets.list(kind='pgvector.conx', raw=True)
-        return render_template('dashboard/genai/documents.html',
-                               indices=indices,
-                               segment=self.segment)
+        return render_template('dashboard/genai/documents.html', indices=indices, segment=self.segment)
 
     @fv.route('/{self.segment}/evals')
     def evals(self):
@@ -47,35 +45,38 @@ class GenAIView(BaseView):
         experiments = set()
         for model in models:
             experiments.update(model.attributes.get('tracking', {}).get('experiments', []))
-        return render_template('dashboard/genai/evaluations.html',
-                               segment=self.segment,
-                               context={
-                                   'experiments': list(experiments),
-                               })
+        return render_template(
+            'dashboard/genai/evaluations.html', segment=self.segment, context={'experiments': list(experiments)}
+        )
 
     @fv.route('/{self.segment}/chat/<path:name>/c/<string:conversation_id>')
     def modelchat(self, name, conversation_id=None):
         om = self.om
         model = om.models.metadata(name, data_store=om.datasets)
-        return render_template('dashboard/genai/chat.html',
-                               default=model,
-                               models=None,
-                               conversation_id=conversation_id,
-                               segment=self.segment)
+        return render_template(
+            'dashboard/genai/chat.html',
+            default=model,
+            models=None,
+            conversation_id=conversation_id,
+            segment=self.segment,
+        )
 
     @fv.route('/{self.segment}/docs/<path:name>')
     def api_list_documents(self, name):
         om = self.om
         draw = int(self.request.args.get('draw', 0))
         index = om.datasets.get(name, model_store=om.models)
-        members = [{
-            'id': item.get('id'),
-            'name': Path(item.get('source') or '').name,
-            'size': item.get('size', 0),
-            'type': (item.get('source') or '').split('.')[-1].lower(),
-            'excerpt': item.get('excerpt', ''),
-            'attributes': item.get('attributes'),
-        } for item in index.list()]
+        members = [
+            {
+                'id': item.get('id'),
+                'name': Path(item.get('source') or '').name,
+                'size': item.get('size', 0),
+                'type': (item.get('source') or '').split('.')[-1].lower(),
+                'excerpt': item.get('excerpt', ''),
+                'attributes': item.get('attributes'),
+            }
+            for item in index.list()
+        ]
         return datatables_ajax(members, draw=draw)
 
     @fv.route('/{self.segment}/docs/<path:name>/<string:doc_id>', methods=['DELETE'])
@@ -122,7 +123,7 @@ class GenAIView(BaseView):
             'type': file_type,
             'index_name': index_name,
             'upload_date': utcnow().isoformat(),
-            'status': 'uploaded'
+            'status': 'uploaded',
         }
         # add document to index
         index = om.datasets.get(index_name, model_store=om.models)
@@ -138,8 +139,8 @@ class GenAIView(BaseView):
                 'size': document['size_formatted'],
                 'type': document['type'],
                 'index_name': document['index_name'],
-                'upload_date': document['upload_date']
-            }
+                'upload_date': document['upload_date'],
+            },
         }), 201
 
     @fv.route('/{self.segment}/chat/history/<path:name>')
@@ -150,14 +151,17 @@ class GenAIView(BaseView):
         model.tracking = om.runtime.model(name).experiment()
         messages = model.conversation(run='*', userid=self.userid)
         messages.drop_duplicates(['key'], inplace=True, keep='first')
-        return {'conversations': [
-            {
-                'id': msg.get('key'),
-                'timestamp': msg.get('dt').replace(tzinfo=timezone.utc).isoformat() if msg.get('dt') else None,
-                'title': msg.get('title', msg.get('content')[:25]),
-                'tags': msg.get('tags', []),
-            } for msg in messages.to_dict(orient='records')
-        ]}
+        return {
+            'conversations': [
+                {
+                    'id': msg.get('key'),
+                    'timestamp': msg.get('dt').replace(tzinfo=timezone.utc).isoformat() if msg.get('dt') else None,
+                    'title': msg.get('title', msg.get('content')[:25]),
+                    'tags': msg.get('tags', []),
+                }
+                for msg in messages.to_dict(orient='records')
+            ]
+        }
 
     @fv.route('/{self.segment}/chat/history/<path:name>/c/<string:conversation_id>')
     def api_conversation_history(self, name, conversation_id):
@@ -166,12 +170,15 @@ class GenAIView(BaseView):
         exp = om.runtime.model(name).experiment()
         model = om.models.get(name, data_store=om.datasets, tracking=exp)
         messages = model.conversation(conversation_id=conversation_id, userid=self.userid, raw=True)
-        return {'messages': [
-            {
-                'role': msg.get('role'),
-                'text': msg.get('content'),
-            } for msg in messages
-        ]}
+        return {
+            'messages': [
+                {
+                    'role': msg.get('role'),
+                    'text': msg.get('content'),
+                }
+                for msg in messages
+            ],
+        }
 
     @fv.route('/{self.segment}/docs/new', methods=['POST'])
     def api_create_index(self):
@@ -192,8 +199,8 @@ class GenAIView(BaseView):
             'index': {
                 'name': index.name,
                 'kind': index.kind,
-                'created_at': utcnow().isoformat()
-            }
+                'created_at': utcnow().isoformat(),
+            },
         }), 201
 
 
@@ -205,15 +212,28 @@ def create_view(bp):
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {
-    'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx',
-    'xls', 'xlsx', 'ppt', 'pptx', 'mp3', 'mp4', 'avi', 'mov'
+    'txt',
+    'pdf',
+    'png',
+    'jpg',
+    'jpeg',
+    'gif',
+    'doc',
+    'docx',
+    'xls',
+    'xlsx',
+    'ppt',
+    'pptx',
+    'mp3',
+    'mp4',
+    'avi',
+    'mov',
 }
 
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def format_file_size(size_bytes):
@@ -248,11 +268,22 @@ def get_file_type(filename):
     # Fallback based on extension
     ext = filename.lower().split('.')[-1] if '.' in filename else ''
     file_types = {
-        'jpg': 'image', 'jpeg': 'image', 'png': 'image', 'gif': 'image',
-        'pdf': 'document', 'doc': 'document', 'docx': 'document', 'txt': 'document',
-        'xls': 'spreadsheet', 'xlsx': 'spreadsheet',
-        'ppt': 'presentation', 'pptx': 'presentation',
-        'mp4': 'video', 'avi': 'video', 'mov': 'video',
-        'mp3': 'audio', 'wav': 'audio'
+        'jpg': 'image',
+        'jpeg': 'image',
+        'png': 'image',
+        'gif': 'image',
+        'pdf': 'document',
+        'doc': 'document',
+        'docx': 'document',
+        'txt': 'document',
+        'xls': 'spreadsheet',
+        'xlsx': 'spreadsheet',
+        'ppt': 'presentation',
+        'pptx': 'presentation',
+        'mp4': 'video',
+        'avi': 'video',
+        'mov': 'video',
+        'mp3': 'audio',
+        'wav': 'audio',
     }
     return file_types.get(ext, 'unknown')

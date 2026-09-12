@@ -17,9 +17,12 @@ class OmegaContentsManagerTests(OmegaTestMixin, TestCase):
         self.clean()
 
     def _create_notebook(self, name, content=None):
-        code = content or """
+        code = (
+            content
+            or """
         print('hello world')
         """.strip()
+        )
         self.om.jobs.create(code, name)
 
     def test_get_top_level(self):
@@ -307,5 +310,3 @@ class OmegaContentsManagerTests(OmegaTestMixin, TestCase):
         very_large = 'abc' * 1024 * 1024
         self._create_notebook('foo', content=very_large)
         nbmodel = self.mgr.get('foo.ipynb', type='notebook')
-
-

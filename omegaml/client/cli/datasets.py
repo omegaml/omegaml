@@ -25,6 +25,7 @@ class DatasetsCommandBase(StoresCommandMixin, CommandBase):
          it must read the csv first, then store in om.datasets. Respectively,
          get uses to_csv because it must store the file locally.
     """
+
     command = 'datasets'
 
     def put(self):
@@ -35,8 +36,9 @@ class DatasetsCommandBase(StoresCommandMixin, CommandBase):
         csvkwargs = self.parse_kwargs('--csv')
         # TODO introduce a puggable filetype processing backend to do this
         is_csv = self.args.get('--format') == 'csv' or anyext(local, '.csv')
-        is_image = self.args.get('--format') == 'image' or anyext(local,
-                                                                  '.png,.img,.bmp,.jpeg,.jpg,.tif,.tiff,.eps,.raw,.gif')
+        is_image = self.args.get('--format') == 'image' or anyext(
+            local, '.png,.img,.bmp,.jpeg,.jpg,.tif,.tiff,.eps,.raw,.gif'
+        )
         is_binary = self.args.get('--format') == 'binary' or not (is_csv or is_image)
         if is_csv:
             # csv formats
@@ -45,6 +47,7 @@ class DatasetsCommandBase(StoresCommandMixin, CommandBase):
         elif is_image:
             # images
             from imageio import imread
+
             with smart_open.open(local, 'rb') as fin:
                 img = imread(fin)
                 meta = om.datasets.put(img, name)
@@ -77,5 +80,6 @@ class DatasetsCommandBase(StoresCommandMixin, CommandBase):
                         break
                     fout.write(data)
         self.logger.debug(local)
+
 
 anyext = lambda n, exts: any(n.endswith(ext) for ext in exts.split(','))

@@ -1,9 +1,11 @@
 """
 omega runtime script tasks
 """
+
 from __future__ import absolute_import
 
 import datetime
+
 from celery import shared_task
 
 from omegaml.celery_util import OmegamlTask
@@ -72,10 +74,12 @@ def run_omega_script(self, scriptname, *args, **kwargs):
     # call and measure time
     dtstart = datetime.datetime.now()
     try:
-        result = (self.get_delegate(scriptname, kind='scripts', pass_as='data_store')
-                  .perform('run', scriptname, *self.delegate_args[1:], om=self.om, **self.delegate_kwargs))
+        result = self.get_delegate(scriptname, kind='scripts', pass_as='data_store').perform(
+            'run', scriptname, *self.delegate_args[1:], om=self.om, **self.delegate_kwargs
+        )
     except Exception as e:
         import traceback
+
         if kwargs.get('__traceback') or self.logging[-1].lower() == 'debug':
             result = "".join(traceback.TracebackException.from_exception(e).format())
         else:

@@ -27,7 +27,8 @@ class JobsRepositoryView(RepositoryBaseView):
             'schedule': {
                 'text': get_description(run_at) if run_at else 'not scheduled',
                 'cron': run_at,
-            }}
+            },
+        }
         return datatables_ajax(schedule, draw=draw)
 
     @fv.route('/{self.segment}/schedule/<path:name>', methods=['POST'])
@@ -49,9 +50,7 @@ class JobsRepositoryView(RepositoryBaseView):
         return self.om.jobs.export(name)
 
     def members(self, excludes=None):
-        excludes = excludes or (
-            lambda m: m.name.startswith('results'),
-        )
+        excludes = excludes or (lambda m: m.name.startswith('results'))
         return super().members(excludes=excludes)
 
 

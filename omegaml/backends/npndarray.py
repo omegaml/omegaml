@@ -13,6 +13,7 @@ class NumpyNDArrayBackend(BaseDataBackend):
     Thus it can have arbitrary size and dimensions, ideal for image
     data and Tensors.
     """
+
     KIND = 'ndarray.bin'
 
     _save_method = 'np.save'
@@ -34,10 +35,14 @@ class NumpyNDArrayBackend(BaseDataBackend):
         buf.seek(0)
         fn = self.data_store.object_store_key(name, 'np', hashed=True)
         gridfile = self._store_to_file(self.data_store, buf, fn)
-        return self.data_store.make_metadata(name, self.KIND, attributes=attributes,
-                                             kind_meta=kind_meta,
-                                             gridfile=gridfile,
-                                             **kwargs).save()
+        return self.data_store.make_metadata(
+            name,
+            self.KIND,
+            attributes=attributes,
+            kind_meta=kind_meta,
+            gridfile=gridfile,
+            **kwargs,
+        ).save()
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         # TODO read file from meta.gridfile if exists, fallback to .fs only if not

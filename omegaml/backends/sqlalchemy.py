@@ -1,18 +1,18 @@
-from logging import warning
-
 import logging
 import os
-import sqlalchemy
 import string
 import warnings
 from getpass import getuser
 from hashlib import sha256
-from packaging.version import Version
-from sqlalchemy.exc import StatementError
+from logging import warning
 from urllib.parse import quote_plus
 
+import sqlalchemy
+from packaging.version import Version
+from sqlalchemy.exc import StatementError
+
 from omegaml.backends.basedata import BaseDataBackend
-from omegaml.util import ProcessLocal, KeepMissing, tqdm_if_interactive, signature
+from omegaml.util import KeepMissing, ProcessLocal, signature, tqdm_if_interactive
 
 try:
     import snowflake
@@ -30,13 +30,13 @@ try:
     import pandas as pd
     import sqlalchemy as sqa
 
-    if (Version(pd.__version__) >= Version("2.2") and
-            Version(sqa.__version__) < Version("2.2")):
+    if Version(pd.__version__) >= Version("2.2") and Version(sqa.__version__) < Version("2.2"):
         from pandas.compat._optional import VERSIONS
 
         VERSIONS['sqlalchemy'] = '1.4'
         warnings.warn(
-            "Patching pandas > 2.2 to support sqlalchemy >=1.4,<2 due to https://github.com/pandas-dev/pandas/issues/57049. To avoid this warning upgrade to sqlalchemy 2.x")
+            "Patching pandas > 2.2 to support sqlalchemy >=1.4,<2 due to https://github.com/pandas-dev/pandas/issues/57049. To avoid this warning upgrade to sqlalchemy 2.x"
+        )
 except:
     pass
 
@@ -45,9 +45,11 @@ ALWAYS_CACHE = bool(os.environ.get('SQLALCHEMY_ALWAYS_CACHE', True) in (True, '1
 # -- enabled by default as this is the least-surprised option
 # -- consistent with sqlalchemy connection pooling defaults
 #: kwargs for create_engine(), override by env/om.defaults.SQLALCHEMY_POOL_RECYCLE=N(seconds), SQLALCHEMY_POOL_PREPING=0|1
-ENGINE_KWARGS = dict(echo=False,
-                     pool_pre_ping=bool(os.environ.get('SQLALCHEMY_POOL_PREPING', True) in (True, '1', 'y')),
-                     pool_recycle=int(os.environ.get('SQLALCHEMY_POOL_RECYCLE', 3600)))
+ENGINE_KWARGS = dict(
+    echo=False,
+    pool_pre_ping=bool(os.environ.get('SQLALCHEMY_POOL_PREPING', True) in (True, '1', 'y')),
+    pool_recycle=int(os.environ.get('SQLALCHEMY_POOL_RECYCLE', 3600)),
+)
 # -- echo=False - do not log to stdout
 # -- pool_pre_ping=True - always check, re-establish connection if no longer working
 # -- pool_recylce=N - do not reuse connections older than N seconds
@@ -177,6 +179,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         * any other kwargs supported by ``pandas.read_sql``
 
     """
+
     KIND = 'sqlalchemy.conx'
     PROMOTE = 'metadata'
 
@@ -213,9 +216,23 @@ class SQLAlchemyBackend(BaseDataBackend):
     def sign(self, values):
         return signature(values)
 
-    def get(self, name, sql=None, chunksize=None, raw=False, sqlvars=None,
-            secrets=None, index=True, keep=None, lazy=False, table=None, trusted=False, *args, **kwargs):
-        """ retrieve a stored connection or query data from connection
+    def get(
+        self,
+        name,
+        sql=None,
+        chunksize=None,
+        raw=False,
+        sqlvars=None,
+        secrets=None,
+        index=True,
+        keep=None,
+        lazy=False,
+        table=None,
+        trusted=False,
+        *args,
+        **kwargs,
+    ):
+        """retrieve a stored connection or query data from connection
 
         Args:
             name (str): the name of the connection
@@ -275,9 +292,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         if not raw and not valid_sql(sql):
             sql = f'select * from :sqltable'
         chunksize = chunksize or meta.kind_meta.get('chunksize')
-        _default_keep = getattr(self.data_store.defaults,
-                                'SQLALCHEMY_ALWAYS_CACHE',
-                                ALWAYS_CACHE)
+        _default_keep = getattr(self.data_store.defaults, 'SQLALCHEMY_ALWAYS_CACHE', ALWAYS_CACHE)
         keep = keep if keep is not None else _default_keep
         if connection_str:
             secrets = self._get_secrets(meta, secrets)
@@ -292,8 +307,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             kwargs.update(kwargs)
             if not lazy:
                 logger.debug(f'executing sql {stmt} with parameters {sqlvars}')
-                pd_kwargs = {**dict(chunksize=chunksize, index_col=index_cols,
-                                    params=(sqlvars or {})), **kwargs}
+                pd_kwargs = {**dict(chunksize=chunksize, index_col=index_cols, params=(sqlvars or {})), **kwargs}
                 result = pd.read_sql(stmt, connection, **pd_kwargs)
             else:
                 # lazy returns a cursor
@@ -308,10 +322,23 @@ class SQLAlchemyBackend(BaseDataBackend):
             return result
         return connection
 
-    def put(self, obj, name, sql=None, copy=False, append=True, chunksize=None,
-            transform=None, table=None, attributes=None, insert=False,
-            secrets=None, *args, **kwargs):
-        """ store sqlalchemy connection or insert data into an existing connection
+    def put(
+        self,
+        obj,
+        name,
+        sql=None,
+        copy=False,
+        append=True,
+        chunksize=None,
+        transform=None,
+        table=None,
+        attributes=None,
+        insert=False,
+        secrets=None,
+        *args,
+        **kwargs,
+    ):
+        """store sqlalchemy connection or insert data into an existing connection
 
         Args:
             obj (str|pd.DataFrame): the sqlalchemy connection string or a dataframe object
@@ -355,26 +382,44 @@ class SQLAlchemyBackend(BaseDataBackend):
             url = obj
             cnx_name = name if not copy else '_cnx_{}'.format(name)
             table = self._default_table(table or name)
-            metadata = self._put_as_connection(url, cnx_name, sql=sql, chunksize=chunksize,
-                                               table=table, attributes=attributes, **kwargs)
+            metadata = self._put_as_connection(
+                url, cnx_name, sql=sql, chunksize=chunksize, table=table, attributes=attributes, **kwargs
+            )
             if copy:
                 secrets = self._get_secrets(metadata, secrets)
-                metadata = self._put_as_data(url, name, cnx_name,
-                                             sql=sql, chunksize=chunksize,
-                                             append=append, transform=transform,
-                                             secrets=secrets,
-                                             **kwargs)
+                metadata = self._put_as_data(
+                    url,
+                    name,
+                    cnx_name,
+                    sql=sql,
+                    chunksize=chunksize,
+                    append=append,
+                    transform=transform,
+                    secrets=secrets,
+                    **kwargs,
+                )
         elif meta is not None:
             table = self._default_table(table or meta.kind_meta.get('table') or name)
-            metadata = self._put_via(obj, name, append=append, table=table, chunksize=chunksize,
-                                     transform=transform, **kwargs)
+            metadata = self._put_via(
+                obj, name, append=append, table=table, chunksize=chunksize, transform=transform, **kwargs
+            )
         else:
             raise ValueError('type {} is not supported by {}'.format(type(obj), self.KIND))
         metadata.attributes.update(attributes) if attributes else None
         return metadata.save()
 
-    def _put_via(self, obj, name, append=True, table=None, chunksize=None, transform=None,
-                 index_columns=None, index=True, **kwargs):
+    def _put_via(
+        self,
+        obj,
+        name,
+        append=True,
+        table=None,
+        chunksize=None,
+        transform=None,
+        index_columns=None,
+        index=True,
+        **kwargs,
+    ):
         # write data back through the connection
         # -- ensure we have a valid object
         if not hasattr(obj, 'to_sql'):
@@ -390,24 +435,40 @@ class SQLAlchemyBackend(BaseDataBackend):
         metadata.kind_meta['index_columns'] = index_cols
         exists_action = 'append' if append else 'replace'
         transform = transform
-        self._chunked_to_sql(obj, table, connection, chunksize=chunksize, method=transform,
-                             if_exists=exists_action, index=index, index_label=index_cols, **kwargs)
+        self._chunked_to_sql(
+            obj,
+            table,
+            connection,
+            chunksize=chunksize,
+            method=transform,
+            if_exists=exists_action,
+            index=index,
+            index_label=index_cols,
+            **kwargs,
+        )
         connection.close()
         return metadata
 
-    def _put_as_data(self, url, name, cnx_name, sql=None, chunksize=None, append=True,
-                     transform=None, **kwargs):
+    def _put_as_data(self, url, name, cnx_name, sql=None, chunksize=None, append=True, transform=None, **kwargs):
         # use the url to query the connection and store resulting data instead
         if not sql:
             raise ValueError('a valid SQL statement is required with copy=True')
-        metadata = self.copy_from_sql(sql, url, name, chunksize=chunksize,
-                                      append=append, transform=transform,
-                                      **kwargs)
+        metadata = self.copy_from_sql(sql, url, name, chunksize=chunksize, append=append, transform=transform, **kwargs)
         metadata.attributes['created_from'] = cnx_name
         return metadata
 
-    def _put_as_connection(self, url, name, sql=None, chunksize=None, attributes=None,
-                           table=None, index_columns=None, secrets=None, **kwargs):
+    def _put_as_connection(
+        self,
+        url,
+        name,
+        sql=None,
+        chunksize=None,
+        attributes=None,
+        table=None,
+        index_columns=None,
+        secrets=None,
+        **kwargs,
+    ):
         kind_meta = {
             'sqlalchemy_connection': str(url),
             'sql': sql,
@@ -420,8 +481,8 @@ class SQLAlchemyBackend(BaseDataBackend):
             kind_meta['secrets'] = {
                 'dsname': '.omega/vault',
                 'query': {
-                    'data_userid': '{user}'
-                }
+                    'data_userid': '{user}',
+                },
             }
         else:
             kind_meta['secrets'] = secrets
@@ -429,27 +490,23 @@ class SQLAlchemyBackend(BaseDataBackend):
         if metadata is not None:
             metadata.kind_meta.update(kind_meta)
         else:
-            metadata = self.data_store.make_metadata(name, self.KIND,
-                                                     kind_meta=kind_meta,
-                                                     attributes=attributes)
+            metadata = self.data_store.make_metadata(name, self.KIND, kind_meta=kind_meta, attributes=attributes)
         return metadata.save()
 
     def _get_connection(self, name, connection_str, secrets=None, keep=None, engine_kwargs=None):
         import sqlalchemy as sqa
+
         # passwords should be encoded
         # https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls
         encoded = lambda d: {
-            k: (quote_plus(v.decode('utf-8')) if isinstance(v, bytes)
-                else quote_plus(v)) for k, v in d.items() if isinstance(v, (str, bytes))
+            k: (quote_plus(v.decode('utf-8')) if isinstance(v, bytes) else quote_plus(v))
+            for k, v in d.items()
+            if isinstance(v, (str, bytes))
         }
         connection = None
         cache_key = None
-        _default_engine_kwargs = getattr(self.data_store.defaults,
-                                         'SQLALCHEMY_ENGINE_KWARGS',
-                                         ENGINE_KWARGS)
-        _default_keep = getattr(self.data_store.defaults,
-                                'SQLALCHEMY_ALWAYS_CACHE',
-                                ALWAYS_CACHE)
+        _default_engine_kwargs = getattr(self.data_store.defaults, 'SQLALCHEMY_ENGINE_KWARGS', ENGINE_KWARGS)
+        _default_keep = getattr(self.data_store.defaults, 'SQLALCHEMY_ALWAYS_CACHE', ALWAYS_CACHE)
         engine_kwargs = engine_kwargs or ENGINE_KWARGS
         keep = keep if keep is not None else _default_keep
         try:
@@ -463,8 +520,7 @@ class SQLAlchemyBackend(BaseDataBackend):
             engine = self.__CNX_CACHE.get(cache_key) or sqa.create_engine(connection_str, **ENGINE_KWARGS)
             connection = engine.connect()
         except KeyError as e:
-            msg = ('{e}, ensure secrets are specified for connection '
-                   '>{connection_str}<'.format(**locals()))
+            msg = '{e}, ensure secrets are specified for connection >{connection_str}<'.format(**locals())
             raise KeyError(msg)
         except Exception as e:
             if connection is not None:
@@ -478,14 +534,12 @@ class SQLAlchemyBackend(BaseDataBackend):
                 self.__CNX_CACHE.pop(cache_key, None)
         return connection
 
-    def copy_from_sql(self, sql, connstr, name, chunksize=10000,
-                      append=False, transform=None, secrets=None, **kwargs):
+    def copy_from_sql(self, sql, connstr, name, chunksize=10000, append=False, transform=None, secrets=None, **kwargs):
         connection = self._get_connection(name, connstr, secrets=secrets)
         chunksize = chunksize or 10000  # avoid None
         pditer = pd.read_sql(sql, connection, chunksize=chunksize, **kwargs)
         with tqdm_if_interactive().tqdm(unit='rows') as pbar:
-            meta = self._chunked_insert(pditer, name, append=append,
-                                        transform=transform, pbar=pbar)
+            meta = self._chunked_insert(pditer, name, append=append, transform=transform, pbar=pbar)
         connection.close()
         return meta
 
@@ -495,7 +549,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         chunksize = chunksize if chunksize is not None else 10000
 
         def chunker(seq, size):
-            return (seq.iloc[pos:pos + size] for pos in range(0, len(seq), size))
+            return (seq.iloc[pos : pos + size] for pos in range(0, len(seq), size))
 
         def to_sql(df, table, connection, pbar=None):
             for i, cdf in enumerate(chunker(df, chunksize)):
@@ -538,8 +592,11 @@ class SQLAlchemyBackend(BaseDataBackend):
 
     def _get_secrets(self, meta, secrets):
         secrets_specs = meta.kind_meta.get('secrets')
-        values = ({k: v for k, v in os.environ.items() if k.isupper() and isinstance(v, (str, bytes))}
-                  if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG else dict())
+        values = (
+            {k: v for k, v in os.environ.items() if k.isupper() and isinstance(v, (str, bytes))}
+            if self.data_store.defaults.OMEGA_ALLOW_ENV_CONFIG
+            else dict()
+        )
         values.update(**self.data_store.defaults)
         if not secrets and secrets_specs:
             dsname = secrets_specs['dsname']
@@ -697,9 +754,11 @@ def load_sql(om=None, kind=SQLAlchemyBackend.KIND):
         None
     """
     from unittest.mock import MagicMock
+
     from IPython import get_ipython
-    import omegaml as om
     from sql.connection import Connection  # noqa
+
+    import omegaml as om
 
     class ConnectionShim:
         # this is required to trick sql magic into accepting existing connection objects

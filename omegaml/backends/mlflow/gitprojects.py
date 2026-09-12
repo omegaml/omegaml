@@ -21,6 +21,7 @@ class MLFlowGitProjectBackend(RunnablePackageMixin, BaseDataBackend):
         * https://packaging.python.org/tutorials/packaging-projects/
         * https://docs.github.com/en/get-started/getting-started-with-git/managing-remote-repositories#changing-a-remote-repositorys-url
     """
+
     KIND = 'mlflow.gitproject'
     MLFLOW_GIT_PREFIX = re.compile(r'^mlflow\+(git|ssh|https).*')
     GIT_PREFIX = 'https'
@@ -42,7 +43,8 @@ class MLFlowGitProjectBackend(RunnablePackageMixin, BaseDataBackend):
             bucket=self.data_store.bucket,
             kind=MLFlowGitProjectBackend.KIND,
             uri=git_uri,
-            attributes=attributes).save()
+            attributes=attributes,
+        ).save()
 
     def get(self, name, **kwargs):
         """

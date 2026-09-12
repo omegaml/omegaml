@@ -54,11 +54,11 @@ class JobSchedule(object):
     .. versionchanged:: NEXT
         the .text property returns times in 24-hour format. Use JobSchedule.cron_descriptor_options to change format.
     """
+
     # default cron descriptor options
     cron_descriptor_options = cron_descriptor.Options(use_24hour_time_format=True)
 
-    def __init__(self, text=None, minute='*', hour='*', weekday='*',
-                 monthday='*', month='*', at=None):
+    def __init__(self, text=None, minute='*', hour='*', weekday='*', monthday='*', month='*', at=None):
         # if we get text, attempt to convert
         if text:
             try:
@@ -90,38 +90,34 @@ class JobSchedule(object):
         # month to number, e.g. january = 1
         month = self._convert_months(month)
         # get a cron spec
-        self.sched = crontab(minute=minute,
-                             hour=hour,
-                             day_of_month=monthday,
-                             day_of_week=weekday,
-                             month_of_year=month)
+        self.sched = crontab(minute=minute, hour=hour, day_of_month=monthday, day_of_week=weekday, month_of_year=month)
         # make sure the spec can be processed by croniter
         if not croniter.is_valid(self.cron):
             raise ValueError("{cronspec} is not a valid schedule")
 
     @classmethod
     def from_cron(cls, cronspec):
-        """ initialize JobSchedule from a cron specifier"""
+        """initialize JobSchedule from a cron specifier"""
         (minute, hour, monthday, month, weekday) = cronspec.split(' ')
-        return JobSchedule(minute=minute, hour=hour, monthday=monthday,
-                           month=month, weekday=weekday)
+        return JobSchedule(minute=minute, hour=hour, monthday=monthday, month=month, weekday=weekday)
 
     @classmethod
     def from_text(cls, text):
-        """ initialize JobSchedule from a weekday, hour, month specifier"""
+        """initialize JobSchedule from a weekday, hour, month specifier"""
         return JobSchedule(text=text)
 
     @property
     def cron(self):
-        """ return the cron representation of the schedule """
+        """return the cron representation of the schedule"""
         # adopted from https://docs.celeryproject.org/en/latest/_modules/celery/schedules.html#schedule
-        cron_repr = ('{0._orig_minute} {0._orig_hour} {0._orig_day_of_month} '
-                     '{0._orig_month_of_year} {0._orig_day_of_week}')
+        cron_repr = (
+            '{0._orig_minute} {0._orig_hour} {0._orig_day_of_month} {0._orig_month_of_year} {0._orig_day_of_week}'
+        )
         return cron_repr.format(self.sched)
 
     @property
     def text(self):
-        """ return the human readable representation of the schedule
+        """return the human readable representation of the schedule
 
         .. versionchanged:: NEXT
             use JobSchedule.cron_descriptor_options to change format, see https://pypi.org/project/cron-descriptor/
@@ -129,7 +125,7 @@ class JobSchedule(object):
         return cron_descriptor.get_description(self.cron, self.cron_descriptor_options)
 
     def next_times(self, n=None, last_run=None):
-        """ return the n next times of this schedule, staring from the last run
+        """return the n next times of this schedule, staring from the last run
 
         Args:
             n (int): the n next times
@@ -154,28 +150,28 @@ class JobSchedule(object):
 
     def _convert_weekdays(self, v):
         # convert full name weekdays to short
-        days = dict([('monday', 'mon'),
-                     ('tuesday', 'tue'),
-                     ('wednesday', 'wed'),
-                     ('thursday', 'thu'),
-                     ('friday', 'fri'),
-                     ('saturday', 'sat'),
-                     ('sunday', 'sun'),
-                     ('weekday', 'mon-fri'),
-                     ('workday', 'mon-fri'),
-                     ('working day', 'mon-fri'),
-                     ('weekend', 'sat-sun'),
-                     ('week-end', 'sat-sun'),
-                     ('week end', 'sat-sun'),
-                     ])
+        days = dict([
+            ('monday', 'mon'),
+            ('tuesday', 'tue'),
+            ('wednesday', 'wed'),
+            ('thursday', 'thu'),
+            ('friday', 'fri'),
+            ('saturday', 'sat'),
+            ('sunday', 'sun'),
+            ('weekday', 'mon-fri'),
+            ('workday', 'mon-fri'),
+            ('working day', 'mon-fri'),
+            ('weekend', 'sat-sun'),
+            ('week-end', 'sat-sun'),
+            ('week end', 'sat-sun'),
+        ])
         v = v.lower()
         for full, short in days.items():
             v = v.replace(full, short)
         return v
 
     def _has_month(self, v):
-        months = ('january,february,march,april,may,june,july,august,'
-                  'september,october,november,december').split(',')
+        months = ('january,february,march,april,may,june,july,august,september,october,november,december').split(',')
         long = any(m in v for m in months)
         short = any(m[0:3] in v for m in months)
         return long or short
@@ -187,8 +183,7 @@ class JobSchedule(object):
         return long or short
 
     def _convert_months(self, v):
-        months = ('january,february,march,april,may,june,july,august,'
-                  'september,october,november,december').split(',')
+        months = ('january,february,march,april,may,june,july,august,september,october,november,december').split(',')
         if not self._has_month(v):
             return v
         v = v.lower()
@@ -274,11 +269,9 @@ class JobSchedule(object):
                 specs['month'] = self._convert_months(part).replace('every', '')
             elif 'daily' in part:
                 specs['weekday'] = '*'
-            elif (self._has_day(part) or 'day' in part or 'week' in part):
+            elif self._has_day(part) or 'day' in part or 'week' in part:
                 # 'monday-friday', 'tuesday', 'every 3rd day'
-                part = (self._convert_weekdays(part)
-                        .replace('day', '')
-                        .strip())
+                part = self._convert_weekdays(part).replace('day', '').strip()
                 # every mon-fri => mon-fri, every fri
                 if 'every ' in part and '-' in part:
                     part = part.replace('every ', '').strip()

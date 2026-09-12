@@ -41,8 +41,8 @@ def create_testdata(om):
                 df = df * 0.1 * np.random.randn(*df.shape)
                 with omx.runtime.experiment(f'{prefix}{bx}-reg-{i}') as exp:
                     exp.track(f'{prefix}{bx}-reg-{i}')
-                    exp.log_metric('acc', .1 + (j * 10 / 100))
-                    exp.log_metric('loss', .97 - (j * 10 / 100))
+                    exp.log_metric('acc', 0.1 + (j * 10 / 100))
+                    exp.log_metric('loss', 0.97 - (j * 10 / 100))
                     if (j % 2) > 0:
                         exp = omx.runtime.experiment(f'{prefix}{bx}-reg-{i}', recreate=True, autotrack=True)
                         mon = exp.as_monitor(f'{prefix}{bx}-reg-{i}')

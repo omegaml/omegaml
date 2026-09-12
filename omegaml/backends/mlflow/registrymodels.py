@@ -18,6 +18,7 @@ class MLFlowRegistryBackend(BaseModelBackend):
     See Also
         https://www.mlflow.org/docs/latest/tracking.html
     """
+
     KIND = 'mlflow.registrymodel'
     MLFLOW_MODELS_PREFIX = 'mlflow+models'
 
@@ -27,8 +28,7 @@ class MLFlowRegistryBackend(BaseModelBackend):
         return is_mlflow_models
 
     def put(self, obj, name, tracking_uri=None, attributes=None, **kwargs):
-        """ save a MLFlow tracking-sourceable project by storing the models uri in meta.uri
-        """
+        """save a MLFlow tracking-sourceable project by storing the models uri in meta.uri"""
         models_uri = obj.replace('mlflow+models://', 'models:/')
         meta = self.data_store._make_metadata(
             name=name,
@@ -36,12 +36,13 @@ class MLFlowRegistryBackend(BaseModelBackend):
             bucket=self.data_store.bucket,
             kind=MLFlowRegistryBackend.KIND,
             uri=models_uri,
-            attributes=attributes)
+            attributes=attributes,
+        )
         self._ensure_tracking_uri(meta, tracking_uri=tracking_uri)
         return meta.save()
 
     def get(self, name, tracking_uri=None, **kwargs):
-        """ Load MLFlow model from the tracking uri stored in metadata.uri """
+        """Load MLFlow model from the tracking uri stored in metadata.uri"""
         meta = self.data_store.metadata(name)
         tracking_uri = tracking_uri or meta.kind_meta['tracking_uri']
         self._ensure_tracking_uri(meta, tracking_uri=tracking_uri)
@@ -49,9 +50,12 @@ class MLFlowRegistryBackend(BaseModelBackend):
         return model
 
     def _ensure_tracking_uri(self, meta, tracking_uri=None):
-        tracking_uri = (tracking_uri or mlflow.get_tracking_uri() or meta.kind_meta.get('tracking_uri') or
-                        os.environ.get('MLFLOW_TRACKING_URI'))
+        tracking_uri = (
+            tracking_uri
+            or mlflow.get_tracking_uri()
+            or meta.kind_meta.get('tracking_uri')
+            or os.environ.get('MLFLOW_TRACKING_URI')
+        )
         meta.kind_meta['tracking_uri'] = tracking_uri
         assert tracking_uri, "pass tracking_uri= or set kind_meta.tracking_uri or set env MLFLOW_TRACKING_URI"
         mlflow.set_tracking_uri(tracking_uri)
-

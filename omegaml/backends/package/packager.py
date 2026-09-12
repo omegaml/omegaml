@@ -1,8 +1,9 @@
-import callable_pip as cpip
 import logging
 import os
 import sys
 from pathlib import Path
+
+import callable_pip as cpip
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +12,7 @@ def build_sdist(src, distdir):
     # uses the build package to create a source distribution
     # -- see https://build.pypa.io/en/stable/api.html#build.ProjectBuilder
     from build import ProjectBuilder
+
     setup_path = Path(src.replace('setup.py', ''))
     builder = ProjectBuilder(setup_path)
     builder.build('sdist', output_directory=distdir)
@@ -20,16 +22,20 @@ def build_sdist(src, distdir):
 
 def install_package(src, dst):
     logger.debug(f'Installing package from {src} to {dst}')
-    cpip.main('install',
-              src,
-              '--force-reinstall',
-              '--no-cache-dir',
-              '--upgrade',
-              '--target', dst)
+    cpip.main(
+        'install',
+        src,
+        '--force-reinstall',
+        '--no-cache-dir',
+        '--upgrade',
+        '--target',
+        dst,
+    )
 
 
 def load_from_path(name, path, keep=False):
     import importlib
+
     logger.debug(f'Loading module {name} from path {path} using keep={keep}')
     sys.path.insert(0, path)
     try:

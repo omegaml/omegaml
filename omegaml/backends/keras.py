@@ -8,6 +8,7 @@ class KerasBackend(BaseModelBackend):
     @classmethod
     def supports(self, obj, name, **kwargs):
         from tensorflow.keras import Sequential as tfSequential, Model as tfModel
+
         is_tf_keras = isinstance(obj, (tfSequential, tfModel))
         try:
             from keras import Sequential, Model
@@ -23,6 +24,7 @@ class KerasBackend(BaseModelBackend):
         # https://www.tensorflow.org/api_docs/python/tf/keras/models/save_model
         # defaults to h5 since TF 2.x. We keep with h5 for simplicity for now
         import tensorflow as tf
+
         kwargs = dict(save_format='h5') if tf.__version__.startswith('2') else {}
         model.save(tmpfn, **kwargs)
         return tmpfn
@@ -30,12 +32,12 @@ class KerasBackend(BaseModelBackend):
     def _extract_model(self, infile, key, tmpfn, **kwargs):
         # override to implement model loading
         from keras.src.saving.legacy.save import load_model
+
         with open(tmpfn, 'wb') as pkgf:
             pkgf.write(infile.read())
         return load_model(tmpfn)
 
-    def fit(self, modelname, Xname, Yname=None, validation_data=None,
-            pure_python=True, **kwargs):
+    def fit(self, modelname, Xname, Yname=None, validation_data=None, pure_python=True, **kwargs):
         """
         Fit a model
 
@@ -64,9 +66,13 @@ class KerasBackend(BaseModelBackend):
         callbacks = keras_kwargs.setdefault('callbacks', [])
         callbacks.append(self.tracking.experiment.tensorflow_callback())
         history = model.fit(X, Y, **keras_kwargs)
-        meta = self.model_store.put(model, modelname, attributes={
-            'history': serializable_history(history)
-        })
+        meta = self.model_store.put(
+            model,
+            modelname,
+            attributes={
+                'history': serializable_history(history),
+            },
+        )
         return meta
 
     def predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
@@ -75,9 +81,7 @@ class KerasBackend(BaseModelBackend):
         result = model.predict(X)
         return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 
-    def score(
-            self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-            **kwargs):
+    def score(self, modelname, Xname, Yname=None, rName=True, pure_python=True, **kwargs):
         model = self.get_model(modelname)
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)
@@ -90,5 +94,4 @@ class KerasBackend(BaseModelBackend):
 
 def serializable_history(history):
     # ensure history object is JSON/BSON serializable by converting to default
-    return {k: ensure_python_array(v, float)
-            for k, v in history.history.items()}
+    return {k: ensure_python_array(v, float) for k, v in history.history.items()}

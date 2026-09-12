@@ -22,6 +22,7 @@ class ScriptsCommandBase(StoresCommandMixin, CommandBase):
     Description:
         Work with scripts
     """
+
     command = 'scripts'
 
     def put(self):

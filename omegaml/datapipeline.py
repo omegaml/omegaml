@@ -22,7 +22,7 @@ class ParallelStep(object):
 
 
 class DataPipeline(object):
-    """ A data pipeline that processes data through a series of steps
+    """A data pipeline that processes data through a series of steps
 
     The pipeline is a sequence of steps, each of which is a callable that
     processes the data.
@@ -31,6 +31,7 @@ class DataPipeline(object):
         The pipeline now automatically gets a context object that is passed
         along to each step as a keyword argument.
     """
+
     def __init__(self, steps, *args, context=None, n_jobs=None, **kwargs):
         self.steps = steps
         self.args = args
@@ -88,6 +89,7 @@ class Model:
     @property
     def om(self):
         import omegaml as _baseom
+
         self._om = self._om or _baseom
         return self._om
 
@@ -123,9 +125,7 @@ class Model:
 
     def join(self, other, on=None, on_left=None, on_right=None, columns_left=None, columns_right=None, **kwargs):
         join_sql = self.join_sql
-        join_keys = {
-            ka: kb for ka, kb in zip(on or on_left or [], on or on_right or [])
-        }
+        join_keys = {ka: kb for ka, kb in zip(on or on_left or [], on or on_right or [])}
         _join_cond = ' and '.join([f'a.{k} = b.{v}' for k, v in join_keys.items()])
         _join_cond = ' and ' + _join_cond if _join_cond else ''
         _left_cols = ','.join(columns_left or ['a.*'])

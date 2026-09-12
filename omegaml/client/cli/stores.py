@@ -2,7 +2,7 @@ from omegaml.client.util import get_omega
 
 
 class StoresCommandMixin:
-    """ Common commands for OmegaStore related commands
+    """Common commands for OmegaStore related commands
 
     Usage:
         class DatasetsCommand(StoresCommandMixin, CommandBase:
@@ -11,6 +11,7 @@ class StoresCommandMixin:
         This will automatically provide list, drop, metadata
         commands for the store given by the command variable
     """
+
     command = 'unspecified'
 
     def put(self):

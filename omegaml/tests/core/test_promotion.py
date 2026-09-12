@@ -100,6 +100,7 @@ class PromotionMixinTests(OmegaTestMixin, TestCase):
     def test_promotion_deferred(self):
         # ensure we always import injected deferred
         from omegaml import _omega
+
         om = _omega.OmegaDeferredInstance()
         prod = om['prod']
         reg = LinearRegression()

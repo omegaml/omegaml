@@ -3,19 +3,19 @@ import logging
 import os
 from hashlib import pbkdf2_hmac
 from time import sleep
-from typing import Callable, Any, Dict
+from typing import Any, Callable, Dict
 from uuid import uuid4
 
 from jose import jwe
-
 from minibatch.tests.util import LocalExecutor
+
 from omegaml.util import tryOr, utcnow
 
 logger = logging.getLogger(__name__)
 
 
 class StreamableResourceMixin:
-    """ resource mixin to handle streaming results in line of by handing-off to a streaming server
+    """resource mixin to handle streaming results in line of by handing-off to a streaming server
 
     Depending on om.defaults.OMEGA_EVENTS_STREAMER:
 
@@ -39,11 +39,12 @@ class StreamableResourceMixin:
     Testing:
         * use honcho start to run all required servers from the Procfile
     """
+
     SECRET_KEY = os.getenv('SECRET_KEY', 'ec3d75c6f5b3965f24f148969b1c82d57246a8aab46393b55ba18d712fa1a0ad')
     PBKDF_ITER = int(os.getenv('PBKDF_ITER', 500000))
 
     def prepare_streaming_result(self, promise=None, resource_name=None, raw=False, stream=None, streamer=None):
-        """ prepare result for event streaming
+        """prepare result for event streaming
 
         Args:
             promise (celery.AsyncResult): a celery result to be resolved
@@ -84,10 +85,13 @@ class StreamableResourceMixin:
         buffer = Sink()
         logger.debug("complete:stream_result getting stream")
         stream_name = f'.system/complete/{stream}'
-        streaming = om.streams.getl(stream_name,
-                                    executor=LocalExecutor(),
-                                    sink=buffer,
-                                    size=1, interval=0.01)
+        streaming = om.streams.getl(
+            stream_name,
+            executor=LocalExecutor(),
+            sink=buffer,
+            size=1,
+            interval=0.01,
+        )
         # process stream, one message at a time
         # -- emitter to sink buffer
         emitter = streaming.make(lambda window: window.data)
@@ -136,8 +140,9 @@ class StreamableResourceMixin:
             session_id = uuid4().hex
             # SEC: A256CGM is the recommended algorithm for JWE, https://datatracker.ietf.org/doc/html/rfc7518#section-5.1
             #      implementation of JWE by the python-jose package
-            key = pbkdf2_hmac('sha256', self.SECRET_KEY.encode('utf-8'), str(session_id).encode('utf-8'),
-                              self.PBKDF_ITER)
+            key = pbkdf2_hmac(
+                'sha256', self.SECRET_KEY.encode('utf-8'), str(session_id).encode('utf-8'), self.PBKDF_ITER
+            )
             token = jwe.encrypt(json.dumps(payload), key, algorithm='dir', encryption='A256GCM')
             logger.debug(f'key {key}')
             logger.debug(f'token {token}')

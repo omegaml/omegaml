@@ -5,6 +5,7 @@ from unittest import TestCase, skip
 from omegaml import Omega
 from omegaml.backends.tensorflow.tfdataset import TFDatasetBackend
 from omegaml.tests.util import tf_perhaps_eager_execution, OmegaTestMixin
+
 # check https://www.tensorflow.org/datasets/api_docs/python/tfds/testing/run_in_graph_and_eager_modes
 from omegaml.util import module_available
 
@@ -14,6 +15,7 @@ from omegaml.util import module_available
 class TensorflowDatasetBackendTests(OmegaTestMixin, TestCase):
     def setUp(self):
         import os
+
         os.environ['TF_EAGER'] = '1'
         tf_perhaps_eager_execution()
         self.om = Omega()
@@ -24,9 +26,11 @@ class TensorflowDatasetBackendTests(OmegaTestMixin, TestCase):
         import tensorflow as tf
         from tensorflow.python.data.experimental import AUTOTUNE
 
-        data_root_orig = tf.keras.utils.get_file('flower_photos',
-                                                 'https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz',
-                                                 untar=True)
+        data_root_orig = tf.keras.utils.get_file(
+            'flower_photos',
+            'https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz',
+            untar=True,
+        )
         data_root = pathlib.Path(data_root_orig)
 
         all_image_paths = list(data_root.glob('*/*'))
@@ -45,8 +49,3 @@ class TensorflowDatasetBackendTests(OmegaTestMixin, TestCase):
         for img in ds.take(1):
             print(img.numpy())
             break
-
-
-
-
-

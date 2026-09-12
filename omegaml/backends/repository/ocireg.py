@@ -3,7 +3,7 @@ from omegaml.backends.repository.orasreg import OrasOciRegistry
 
 
 class OCIRegistryBackend(BaseModelBackend):
-    """ enable storing references to OCI repositories
+    """enable storing references to OCI repositories
 
     Concepts:
         * Registry - the name of the service hosting OCI artifacts, e.g. https://ghcr.io
@@ -21,6 +21,7 @@ class OCIRegistryBackend(BaseModelBackend):
         can reference multiple blobs. The registry stores the blobs independent of the artifact, that is multiple artifacts
         can reference the same blob, since the layers don't actually contain data but references (by digest) to the blobs.
     """
+
     KIND = 'oci.registry'
     PROMOTE = 'metadata'
 
@@ -29,7 +30,7 @@ class OCIRegistryBackend(BaseModelBackend):
         return any(str(obj).startswith(prefix) for prefix in ('oci://', 'ocidir://', 'file://'))
 
     def put(self, obj, name, asname=None, **kwargs):
-        """ store a reference to an oci registry
+        """store a reference to an oci registry
 
         Args:
             obj (str): the uri of the oci registry as oci://hostname:port/namespace/image:tag,
@@ -56,10 +57,11 @@ class OCIRegistryBackend(BaseModelBackend):
             bucket=self.model_store.bucket,
             kind=self.KIND,
             kind_meta=kind_meta,
-            attributes=attributes).save()
+            attributes=attributes,
+        ).save()
 
     def get(self, name, image=None, local=None, **kwargs):
-        """ retrieve an OCI registry instance
+        """retrieve an OCI registry instance
 
         Args:
             name (str): the name

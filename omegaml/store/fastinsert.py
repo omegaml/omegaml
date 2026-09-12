@@ -11,8 +11,8 @@ default_chunksize = int(1e6)
 
 
 def dfchunker(df, size=default_chunksize):
-    """ chunk a dataframe as in iterator """
-    return (df.iloc[pos:pos + size] for pos in range(0, len(df), size))
+    """chunk a dataframe as in iterator"""
+    return (df.iloc[pos : pos + size] for pos in range(0, len(df), size))
 
 
 def insert_chunk(job):

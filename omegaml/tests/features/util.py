@@ -6,15 +6,12 @@ from urllib.parse import urlparse, urlunparse
 import yaml
 from selenium.webdriver.common.keys import Keys
 
-istrue = lambda v: (
-    (v.lower() in ('yes', '1', 'y', 'true', 't'))
-    if isinstance(v, str) else bool(v)
-)
+istrue = lambda v: (v.lower() in ('yes', '1', 'y', 'true', 't')) if isinstance(v, str) else bool(v)
 isfalse = lambda v: not istrue(v)
 
 
 def uri(browser, uri):
-    """ given a browser, replace the path with uri """
+    """given a browser, replace the path with uri"""
     url = browser.url
     parsed = list(urlparse(url))
     parsed[2] = uri
@@ -225,7 +222,14 @@ def get_admin_secrets(scope=None, keys=None):
     secrets = os.path.join(os.path.expanduser('~/.omegaml/behave.yml'))
     with open(secrets) as fin:
         secrets = yaml.safe_load(fin)
-        secrets = secrets.get(scope, {}) if scope else secrets
+        secrets = (
+            secrets.get(
+                scope,
+                {},
+            )
+            if scope
+            else secrets
+        )
     if keys:
         result = [secrets.get(k) for k in keys]
     else:

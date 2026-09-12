@@ -10,4 +10,3 @@ def create_view(bp):
     view = StreamRepositoryView('streams')
     view.create_routes(bp)
     return
-

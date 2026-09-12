@@ -4,7 +4,7 @@ from unittest import TestCase
 import pandas as pd
 
 from omegaml import Omega
-from omegaml.datapipeline import Model, DataPipeline
+from omegaml.datapipeline import DataPipeline, Model
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -61,19 +61,16 @@ class DataPipelineTests(OmegaTestMixin, TestCase):
 
     def test_datapipeline(self):
         Product = self._setup_model()
-        pipeline = DataPipeline(steps=[
-            Product(),
-        ])
+        pipeline = DataPipeline(steps=[Product()])
         result = pipeline.process(pno=[1234])
         self.assertIsInstance(result, pd.DataFrame)
         self.assertEqual(len(result), 10)
 
     def test_parallel_data_pipeline(self):
         Product = self._setup_model(dburl=f'sqlite:////{self.dbpath}', drop=True)
-        pipeline = DataPipeline(steps=[
-            Product(),
-            lambda values, **kwargs: pd.concat(values),
-        ])
+        pipeline = DataPipeline(
+            steps=[Product(), lambda values, **kwargs: pd.concat(values)],
+        )
         result = pipeline.map([dict(pno=[1234])])
         self.assertIsInstance(result, pd.DataFrame)
         self.assertEqual(len(result), 10)
@@ -83,5 +80,9 @@ class DataPipelineTests(OmegaTestMixin, TestCase):
 
         product = Product()
         df = product.join(product, on=['pno'])
-        self.assertEqual(len(df),
-                         product.count(sql='select a.*, b.* from :sqltable as a join :sqltable as b on a.pno = b.pno'))
+        self.assertEqual(
+            len(df),
+            product.count(
+                sql='select a.*, b.* from :sqltable as a join :sqltable as b on a.pno = b.pno',
+            ),
+        )

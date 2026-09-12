@@ -47,16 +47,16 @@ class PythonRawFileBackend(BaseDataBackend):
         return True
 
     def get(
-            self,
-            name,
-            local=None,
-            mode='wb',
-            open_kwargs=None,
-            chunksize=None,
-            uri=None,
-            extract=None,
-            replace=False,
-            **kwargs,
+        self,
+        name,
+        local=None,
+        mode='wb',
+        open_kwargs=None,
+        chunksize=None,
+        uri=None,
+        extract=None,
+        replace=False,
+        **kwargs,
     ):
         """
         get a stored file as a file-like object with binary contents, or copy contents to a local file

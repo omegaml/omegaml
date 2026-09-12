@@ -75,18 +75,18 @@ class ConversationModelBackend(GenAIBaseBackend):
         )
 
     def put(
-            self,
-            obj,
-            name,
-            template=None,
-            prompt=None,
-            pipeline=None,
-            provider=None,
-            tools=None,
-            documents=None,
-            strategy=None,
-            apikey=None,
-            **kwargs,
+        self,
+        obj,
+        name,
+        template=None,
+        prompt=None,
+        pipeline=None,
+        provider=None,
+        tools=None,
+        documents=None,
+        strategy=None,
+        apikey=None,
+        **kwargs,
     ):
         """save a conversational LLM model served by an OpenAI-compatible /chat/completions or /embeddings endpoints
 
@@ -155,18 +155,18 @@ class ConversationModelBackend(GenAIBaseBackend):
         return meta.save()
 
     def get(
-            self,
-            name,
-            prompt=None,
-            template=None,
-            data_store=None,
-            pipeline=None,
-            tools=None,
-            documents=None,
-            strategy=None,
-            tracking=None,
-            secrets=None,
-            **kwargs,
+        self,
+        name,
+        prompt=None,
+        template=None,
+        data_store=None,
+        pipeline=None,
+        tools=None,
+        documents=None,
+        strategy=None,
+        tracking=None,
+        secrets=None,
+        **kwargs,
     ):
         """get a ConversationModel
 
@@ -313,8 +313,9 @@ class ConversationModelBackend(GenAIBaseBackend):
         return self.tracking
 
 
-class ConversationModel(TracingMixin, ToolCallingMixin, AugmentationMixin, EmbeddingsMixin, ChatMixin, CompletionsMixin,
-    GenAIModel):
+class ConversationModel(
+    TracingMixin, ToolCallingMixin, AugmentationMixin, EmbeddingsMixin, ChatMixin, CompletionsMixin, GenAIModel
+):
     """OpenAI model
 
     This implements the OpenAI model interface. It is a thin wrapper around the OpenAI API,
@@ -385,21 +386,21 @@ class ConversationModel(TracingMixin, ToolCallingMixin, AugmentationMixin, Embed
     """
 
     def __init__(
-            self,
-            base_url,
-            model,
-            api_key=None,
-            template=None,
-            prompt=None,
-            data_store=None,
-            tracking=None,
-            pipeline=None,
-            provider='openai',
-            tools=None,
-            documents=None,
-            strategy=None,
-            trace=None,
-            **kwargs,
+        self,
+        base_url,
+        model,
+        api_key=None,
+        template=None,
+        prompt=None,
+        data_store=None,
+        tracking=None,
+        pipeline=None,
+        provider='openai',
+        tools=None,
+        documents=None,
+        strategy=None,
+        trace=None,
+        **kwargs,
     ):
         super().__init__()
         self.base_url = base_url

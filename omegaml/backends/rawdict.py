@@ -1,7 +1,8 @@
+from pymongo.collection import Collection
+
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.mdataframe import MDataFrame
-from omegaml.util import json_normalize, PickableCollection
-from pymongo.collection import Collection
+from omegaml.util import PickableCollection, json_normalize
 
 
 class PandasRawDictBackend(BaseDataBackend):
@@ -23,11 +24,12 @@ class PandasRawDictBackend(BaseDataBackend):
         # preserve all document keys, including _id
         om.datasets.getl('foo', raw=True)
     """
+
     KIND = 'pandas.rawdict'
 
     @classmethod
     def supports(self, obj, name, as_raw=None, data_store=None, **kwargs):
-        new_as_raw = (as_raw and isinstance(obj, (dict, list, tuple)))
+        new_as_raw = as_raw and isinstance(obj, (dict, list, tuple))
         new_as_collection = isinstance(obj, (Collection, PickableCollection))
         exists_as_dict = not (new_as_raw or new_as_collection) and (name and data_store.metadata(name) is not None)
         return new_as_raw or new_as_collection or exists_as_dict
@@ -55,9 +57,11 @@ class PandasRawDictBackend(BaseDataBackend):
             collection.insert_many(obj)
         else:
             raise ValueError(f'cannot insert object of type {type(obj)}')
-        meta = self.data_store._make_metadata(name,
-                                              kind=self.KIND,
-                                              collection=collection.name,
-                                              attributes=attributes,
-                                              **kwargs.get('meta_kwargs', {}))
+        meta = self.data_store._make_metadata(
+            name,
+            kind=self.KIND,
+            collection=collection.name,
+            attributes=attributes,
+            **kwargs.get('meta_kwargs', {}),
+        )
         return meta.save()

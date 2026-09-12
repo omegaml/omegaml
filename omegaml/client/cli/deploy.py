@@ -1,4 +1,4 @@
-""" omega-ml bulk deployment utility
+"""omega-ml bulk deployment utility
 (c) 2020 one2seven GmbH, Switzerland
 
 Enables deployment of datasets, models, scripts, jobs as well as cloud
@@ -79,26 +79,24 @@ Usage:
             sequence: 9999
 
 """
-import logging
 
 import argparse
-import omegaml as om
+import logging
 import os
 import re
 import subprocess
+
 import yaml
+
+import omegaml as om
 from omegaml.client import cli
 
 parser = argparse.ArgumentParser(description='omegaml scripted deploy')
-parser.add_argument('--file', dest='deployfile', default='deploy.yml',
-                    help='/path/to/deploy.yml')
+parser.add_argument('--file', dest='deployfile', default='deploy.yml', help='/path/to/deploy.yml')
 parser.add_argument('--dry', default=False, action='store_true')
-parser.add_argument('--action', default='update',
-                    help='add, update, remove')
-parser.add_argument('--select', default='',
-                    help='subset of assets to apply')
-parser.add_argument('--specs', default='',
-                    help='comma separated list of <var>=<value>[,...]')
+parser.add_argument('--action', default='update', help='add, update, remove')
+parser.add_argument('--select', default='', help='subset of assets to apply')
+parser.add_argument('--specs', default='', help='comma separated list of <var>=<value>[,...]')
 
 DIRECT_COMMANDS = ['kubectl', 'shell']
 COMMAND_ORDER = 'cloud,shell,kubectl,datasets,scripts,runtime,appingress'
@@ -111,7 +109,7 @@ SPECS_CLI_MAP = {
     'runtime': 'runtime {kind} {action} {name} {options}',
     'cloud': 'cloud {action} {kind} --specs {specs} {options}',
     'kubectl': 'kubectl {command}',
-    'shell': '{command}'
+    'shell': '{command}',
 }
 ACTION_MAP = {
     'update': {
@@ -144,7 +142,9 @@ def process(specs_file, action='plan', dry=False, select=None, specs=None, cli_l
     order = COMMAND_ORDER
     commands = []
     vars = dict(action=action, dry=dry, select=select)
-    vars.update({**os.environ, **DEFAULT_VARS})
+    vars.update(
+        {**os.environ, **DEFAULT_VARS},
+    )
     selected = (select or '').split(',')
     specs = dict([pair.strip().split('=', 1) for pair in specs.split(',')]) if specs else {}
 
@@ -160,8 +160,7 @@ def process(specs_file, action='plan', dry=False, select=None, specs=None, cli_l
 
     def prepare(cmd, item):
         if 'specs' in item:
-            item['specs'] = ','.join(f'{k}={v}'
-                                     for k, v in item['specs'].items())
+            item['specs'] = ','.join(f'{k}={v}' for k, v in item['specs'].items())
         if action in ACTION_MAP:
             default_action = ACTION_MAP[action].get(cmd, ACTION_MAP[action].get('_default_'))
         else:
@@ -181,7 +180,10 @@ def process(specs_file, action='plan', dry=False, select=None, specs=None, cli_l
         }
         try:
             action_override = {'action': item['action']} if not str(item.get('action')).startswith('{') else {}
-            render_vars(command, **{**item, **vars, **specs, **action_override})
+            render_vars(
+                command,
+                **{**item, **vars, **specs, **action_override},
+            )
         except KeyError as e:
             logger.error(f"Variable {e} must be set in {cmd} {item}")
             exit(1)
@@ -215,9 +217,9 @@ def process(specs_file, action='plan', dry=False, select=None, specs=None, cli_l
         return lookup, selected and any(re.match(s, lookup) for s in selected)
 
     def apply():
-        sequenced = sorted(commands,
-                           key=lambda v: (len(commands) + 1) * SEQUENCE_SPACING if v.get('depends') else v.get(
-                               'sequence'))
+        sequenced = sorted(
+            commands, key=lambda v: (len(commands) + 1) * SEQUENCE_SPACING if v.get('depends') else v.get('sequence')
+        )
         for cmd in sequenced:
             lookup, should_process = is_selected(cmd)
             if not should_process:
@@ -246,8 +248,13 @@ def process(specs_file, action='plan', dry=False, select=None, specs=None, cli_l
         with open(specs_file) as fin:
             deploy_specs = yaml.safe_load(fin)
             try:
-                vars_update = {k: v.format(**vars)
-                               for k, v in deploy_specs.get('vars', {}).items()}
+                vars_update = {
+                    k: v.format(**vars)
+                    for k, v in deploy_specs.get(
+                        'vars',
+                        {},
+                    ).items()
+                }
             except KeyError as e:
                 logger.info(f"Variable {e} must be set in vars section")
                 exit(1)

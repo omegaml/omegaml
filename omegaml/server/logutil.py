@@ -50,6 +50,7 @@ To update logging data:
     from logutil import LoggingRequestContext
     LoggingRequestContext.inject(**data)
 """
+
 import logging
 import os
 import socket
@@ -73,7 +74,7 @@ LOGUTIL_CONFIG_FILE = [p for p in _config_paths if p.exists()][-1]
 
 
 def configure_logging(logging_config=None, settings=None):
-    """ configure logging
+    """configure logging
 
     This will read the logging configuration from LOGGING_CONFIG_FILE or fallback to settings.LOGGING.
     It will use logging.dictConfig to initialize logging accordingly. settings.LOGGING will be set to
@@ -87,10 +88,14 @@ def configure_logging(logging_config=None, settings=None):
     """
     from logging.config import dictConfig
 
-    config_file = (logging_config or getattr(settings, 'LOGGING_CONFIG_FILE', None)
-                   or os.environ.get('LOGGING_CONFIG_FILE') or LOGUTIL_CONFIG_FILE)
+    config_file = (
+        logging_config
+        or getattr(settings, 'LOGGING_CONFIG_FILE', None)
+        or os.environ.get('LOGGING_CONFIG_FILE')
+        or LOGUTIL_CONFIG_FILE
+    )
     logging.info(f'loading logger config from {config_file}')
-    
+
     try:
         with open(config_file, 'r') as fin:
             loggingConfig = yaml.safe_load(fin)
@@ -136,9 +141,7 @@ def logutil_django(mapping=None, **extra):
 
     _header_id = getattr(settings, 'REQUEST_ID_HEADER', 'X_REQUEST_ID').replace('-', '_')
     request_header_id = 'HTTP_{}'.format(_header_id)
-    request_started.connect(LoggingRequestContext.link_up(starter=starter,
-                                                          mapping=mapping,
-                                                          **extra), weak=False)
+    request_started.connect(LoggingRequestContext.link_up(starter=starter, mapping=mapping, **extra), weak=False)
     request_finished.connect(LoggingRequestContext.link_down(), weak=False)
     got_request_exception.connect(LoggingRequestContext.link_down(), weak=False)
 
@@ -155,9 +158,7 @@ def logutil_celery(mapping=None, **extra):
 
 class LoggingRequestContext:
     mapping = {}
-    extra = {
-        'hostname': socket.gethostname(),
-    }
+    extra = {'hostname': socket.gethostname()}
     extra.update({k.lower(): v for k, v in os.environ.items() if k in LOGUTIL_ENV_KEYS})
 
     def __init__(self, **extra):
@@ -243,11 +244,12 @@ class HostnameInjectingFilter(logging.Filter):
 class TaskInjectingFilter(logging.Filter):
     def filter(self, record):
         from celery._state import get_current_task
+
         task = get_current_task()
         if task and task.request:
-            record.__dict__.update(task_id=task.request.id,
-                                   task_name=task.name,
-                                   user_id=getattr(task, 'current_userid', '???'))
+            record.__dict__.update(
+                task_id=task.request.id, task_name=task.name, user_id=getattr(task, 'current_userid', '???')
+            )
         return True
 
 

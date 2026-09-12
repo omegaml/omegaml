@@ -41,6 +41,7 @@ Options:
 [description:jobs]
 [description:shell]
 """
+
 import sys
 
 from omegaml import version
@@ -59,18 +60,23 @@ def main(argv=None, logger=None, **kwargs):
     # make sure cli sees current project
     sys.path.insert(0, '.')
     # use argv and logger for debugging and testing
-    parser = CommandParser(__doc__, [DatasetsCommandBase,
-                                     ScriptsCommandBase,
-                                     ModelsCommandBase,
-                                     RuntimeCommandBase,
-                                     CloudCommandBase,
-                                     ShellCommandBase,
-                                     JobsCommandBase,
-                                     CatchallCommandBase],
-                           argv=argv,
-                           version=version,
-                           logger=logger,
-                           **kwargs)
+    parser = CommandParser(
+        __doc__,
+        [
+            DatasetsCommandBase,
+            ScriptsCommandBase,
+            ModelsCommandBase,
+            RuntimeCommandBase,
+            CloudCommandBase,
+            ShellCommandBase,
+            JobsCommandBase,
+            CatchallCommandBase,
+        ],
+        argv=argv,
+        version=version,
+        logger=logger,
+        **kwargs,
+    )
     try:
         parser.parse()
         parser.process()

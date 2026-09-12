@@ -32,15 +32,17 @@ def response_for_toolcalls(
                     if not isinstance(args, tuple | list)
                     else {k: v for k, v in zip(["args", "kwargs"], [args, kwargs])}
                 )
-            }
+            },
         )
 
         # For standard OpenAI format we want named arguments as JSON:
-        # json_args = json.dumps({"args": args, "kwargs": kwargs})
+        # json_args = json.dumps({"args": args, "kwargs": kwargs},)
 
-        assistant_tool_calls.append(
-            {"id": call_id, "type": "function", "function": {"name": func.__name__, "arguments": json_args}}
-        )
+        assistant_tool_calls.append({
+            "id": call_id,
+            "type": "function",
+            "function": {"name": func.__name__, "arguments": json_args},
+        })
     if not results:
         # ---- pure assistant message (no execution) --------------------
         return {
@@ -49,7 +51,10 @@ def response_for_toolcalls(
             "model": model,
             "created": int(__import__("time").time()),
             "choices": [
-                {"index": 0, "message": {"role": "assistant", "content": None, "tool_calls": assistant_tool_calls}}
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": None, "tool_calls": assistant_tool_calls},
+                }
             ],
         }
     # ---- step 2: execute the calls and build *result-side* response ---
@@ -74,7 +79,7 @@ def response_for_toolcalls(
                     "name": func.__name__,
                     "content": json.dumps({"result": result}) if not isinstance(result, str) else result,
                 },
-            }
+            },
         )
     # ---- build the tool-result chunk to send back as user messages ---
     resp = {
@@ -103,6 +108,9 @@ if __name__ == "__main__":
     def greet(name: str) -> str:
         return f"Hello, {name}!"
 
-    calls = [(add, (10, 20), {}), (greet, (), {"name": "Alice"})]
+    calls = [
+        (add, (10, 20), {}),
+        (greet, (), {"name": "Alice"}),
+    ]
     response = response_for_toolcalls(calls)
     print(json.dumps(response, indent=2))

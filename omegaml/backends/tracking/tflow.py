@@ -3,7 +3,7 @@ from itertools import product
 
 
 class TensorflowCallbackBase:
-    """ A callback for Tensorflow Keras models
+    """A callback for Tensorflow Keras models
 
     Implements the callback protocol according to Tensorflow Keras
     semantics and linking to a :class:`omegaml.backends.tracking.TrackingProvider`
@@ -60,10 +60,13 @@ class TensorflowCallbackBase:
 try:
     from tensorflow import keras
 except Exception as e:
+
     class TensorflowCallback(TensorflowCallbackBase):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             warnings.warn(f'tensorflow could not be loaded, TensorflowCallback may not work due to {e}')
+
 else:
+
     class TensorflowCallback(TensorflowCallbackBase, keras.callbacks.Callback):
         pass

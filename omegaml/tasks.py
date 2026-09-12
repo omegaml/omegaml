@@ -1,6 +1,7 @@
 """
 omega runtime model tasks
 """
+
 from __future__ import absolute_import
 
 import datetime
@@ -40,10 +41,10 @@ def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=
             stream.append(chunk)
         else:
             task_logger.debug('finalized streaming %s', self.request.id)
-            stream.append({'stream_complete': 'stop'})
-        result = {
-            'result': chunk,
-        }
+            stream.append(
+                {'stream_complete': 'stop'},
+            )
+        result = {'result': chunk}
     return sanitized(result)
 
 
@@ -55,7 +56,7 @@ def omega_embed(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_indexdocuments(self, documents=None, index=None, force=False):
-    """ index pending documents in a document index
+    """index pending documents in a document index
 
     Args:
         self (OmegamlTask): the celery task instance
@@ -75,8 +76,7 @@ def omega_indexdocuments(self, documents=None, index=None, force=False):
     documents = ensure_list(documents or 'documents/*')
 
     def files_matching_specs(documents, force=False):
-        matching = list(chain.from_iterable(om.datasets.list(p, raw=True)
-                                            for p in documents))
+        matching = list(chain.from_iterable(om.datasets.list(p, raw=True) for p in documents))
         for meta in matching:
             if force or not meta.attributes.get('indexed'):
                 yield meta
@@ -122,22 +122,19 @@ def omega_fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
 
 
 @shared_task(base=OmegamlTask, bind=True)
-def omega_partial_fit(self,
-                      modelname, Xname, Yname=None, pure_python=True, **kwargs):
+def omega_partial_fit(self, modelname, Xname, Yname=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).perform('partial_fit', *self.delegate_args, **self.delegate_kwargs)
     return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)
-def omega_score(self, modelname, Xname, Yname=None, rName=True, pure_python=True,
-                **kwargs):
+def omega_score(self, modelname, Xname, Yname=None, rName=True, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).perform('score', *self.delegate_args, **self.delegate_kwargs)
     return sanitized(result)
 
 
 @shared_task(base=OmegamlTask, bind=True)
-def omega_fit_transform(self, modelname, Xname, Yname=None, rName=None,
-                        pure_python=True, **kwargs):
+def omega_fit_transform(self, modelname, Xname, Yname=None, rName=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).perform('fit_transform', *self.delegate_args, **self.delegate_kwargs)
     return sanitized(result)
 
@@ -164,14 +161,14 @@ def omega_gridsearch(self, modelname, Xname, Yname=None, parameters=None, **kwar
 def omega_settings(self, *args, **kwargs):
     if os.environ.get('OMEGA_DEBUG'):
         defaults = self.om.defaults
-        return {k: getattr(defaults, k, '')
-                for k in dir(defaults) if k and k.isupper()}
+        return {k: getattr(defaults, k, '') for k in dir(defaults) if k and k.isupper()}
     return {'error': 'settings dump is disabled'}
 
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_ping(task, *args, exception=False, **kwargs):
     import socket
+
     hostname = task.request.hostname or socket.gethostname()
     # resolve standard kwargs
     om = task.om
@@ -191,6 +188,7 @@ def omega_ping(task, *args, exception=False, **kwargs):
     logname, level = task.logging
     if logname:
         import logging as logmod
+
         pylevel = getattr(logmod, level)
         # test omega, task and package level loggers
         om.logger.setLevel(level)
@@ -205,7 +203,7 @@ def omega_ping(task, *args, exception=False, **kwargs):
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_preload(task, *args, items=None, **kwargs):
-    """ preload models, datasets and other items into worker process """
+    """preload models, datasets and other items into worker process"""
     pass
 
 
@@ -216,6 +214,7 @@ def fix_multiprocessing(**kwargs):
     # issue see https://github.com/celery/billiard/issues/168
     # fix source https://github.com/celery/celery/issues/1709
     from multiprocessing import current_process
+
     try:
         current_process()._config
     except AttributeError:
@@ -227,4 +226,5 @@ def preload_frameworks(**kwargs):
     # TODO in light of PR#253 startup-performance this may be needed
     #      until then omegaml.defaults does this already, kept here for reference
     from omegaml import _base_config
+
     _base_config.load_framework_support()

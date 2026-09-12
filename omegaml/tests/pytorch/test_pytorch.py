@@ -14,6 +14,7 @@ except:
     @skipUnless(module_available('torch'), "skipping due to pytorch is not installed")
     class TestPytorchModels(OmegaTestMixin, TestCase):
         pass
+
 else:
     from omegaml.backends.pytorch import PytorchModelBackend
 

@@ -11,8 +11,7 @@ logger = logging.getLogger(__file__)
 
 
 class ModelMixin(object):
-    """ mixin methods to OmegaModelProxy
-    """
+    """mixin methods to OmegaModelProxy"""
 
     def fit(self, Xname, Yname=None, **kwargs):
         """
@@ -72,8 +71,7 @@ class ModelMixin(object):
         """
         omega_transform = self.task('omegaml.tasks.omega_transform')
         Xname = self._ensure_data_is_stored(Xname)
-        return omega_transform.delay(self.modelname, Xname,
-                                     rName=rName, **kwargs)
+        return omega_transform.delay(self.modelname, Xname, rName=rName, **kwargs)
 
     def fit_transform(self, Xname, Yname=None, rName=None, **kwargs):
         """
@@ -89,8 +87,7 @@ class ModelMixin(object):
            dataset if rName was given
         """
 
-        omega_fit_transform = self.task(
-            'omegaml.tasks.omega_fit_transform')
+        omega_fit_transform = self.task('omegaml.tasks.omega_fit_transform')
         Xname = self._ensure_data_is_stored(Xname)
         if Yname is not None:
             Yname = self._ensure_data_is_stored(Yname)
@@ -124,8 +121,7 @@ class ModelMixin(object):
         :return: the data returned by .predict_proba, or the metadata of the rName
            dataset if rName was given
         """
-        omega_predict_proba = self.task(
-            'omegaml.tasks.omega_predict_proba')
+        omega_predict_proba = self.task('omegaml.tasks.omega_predict_proba')
         Xname = self._ensure_data_is_stored(Xpath_or_data)
         return omega_predict_proba.delay(self.modelname, Xname, rName=rName, **kwargs)
 
@@ -213,7 +209,8 @@ class ModelMixin(object):
                 return PassthroughDataset(name_or_data)
             else:
                 warnings.warn(
-                    f'size of dataset is larger than {PassthroughDataset.MAX_SIZE} bytes, storing in om.datasets')
+                    f'size of dataset is larger than {PassthroughDataset.MAX_SIZE} bytes, storing in om.datasets'
+                )
                 name = '%s_%s' % (prefix, uuid4().hex)
                 self.runtime.omega.datasets.put(name_or_data, name)
         elif is_dataframe(name_or_data) or is_series(name_or_data):
@@ -223,6 +220,5 @@ class ModelMixin(object):
             name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         else:
-            raise TypeError(
-                'invalid type for Xpath_or_data', type(name_or_data))
+            raise TypeError('invalid type for Xpath_or_data', type(name_or_data))
         return name

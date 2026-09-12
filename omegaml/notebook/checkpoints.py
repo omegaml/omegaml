@@ -1,4 +1,5 @@
-from jupyter_server.services.contents.checkpoints import GenericCheckpointsMixin, Checkpoints
+from jupyter_server.services.contents.checkpoints import Checkpoints, GenericCheckpointsMixin
+
 from omegaml.util import utcnow
 
 
@@ -11,23 +12,23 @@ class NoOpCheckpoints(GenericCheckpointsMixin, Checkpoints):
     def checkpoint_model(self):
         info = {
             "id": "",
-            "last_modified": utcnow()
+            "last_modified": utcnow(),
         }
         return info
 
     def create_file_checkpoint(self, content, format, path):
-        """ -> checkpoint model"""
+        """-> checkpoint model"""
         return self.checkpoint_model()
 
     def create_notebook_checkpoint(self, nb, path):
-        """ -> checkpoint model"""
+        """-> checkpoint model"""
         return self.checkpoint_model()
 
     def get_file_checkpoint(self, checkpoint_id, path):
-        """ -> {'type': 'file', 'content': <str>, 'format': {'text', 'base64'}}"""
+        """-> {'type': 'file', 'content': <str>, 'format': {'text', 'base64'}}"""
 
     def get_notebook_checkpoint(self, checkpoint_id, path):
-        """ -> {'type': 'notebook', 'content': <output of nbformat.read>}"""
+        """-> {'type': 'notebook', 'content': <output of nbformat.read>}"""
 
     def delete_checkpoint(self, checkpoint_id, path):
         """deletes a checkpoint for a file"""

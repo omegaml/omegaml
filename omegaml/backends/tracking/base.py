@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class TrackingProvider:
-    """ TrackingProvider implements an abstract interface to experiment tracking
+    """TrackingProvider implements an abstract interface to experiment tracking
 
     Concrete implementations like MLFlow, Sacred or Neptune.ai can be implemented
     based on TrackingProvider. In combination with the runtime's OmegaTrackingProxy
@@ -63,7 +63,7 @@ class TrackingProvider:
         return self
 
     def track(self, obj, store=None, label=None, monitor=False, monitor_kwargs=None, **kwargs):
-        """ attach this experiment to the named object
+        """attach this experiment to the named object
 
         Usage:
 
@@ -132,7 +132,8 @@ class TrackingProvider:
         is_autotracked = getattr(self, 'autotrack', False)
         if not is_autotracked:
             logger.warning(
-                f"Experiment {self._experiment} is not autotracked, model calls are not tracked automatically")
+                f"Experiment {self._experiment} is not autotracked, model calls are not tracked automatically"
+            )
         provider = provider or mon.get('provider') if mon else None
         provider = provider or store.prefix.replace('/', '')
         store.link_monitor(obj, self._experiment, provider=provider, alerts=alerts, schedule=schedule)
@@ -168,6 +169,7 @@ class TrackingProvider:
         # -- if the job exists, do nothing
         # Returns: list of jobs created as [Metadata, ...]
         import omegaml as om
+
         store = model_store or self._model_store
         jobs = jobs_store or om.jobs
         code_block = self._monitor_job_template()
@@ -270,6 +272,7 @@ class TrackingProvider:
 
     def tensorflow_callback(self):
         from omegaml.backends.tracking.tflow import TensorflowCallback
+
         return TensorflowCallback(self)
 
     def data(self, experiment=None, run=None, event=None, step=None, key=None, raw=False, **query):

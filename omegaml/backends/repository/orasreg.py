@@ -42,11 +42,7 @@ class OrasOciRegistry(ArtifactRepository):
         protocol, _url, _namespace, image, tag, auth = parse_ociuri(url)
         repo = repo or (f'{image}:{tag}' if image and tag else None)
         url = str(_url)  # allow for url:Path
-        url = (
-            url.replace(f"/{image}", "").replace(f":{tag}", "")
-            if (image or tag)
-            else url
-        )
+        url = url.replace(f"/{image}", "").replace(f":{tag}", "") if (image or tag) else url
         super().__init__(url, repo=repo, namespace=namespace, auth=auth)
         self.cache = Path("/tmp") / ".oras" / "cache"
         os.environ.setdefault("ORAS_CACHE", str(self.cache))
@@ -77,11 +73,7 @@ class OrasOciRegistry(ArtifactRepository):
         Returns:
             str: the url as required for the oras command, prefixed with appropriate options
         """
-        if (
-            url.startswith("ocidir://")
-            or url.startswith("oci:///")
-            or url.startswith("file://")
-        ):
+        if url.startswith("ocidir://") or url.startswith("oci:///") or url.startswith("file://"):
             url = Path(url.replace("ocidir://", ""))
             url.mkdir(parents=True, exist_ok=True)
         elif url.startswith('oci://'):
@@ -177,9 +169,7 @@ class OrasOciRegistry(ArtifactRepository):
                 self._validate('url', 'repo', **x(locals()))
                 for artifact in self.artifacts(repo=repo):
                     digest = artifact['digest']
-                    cmd = (
-                        f'blob delete --force {self.ociurl(self.url)}/{drepo}@{digest}'
-                    )
+                    cmd = f'blob delete --force {self.ociurl(self.url)}/{drepo}@{digest}'
                     self._oras(cmd)
 
                 cmd = f'manifest delete --force {self.ociurl(self.url)}/{repo}'
@@ -233,12 +223,13 @@ class OrasOciRegistry(ArtifactRepository):
                 filename = (
                     lpath
                     / Path(
-                        a.get('annotations', {}).get('org.opencontainers.image.title')
+                        a.get(
+                            'annotations',
+                            {},
+                        ).get('org.opencontainers.image.title')
                     ).name
                 )
-            cmd = (
-                f"blob fetch -o {filename} {self.ociurl(self.url)}/{repo_path}@{digest}"
-            )
+            cmd = f"blob fetch -o {filename} {self.ociurl(self.url)}/{repo_path}@{digest}"
             self._oras(cmd)
             if is_tar:
                 # extract tar blobs into destination directory
@@ -331,7 +322,7 @@ class OrasOciRegistry(ArtifactRepository):
         return [m['digest'] for m in artifacts]
 
     def list(self):
-        """ list repos in registry """
+        """list repos in registry"""
         url = self.url
         self._validate('list', **x(locals()))
         self._ensure_login()
@@ -361,23 +352,15 @@ class OrasOciRegistry(ArtifactRepository):
             '.tgz': 'application/vnd.oci.image.layer.v1.tar+gzip',
             '.bin': 'application/octet-stream',
         }
-        return COMMON_TYPES.get(Path(p).suffix) or COMMON_TYPES.get(
-            '.bin'
-        )  # default to binary
+        return COMMON_TYPES.get(Path(p).suffix) or COMMON_TYPES.get('.bin')  # default to binary
 
     def _validate(self, *ops, repo=None, url=None, **kwargs):
         # validate current settings before operation is called
         repo = repo or self.repo
         url = url or self.url
         CHECKS = {
-            'repo': lambda: (
-                repo is not None,
-                "no repository (image), specify repo='name:tag'",
-            ),
-            'url': lambda: (
-                url is not None,
-                "no registry (url or ocidir), specify OCIOrasRegistry(url|path)",
-            ),
+            'repo': lambda: (repo is not None, "no repository (image), specify repo='name:tag'"),
+            'url': lambda: (url is not None, "no registry (url or ocidir), specify OCIOrasRegistry(url|path)"),
         }
         OPERATIONS = {
             "push": ["repo"],
@@ -423,12 +406,8 @@ def parse_ociuri(ociuri):
     """
     # infer scheme
     ociuri = str(ociuri)  # force string of Path() instances
-    valid_uri = any(
-        ociuri.startswith(prefix) for prefix in ('file://', 'ocidir://', 'oci://')
-    )
-    implied_scheme = (
-        'ocidir' if any(ociuri.startswith(prefix) for prefix in ('.', '/')) else 'oci'
-    )
+    valid_uri = any(ociuri.startswith(prefix) for prefix in ('file://', 'ocidir://', 'oci://'))
+    implied_scheme = 'ocidir' if any(ociuri.startswith(prefix) for prefix in ('.', '/')) else 'oci'
     # parse ociuri
     ociuri = f'{implied_scheme}://{ociuri}' if not valid_uri else ociuri
     parsed = urlparse(ociuri)
@@ -440,9 +419,7 @@ def parse_ociuri(ociuri):
         image, tag = ocidir.name.split(':') if ':' in ocidir.name else ('', 'latest')
         if '/ns/' in parsed.path:
             url, namespace = str(ocidir.parent if image else ocidir).split('/ns/')
-            namespace, image = (
-                namespace.split('/', 1) if '/' in namespace else (namespace, image)
-            )
+            namespace, image = namespace.split('/', 1) if '/' in namespace else (namespace, image)
         else:
             url, namespace = str(ocidir.parent if image else ocidir), ''
         tag = tag if image else ''
@@ -467,9 +444,7 @@ def parse_ociuri(ociuri):
         # rebuild canonical url
         url = f'{protocol}://{bare_netloc}' + (f'/{namespace}' if namespace else '')
     else:
-        raise ValueError(
-            f'cannot parse {ociuri}, only protocols oci://, ocidir://, file:// are supported'
-        )
+        raise ValueError(f'cannot parse {ociuri}, only protocols oci://, ocidir://, file:// are supported')
     return protocol, url, namespace, image, tag, auth
 
 

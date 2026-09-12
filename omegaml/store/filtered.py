@@ -14,6 +14,7 @@ from omegaml.util import PickableCollection, ensure_base_collection, signature
 
 logger = logging.getLogger(__name__)
 
+
 class FilteredCollection:
     """
     A permanently filtered collection
@@ -21,7 +22,7 @@ class FilteredCollection:
     Supports all methods as a Collection does, however any filter or query
     argument is permanently set at instantiation
 
-        fcoll = FilteredCollection(collection, query={ expression })
+        fcoll = FilteredCollection(collection, query={ expression },)
 
     Any subsequent operation will automatically apply the query expression.
 
@@ -38,7 +39,7 @@ class FilteredCollection:
 
             # FilteredCollection
 
-            coll = FilteredCollection(query={expression})
+            coll = FilteredCollection(query={expression},)
             coll.find_one_and_replace(replace, filter=None)
 
     This is so that calls to a FilteredCollection feel more natural, as opposed
@@ -48,7 +49,7 @@ class FilteredCollection:
 
             # temporarily add another filter
 
-            coll.find_one_and_replace(replace, filter={expression})
+            coll.find_one_and_replace(replace, filter={expression},)
 
     Here expression will only apply to this particular method call. The
     global filter set by query= is unchanged.
@@ -57,8 +58,7 @@ class FilteredCollection:
     the expression for the set fcoll.query = { expression }
     """
 
-    def __init__(self, collection, query=None, projection=None,
-                 trusted=False, **kwargs):
+    def __init__(self, collection, query=None, projection=None, trusted=False, **kwargs):
         if isinstance(collection, FilteredCollection):
             # avoid cascading of FilteredCollections
             query = query or collection._fixed_query
@@ -89,7 +89,11 @@ class FilteredCollection:
 
     def aggregate(self, pipeline, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(self._sanitize_filter(filter or {}))
+        query.update(
+            self._sanitize_filter(
+                filter or {},
+            )
+        )
         pipeline.insert(0, qops.MATCH(query))
         kwargs.update(allowDiskUse=True)
         return self.collection.aggregate(pipeline, **kwargs)
@@ -101,28 +105,39 @@ class FilteredCollection:
 
     def find_one(self, filter=None, *args, **kwargs):
         query = dict(self.query)
-        query.update(self._sanitize_filter(filter or {}))
+        query.update(
+            self._sanitize_filter(
+                filter or {},
+            )
+        )
         return self.collection.find_one(query, *args, **kwargs)
 
     def find_one_and_delete(self, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(self._sanitize_filter(filter or {}))
-        return self.collection.find_one_and_delete(query,
-                                                   **kwargs)
+        query.update(
+            self._sanitize_filter(
+                filter or {},
+            )
+        )
+        return self.collection.find_one_and_delete(query, **kwargs)
 
     def find_one_and_replace(self, replacement, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(self._sanitize_filter(filter or {}))
-        return self.collection.find_one_and_replace(query,
-                                                    replacement,
-                                                    **kwargs)
+        query.update(
+            self._sanitize_filter(
+                filter or {},
+            )
+        )
+        return self.collection.find_one_and_replace(query, replacement, **kwargs)
 
     def find_one_and_update(self, update, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(self._sanitize_filter(filter or {}))
-        return self.collection.find_one_and_update(query,
-                                                   update,
-                                                   **kwargs)
+        query.update(
+            self._sanitize_filter(
+                filter or {},
+            )
+        )
+        return self.collection.find_one_and_update(query, update, **kwargs)
 
     def estimated_document_count(self, **kwargs):
         return self.collection.estimated_document_count(**kwargs)
@@ -134,7 +149,11 @@ class FilteredCollection:
 
     def distinct(self, key, filter=None, **kwargs):
         query = dict(self.query)
-        query.update(self._sanitize_filter(filter or {}))
+        query.update(
+            self._sanitize_filter(
+                filter or {},
+            )
+        )
         return self.collection.distinct(key, filter=query, **kwargs)
 
     def create_index(self, keys, **kwargs):
@@ -144,34 +163,28 @@ class FilteredCollection:
         return self.collection.list_indexes(**kwargs)
 
     def insert(self, *args, **kwargs):
-        raise NotImplementedError(
-            "deprecated in Collection and not implemented in FilteredCollection")
+        raise NotImplementedError("deprecated in Collection and not implemented in FilteredCollection")
 
     def update(self, *args, **kwargs):
-        raise NotImplementedError(
-            "deprecated in Collection and not implemented in FilteredCollection")
+        raise NotImplementedError("deprecated in Collection and not implemented in FilteredCollection")
 
     def remove(self, *args, **kwargs):
-        raise NotImplementedError(
-            "deprecated in Collection and not implemented in FilteredCollection")
+        raise NotImplementedError("deprecated in Collection and not implemented in FilteredCollection")
 
     def find_and_modify(self, *args, **kwargs):
-        raise NotImplementedError(
-            "deprecated in Collection and not implemented in FilteredCollection")
+        raise NotImplementedError("deprecated in Collection and not implemented in FilteredCollection")
 
     def ensure_index(self, *args, **kwargs):
-        raise NotImplementedError(
-            "deprecated in Collection and not implemented in FilteredCollection")
+        raise NotImplementedError("deprecated in Collection and not implemented in FilteredCollection")
 
     def save(self, *args, **kwargs):
-        raise NotImplementedError(
-            "deprecated in Collection and not implemented in FilteredCollection")
+        raise NotImplementedError("deprecated in Collection and not implemented in FilteredCollection")
 
     def _sanitize_filter(self, filter, trusted=False):
         from omegaml.store.queryops import sanitize_filter
+
         trusted = trusted or self._trusted
         should_sanitize = not trusted or trusted != signature(filter)
         sanitize_filter(filter) if should_sanitize else filter
         logger.debug(f'executing mongodb query filter {filter}')
         return filter
-

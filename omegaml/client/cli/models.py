@@ -23,6 +23,7 @@ class ModelsCommandBase(StoresCommandMixin, CommandBase):
     .. versionchanged:: NEXT
         om models get <name> <path> is the same as om.models.get(name, local='<path>')
     """
+
     command = 'models'
 
     def get(self):

@@ -40,11 +40,10 @@ class AIPromptsView(AIRepositoryView):
     def members(self, excludes=None):
         excludes = (
             lambda m: m.name.startswith('_'),
-            lambda m: m.name.startswith('experiments/')
+            lambda m: m.name.startswith('experiments/'),
         )
         kind = ['genai.text', 'genai.llm']
-        items = [m for m in self.store.list('prompts/*',
-            kind=kind, raw=True) if not any(e(m) for e in excludes)]
+        items = [m for m in self.store.list('prompts/*', kind=kind, raw=True) if not any(e(m) for e in excludes)]
         return items
 
     @fv.route('/{self.segment}/new')
@@ -57,11 +56,14 @@ class AIPromptsView(AIRepositoryView):
         data = self._default_detail_data(name, meta=meta)
         data.update(self.detail_data(name, data=data, meta=meta))
         context = self.context_data(isNew=True)
-        return render_template(f"dashboard/{template}",
+        return render_template(
+            f"dashboard/{template}",
             segment=self.segment,
             buckets=self.buckets,
             context=context,
-            data=data, **data)
+            data=data,
+            **data,
+        )
 
     @fv.route('/{self.segment}/<path:name>/save', methods=['POST'])
     def api_save_prompt(self, name):
@@ -75,19 +77,23 @@ class AIPromptsView(AIRepositoryView):
             # create a new instance
             model_meta = om.models.metadata(model, data_store=om.datasets)
             model_meta.kind_meta['base_url'] = ConversationModelBackend.STORED_MODEL_URL
-            meta = om.models._make_metadata(name=name, kind=model_meta.kind,
+            meta = om.models._make_metadata(
+                name=name,
+                kind=model_meta.kind,
                 bucket=self.bucket,
                 attributes=model_meta.attributes,
-                kind_meta=model_meta.kind_meta)
+                kind_meta=model_meta.kind_meta,
+            )
             meta.save()
             meta = om.models.link_experiment(name, name, label=om.runtime._default_label)
         meta.attributes.update(data)
         # set default permissions
         # -- groups matches the /ai/app/chat/<group> endpoint
         # -- by default it is included in the 'sibyl' group
-        meta.attributes.setdefault('permissions', {
-            'groups': data.get('permissions', {}).get('groups', ['sibyl']),
-        })
+        meta.attributes.setdefault(
+            'permissions',
+            {'groups': data.get('permissions', {}).get('groups', ['sibyl'])},
+        )
         meta.save(version=True)
         return {'message': 'Prompt saved successfully', 'name': name}, 200
 

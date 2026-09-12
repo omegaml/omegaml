@@ -1,10 +1,9 @@
-from os.path import basename
-
 import os
 import re
+from os.path import basename
 
 from omegaml.backends.basedata import BaseDataBackend
-from omegaml.backends.package.packager import install_and_import, RunnablePackageMixin
+from omegaml.backends.package.packager import RunnablePackageMixin, install_and_import
 
 
 class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
@@ -35,6 +34,7 @@ class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
     See Also:
         * https://packaging.python.org/tutorials/packaging-projects/
     """
+
     KIND = 'pipsrc.package'
 
     @classmethod
@@ -73,7 +73,8 @@ class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
             bucket=self.data_store.bucket,
             kind=PythonPipSourcedPackageData.KIND,
             kind_meta=kind_meta,
-            attributes=attributes).save()
+            attributes=attributes,
+        ).save()
 
     def get(self, name, keep=False, **kwargs):
         """
@@ -95,7 +96,6 @@ class PythonPipSourcedPackageData(RunnablePackageMixin, BaseDataBackend):
         pip_name = pip_source.replace('pypi://', '')
         mod = install_and_import(pip_name, pkgname, dstdir, keep=keep)
         return mod
-
 
     @property
     def packages_path(self):

@@ -29,7 +29,7 @@ class PythonLocalPackageDataTests(TestCase):
         self.om = Omega()
         delete_database()
         self.pkgsdir = self.om.scripts.get_backend_bykind(PythonPackageData.KIND).packages_path
-        self.distdir = os.path.join(self.basepath,  'demo', 'helloworld', 'dist')
+        self.distdir = os.path.join(self.basepath, 'demo', 'helloworld', 'dist')
         rmtree(self.distdir, ignore_errors=True)
         mkdirs(self.distdir)
         mkdirs(self.pkgsdir)
@@ -125,5 +125,3 @@ class PythonLocalPackageDataTests(TestCase):
         om.scripts.put(pkgsrc, 'helloworld')
         new_sysargv = ' '.join(sys.argv)
         self.assertEqual(new_sysargv, orig_sysargv)
-
-

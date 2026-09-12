@@ -71,8 +71,7 @@ class StreamsProxy(OmegaStore):
     def _qualified_stream(self, name, *args, **kwargs):
         return f'{self.bucket}.{self.prefix}.{name}.stream'
 
-    def get(self, name, lazy=False, source=None, source_kwargs=None, autoattach=True,
-            streaming=None, **kwargs):
+    def get(self, name, lazy=False, source=None, source_kwargs=None, autoattach=True, streaming=None, **kwargs):
         """
         get or create a new minibatch stream
 
@@ -117,10 +116,9 @@ class StreamsProxy(OmegaStore):
         if meta is None:
             meta = self._create_stream(name, source, kwargs, source_kwargs, streaming)
         # recreate the stream (buffer) or streaming (callable) object
-        stream = self._get_actual_stream(meta, source=source,
-                                         source_kwargs=source_kwargs,
-                                         autoattach=autoattach,
-                                         **kwargs)
+        stream = self._get_actual_stream(
+            meta, source=source, source_kwargs=source_kwargs, autoattach=autoattach, **kwargs
+        )
         if lazy:
             streaming_kwargs = meta.kind_meta['stream']['streaming_kwargs']
             streaming_kwargs.update(streaming)
@@ -135,25 +133,30 @@ class StreamsProxy(OmegaStore):
                 'stream_kwargs': stream_kwargs,
                 'streaming_kwargs': {
                     # remove any window function passed in
-                    k: v for k, v in streaming_kwargs.items() if isinstance(v, scalar_types)
-                }
+                    k: v
+                    for k, v in streaming_kwargs.items()
+                    if isinstance(v, scalar_types)
+                },
             },
             'attach': {
                 'source': source if isinstance(source, str) else None,
                 'source_kwargs': source_kwargs or {},
-            }
+            },
         }
-        meta = self.make_metadata(name,
-                                  self.KIND,
-                                  prefix=self.prefix,
-                                  bucket=self.bucket,
-                                  kind_meta=kind_meta).save()
+        meta = self.make_metadata(
+            name,
+            self.KIND,
+            prefix=self.prefix,
+            bucket=self.bucket,
+            kind_meta=kind_meta,
+        ).save()
         return meta
 
-    def _get_actual_stream(self, meta, source=None, source_kwargs=None,
-                           autoattach=True, **kwargs):
+    def _get_actual_stream(self, meta, source=None, source_kwargs=None, autoattach=True, **kwargs):
         import minibatch as mb
+
         import omegaml as om
+
         # apply stream_kwargs
         stream_meta = dict(meta.kind_meta.get('stream', {}))
         stream_name = stream_meta.get('name')
@@ -173,12 +176,14 @@ class StreamsProxy(OmegaStore):
     def _autoattach(self, om, stream, source, source_kwargs):
         if source == 'runtime':
             from minibatch.contrib.celery import CeleryEventSource
+
             stream.attach(CeleryEventSource(om.runtime.celeryapp, **source_kwargs))
         elif isinstance(source, str):
             # a dataset name was given
             om = om[self.bucket] if isinstance(om, om.Omega) else om.setup()[self.bucket]
             if om.datasets.metadata(source) is not None:
                 from minibatch.contrib.omegaml import DatasetSource
+
                 stream.attach(DatasetSource(om, source, **source_kwargs))
             else:
                 raise ValueError(f'cannot attach non-existing dataset {source} to {stream}')
@@ -203,6 +208,7 @@ class StreamsProxy(OmegaStore):
         meta = self.metadata(name)
         if meta is None and not force:
             from mongoengine import DoesNotExist
+
             raise DoesNotExist()
         if keep_data is False:
             try:

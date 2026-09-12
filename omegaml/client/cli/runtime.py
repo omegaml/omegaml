@@ -209,6 +209,7 @@ class RuntimeCommandBase(CommandBase):
         # to see an example of the configuration file
         $ om runtime deploy example
     """
+
     command = 'runtime'
 
     def ping(self):
@@ -242,8 +243,7 @@ class RuntimeCommandBase(CommandBase):
             k, v = kv.split('=', 1)
             kv_dct[k] = eval(v)
         kwargs = {}
-        if action in ('predict', 'predict_proba',
-                      'decision_function', 'transform'):
+        if action in ('predict', 'predict_proba', 'decision_function', 'transform'):
             # actions that take rName, but no Y
             kwargs['rName'] = output
         else:
@@ -293,13 +293,12 @@ class RuntimeCommandBase(CommandBase):
 
     def log(self):
         import pandas as pd
+
         tail = self.args.get('-f')
         om = get_omega(self.args)
         if not tail:
             df = om.logger.dataset.get()
-            with pd.option_context('display.max_rows', None,
-                                   'display.max_columns', None,
-                                   'display.max_colwidth', None):
+            with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.max_colwidth', None):
                 print(df[['text']])
         else:
             om.logger.dataset.tail()
@@ -342,6 +341,7 @@ class RuntimeCommandBase(CommandBase):
         if is_r_worker:
             # start r runtime
             from omegaml.runtimes import rsystem
+
             rworker = os.path.join(os.path.dirname(rsystem.__file__), 'omworker.R')
             rcmd = f'Rscript {rworker}'.split(' ')
             call(rcmd)
@@ -363,6 +363,7 @@ class RuntimeCommandBase(CommandBase):
                 reqfile = '.system/requirements.txt'
         if not om.scripts.exists('.system/envinstall', hidden=True):
             import omegaml as om_module
+
             envinstall_path = os.path.join(os.path.dirname(om_module.__file__), 'runtimes', 'envinstall')
             om.scripts.put(f'pkg://{envinstall_path}', '.system/envinstall')
         # determine runtime workers to execute envinstall
@@ -380,13 +381,16 @@ class RuntimeCommandBase(CommandBase):
         # run installation
         results = []
         for label in labels:
-            result = (om.runtime.require(label)
-                      .script('.system/envinstall')
-                      .run(action=action, package=package, requirements=reqfile,
-                           __format='python'))
+            result = (
+                om.runtime
+                .require(label)
+                .script('.system/envinstall')
+                .run(action=action, package=package, requirements=reqfile, __format='python')
+            )
             results.append((label, result))
         # process results
         from tqdm import tqdm
+
         with tqdm() as progress:
             while any(not r[1].ready() for r in results):
                 progress.update(1)
@@ -406,17 +410,19 @@ class RuntimeCommandBase(CommandBase):
             pprint(om.runtime.workers())
         elif labels:
             queues = om.runtime.queues()
-            pprint({worker: [q.get('name') for q in details
-                             if not q.get('name').startswith('amq')]
-                    for worker, details in queues.items()})
+            pprint({
+                worker: [q.get('name') for q in details if not q.get('name').startswith('amq')]
+                for worker, details in queues.items()
+            })
         elif stats:
             stats = om.runtime.stats()
-            pprint({worker: {
-                'size': details['pool']['max-concurrency'],
-                'tasks': {
-                    task: count for task, count in details['total'].items()
+            pprint({
+                worker: {
+                    'size': details['pool']['max-concurrency'],
+                    'tasks': {task: count for task, count in details['total'].items()},
                 }
-            } for worker, details in stats.items()})
+                for worker, details in stats.items()
+            })
 
     def restart(self):
         from omegaml.client.userconf import ensure_api_url
@@ -434,10 +440,18 @@ class RuntimeCommandBase(CommandBase):
         # -- explain: url is validated according to OWASP recommendation by ensure_api_url
         appsurl = ensure_api_url(apphub_url, om.defaults, key='OMEGA_APPHUB_URL')
         name = name.replace('apps/', '')
-        stop = requests.get(f'{appsurl}/apps/api/stop/{user}/{name}'.format(om.runtime.auth.userid),
-                            auth=auth, verify=not insecure, headers=headers)
-        start = requests.get(f'{appsurl}/apps/api/start/{user}/{name}'.format(om.runtime.auth.userid),
-                             auth=auth, verify=not insecure, headers=headers)
+        stop = requests.get(
+            f'{appsurl}/apps/api/stop/{user}/{name}'.format(om.runtime.auth.userid),
+            auth=auth,
+            verify=not insecure,
+            headers=headers,
+        )
+        start = requests.get(
+            f'{appsurl}/apps/api/start/{user}/{name}'.format(om.runtime.auth.userid),
+            auth=auth,
+            verify=not insecure,
+            headers=headers,
+        )
         self.logger.info(f'stop: {stop} start: {start}')
 
     def serve(self):
@@ -485,9 +499,7 @@ class RuntimeCommandBase(CommandBase):
         dolist = self.args.get('--list')
         promote = self.args.get('--promote')
         pattern = '|'.join(names)
-        if (not archive.is_file()
-                and not archive.exists()
-                and archive.parent.exists()):
+        if not archive.is_file() and not archive.exists() and archive.parent.exists():
             archives = list(archive.parent.glob(f'{archive.name}*'))
             if len(archives) > 1:
                 archive = Path(self.ask("Select an archive", options=archives, select=True, default=1))
@@ -513,8 +525,10 @@ class RuntimeCommandBase(CommandBase):
         # SEC: CWE-918
         # -- url is validated according to OWASP recommendation by ensure_api_url
         apiurl = ensure_api_url(apiurl, om.defaults, key='OMEGA_RESTAPI_URL')
-        curlcmd = (f'curl -X PUT -H "Content-Type: application/json" '
-                   f'-H "Qualifier: {qualifier}" '
-                   f'-H "Authorization: ApiKey {userid}:{apikey}" '
-                   f'{apiurl}/api/v1/{kind}/{name}?datax=sample')
+        curlcmd = (
+            f'curl -X PUT -H "Content-Type: application/json" '
+            f'-H "Qualifier: {qualifier}" '
+            f'-H "Authorization: ApiKey {userid}:{apikey}" '
+            f'{apiurl}/api/v1/{kind}/{name}?datax=sample'
+        )
         print(curlcmd)

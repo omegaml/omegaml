@@ -58,10 +58,15 @@ class OmegaLoggingHandler(logging.Handler):
         if record.__dict__.get('_from_simplelogger'):
             # ignore log calls from the OmegaSimpleLogger
             return
-        log_entry = _make_log_entry(record.levelname, record.levelno, record.name,
-                                    record.msg, text=self.format(record),
-                                    hostname=getattr(record, 'hostname', LOGGER_HOSTNAME),
-                                    userid=self.userid)
+        log_entry = _make_log_entry(
+            record.levelname,
+            record.levelno,
+            record.name,
+            record.msg,
+            text=self.format(record),
+            hostname=getattr(record, 'hostname', LOGGER_HOSTNAME),
+            userid=self.userid,
+        )
         # FIXME pymongo 4.7 will issue logger.debug on its own, so we need to avoid recursion
         # -- we disable pymongo debug logging here to avoid recursion
         # -- this is due to pymongo since 4.7 supporing python native logging
@@ -75,8 +80,19 @@ class OmegaLoggingHandler(logging.Handler):
         return TailableLogDataset(dataset=self.dataset, collection=self.collection).tail(wait=wait)
 
     @classmethod
-    def setup(cls, store=None, dataset=None, level=None, logger=None, name=None,
-              fmt=None, reset=False, size=10 * 1024 * 1024, defaults=None, exit_hook=False):
+    def setup(
+        cls,
+        store=None,
+        dataset=None,
+        level=None,
+        logger=None,
+        name=None,
+        fmt=None,
+        reset=False,
+        size=10 * 1024 * 1024,
+        defaults=None,
+        exit_hook=False,
+    ):
         """
         Args:
             dataset (str): the name of the dataset
@@ -92,6 +108,7 @@ class OmegaLoggingHandler(logging.Handler):
         """
         import omegaml as om
         import logging
+
         store = store or om.setup().datasets
         defaults = defaults or store.defaults
         effective_level = logger.getEffectiveLevel() if logger else defaults.OMEGA_LOGLEVEL
@@ -105,8 +122,9 @@ class OmegaLoggingHandler(logging.Handler):
         logger.setLevel(level)
         collection = _setup_logging_dataset(store, dataset, logger=logger, size=size, reset=reset)
         formatter = logging.Formatter(fmt)
-        handler = LoggingHandler(store, dataset, collection, level=level,
-                                 userid=getattr(defaults, 'OMEGA_USERID', getpass.getuser()))
+        handler = LoggingHandler(
+            store, dataset, collection, level=level, userid=getattr(defaults, 'OMEGA_USERID', getpass.getuser())
+        )
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         if exit_hook:
@@ -168,10 +186,12 @@ class OmegaSimpleLogger:
 
         om.logger.dataset.tail(wait=True).
     """
+
     levels = 'QUIET,CRITICAL,ERROR,WARNING,INFO,DEBUG'.split(',')
 
-    def __init__(self, store=None, dataset=None, collection=None, level=None,
-                 size=1 * 1024 * 1024, defaults=None, name='simple'):
+    def __init__(
+        self, store=None, dataset=None, collection=None, level=None, size=1 * 1024 * 1024, defaults=None, name='simple'
+    ):
         import omegaml as om
 
         self.store = store or om.setup().datasets
@@ -189,8 +209,9 @@ class OmegaSimpleLogger:
     @property
     def collection(self):
         if not self._is_setup:
-            self._collection = _setup_logging_dataset(self.store, self.dsname, self,
-                                                      collection=self._collection, size=self.size)
+            self._collection = _setup_logging_dataset(
+                self.store, self.dsname, self, collection=self._collection, size=self.size
+            )
             self._is_setup = True
         return self._collection
 
@@ -203,13 +224,14 @@ class OmegaSimpleLogger:
         self._name = name
 
     def reset(self):
-        self._collection = _setup_logging_dataset(self.store, self.dsname, self,
-                                                  collection=self._collection, size=self.size, reset=True)
+        self._collection = _setup_logging_dataset(
+            self.store, self.dsname, self, collection=self._collection, size=self.size, reset=True
+        )
 
     def getLogger(self, name, **kwargs):
-        return self.__class__(store=kwargs.get('store', self.store),
-                              defaults=kwargs.get('defaults', self.defaults),
-                              name=name)
+        return self.__class__(
+            store=kwargs.get('store', self.store), defaults=kwargs.get('defaults', self.defaults), name=name
+        )
 
     def setLevel(self, level):
         """
@@ -244,8 +266,9 @@ class OmegaSimpleLogger:
             return
         # insert a log message
         fmt = '{created} {level} {message}'
-        log_entry = _make_log_entry(level, levelno, self._name, message, fmt=fmt,
-                                    hostname=LOGGER_HOSTNAME, userid=self.userid)
+        log_entry = _make_log_entry(
+            level, levelno, self._name, message, fmt=fmt, hostname=LOGGER_HOSTNAME, userid=self.userid
+        )
         # log to dataset
         self.collection.insert_one(log_entry)
         # optionally log to system (e.g. external log aggregation)
@@ -254,9 +277,7 @@ class OmegaSimpleLogger:
         # -- we mark this record to avoid double logging in case of an active OmegaLoggingHandler
         if getattr(self.defaults, 'OMEGA_LOG_PYTHON', False):
             pylogmeth = getattr(python_logger, level.lower())
-            pylogmeth(message, extra=dict(userid=self.userid,
-                                          hostname=LOGGER_HOSTNAME,
-                                          _from_simplelogger=True))
+            pylogmeth(message, extra=dict(userid=self.userid, hostname=LOGGER_HOSTNAME, _from_simplelogger=True))
 
     def info(self, message, **kwargs):
         self.log('INFO', message, **kwargs)
@@ -281,7 +302,7 @@ class OmegaSimpleLogger:
         else:
             data = self.dataset.get(**kwargs)
             if latest:
-                data = data.iloc[-1 * abs(min(len(data), latest)):]
+                data = data.iloc[-1 * abs(min(len(data), latest)) :]
             if isinstance(columns, list):
                 data = data[columns or data.columns]
             if reverse:
@@ -291,9 +312,7 @@ class OmegaSimpleLogger:
     @property
     def dataset(self):
         if self._dataset is None:
-            self._dataset = TailableLogDataset(self.store,
-                                               dataset=self._dataset,
-                                               collection=self.collection)
+            self._dataset = TailableLogDataset(self.store, dataset=self._dataset, collection=self.collection)
         return self._dataset
 
     def exit_hook(self):
@@ -301,7 +320,7 @@ class OmegaSimpleLogger:
 
     @contextmanager
     def capture(self, logger, exit_hook=True):
-        """ convenience python log rerouting
+        """convenience python log rerouting
 
         # this reroutes the request's loggers output to om.logger
         with om.logger.capture(logging.getLogger('request')):
@@ -351,8 +370,7 @@ class TailableLogDataset:
         # set stdout, must be file-like, implementing .write() and .flush()
         stdout = self.stdout if self.stdout is not None else self._get_fixed_stdout()
         # start tail thread
-        self.tail_thread = Thread(target=self._tailer,
-                                  args=(self.collection, stdout,))
+        self.tail_thread = Thread(target=self._tailer, args=(self.collection, stdout))
         self.tail_thread.start()
         self.tail_stop = False
         # register exit handler to stop thread
@@ -391,7 +409,7 @@ class TailableLogDataset:
                 created = record.get('created')
                 if self.tail_stop:
                     break
-            sleep(.1)
+            sleep(0.1)
         print("*** log tailing ended")
 
     def _get_fixed_stdout(self):
@@ -402,9 +420,7 @@ class TailableLogDataset:
         from ipykernel import iostream
 
         if isinstance(sys.stdout, iostream.OutStream):
-            stdout = iostream.OutStream(sys.stdout.session,
-                                        sys.stdout.pub_thread,
-                                        'omega-logger')
+            stdout = iostream.OutStream(sys.stdout.session, sys.stdout.pub_thread, 'omega-logger')
             parent = dict(sys.stdout.parent_header)
             stdout.set_parent(parent)
         else:
@@ -414,6 +430,7 @@ class TailableLogDataset:
 
 def _make_log_entry(level, levelno, name, message, text=None, fmt='{message}', hostname=None, userid=None):
     from datetime import datetime
+
     created = datetime.utcnow()
     text = text if text is not None else fmt.format(**locals())
     hostname = hostname or LOGGER_HOSTNAME
@@ -453,4 +470,5 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
 
 def _attach_sysexcept_hook(logger):
     import traceback, sys
+
     sys.excepthook = lambda t, v, tb: logger.error('{t} {v} {tb}'.format(t=t, v=v, tb=traceback.format_tb(tb)))

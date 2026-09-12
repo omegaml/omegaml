@@ -4,7 +4,7 @@ from omegaml.backends.basemodel import BaseModelBackend
 
 
 class GenericModelBackend(BaseModelBackend):
-    """ a generic model backend enabling custom serializers
+    """a generic model backend enabling custom serializers
 
     supports arbitrary model saving and loading for use in a @virtualobj function
 
@@ -29,6 +29,7 @@ class GenericModelBackend(BaseModelBackend):
     .. versionadded:: 0.18.0
         backend kind='python.model' supports custom serializers
     """
+
     KIND = 'python.model'
 
     serializer = lambda store, model, filename, **kwargs: joblib.dump(model, filename)[0]
@@ -42,7 +43,7 @@ class GenericModelBackend(BaseModelBackend):
         return explicit or implicit
 
     def put(self, obj, name, uri=None, serializer=None, loader=None, **kwargs):
-        """ save any model using custom serializer and loader
+        """save any model using custom serializer and loader
 
         Args:
             obj (any|tuple): model instance or a tuple of (instance, helper), where

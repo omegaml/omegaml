@@ -4,7 +4,7 @@ from omegaml.backends.restapi.script import GenericScriptResource
 
 
 class GenericServiceResource:
-    """ backend for /api/service/ resources
+    """backend for /api/service/ resources
 
     Acts as an adapter to a concrete resource, returning only its bare result.
     If the resource (=stored object) has a signature attached, it has already
@@ -13,6 +13,7 @@ class GenericServiceResource:
     If your resource returns a value that is not json serializable (i.e. the
     return value is not a dict), dict(value=<result>) will be returned.
     """
+
     RESOURCE_MAP = {
         'models/': GenericModelResource,
         'scripts/': GenericScriptResource,
@@ -118,12 +119,13 @@ class GenericServiceResource:
 
 
 class GenericServiceResourceFallback(GenericServiceResource):
-    """ backend for /api/service/ resources
+    """backend for /api/service/ resources
 
     Acts as an adapter to a concrete resource, returning only its bare result.
     If the resource (=stored object) has a signature attached, it has already
     been validated by the object's backend or as part of the SignatureMixin
     """
+
     RESOURCE_MAP = {
         'models/': GenericModelResource,
         'scripts/': GenericScriptResource,

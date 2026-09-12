@@ -11,6 +11,7 @@ def uploadtutorial(ctx, nbname):
     # br.find_by_css('input.fileinput')
     # br.find_by_css('input.fileinput').click() # opens a native file dialoge
     from nbformat import read as nbread
+
     br = ctx.browser
     om = ctx.feature.om
     # upload directly

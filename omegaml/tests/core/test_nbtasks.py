@@ -31,7 +31,7 @@ class JobTasksTests(unittest.TestCase):
         return fs
 
     def test_map(self):
-        """ test runtime.job.map() works ok """
+        """test runtime.job.map() works ok"""
         om = self.om
         meta = om.jobs.create("print('hello')", 'main')
         job = om.runtime.job('main')
@@ -47,7 +47,7 @@ class JobTasksTests(unittest.TestCase):
             self.assertEqual(status.loc[t.name, 'run_status'], 'OK')
 
     def test_list(self):
-        """ test runtime.job.list() works ok """
+        """test runtime.job.list() works ok"""
         om = self.om
         meta = om.jobs.create("print('hello')", 'mymain')
         job = om.runtime.job('mymain')
@@ -65,7 +65,7 @@ class JobTasksTests(unittest.TestCase):
         self.assertEqual(len(task_list), 4)
 
     def test_map_fail(self):
-        """ test runtime.job.map() works with erronous jobs """
+        """test runtime.job.map() works with erronous jobs"""
         om = self.om
         # introduce some error
         meta = om.jobs.create("raise ValueError()", 'main')
@@ -94,7 +94,7 @@ class JobTasksTests(unittest.TestCase):
             self.assertEqual(status.loc[t.name, 'run_status'], 'ERROR')
 
     def test_map_groups(self):
-        """ test runtime.job.map() works with multiple groups """
+        """test runtime.job.map() works with multiple groups"""
 
         om = self.om
         meta = om.jobs.create("print('hello')", 'main')

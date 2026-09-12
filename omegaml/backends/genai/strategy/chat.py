@@ -36,8 +36,7 @@ class ChatMixin:
         return response_gen if stream else [response for response in response_gen][-1]
 
     def _do_chat(
-            self, prompt, messages=None, conversation_id=None, data=None, use_tools=False, raw=False, stream=False,
-            **kwargs
+        self, prompt, messages=None, conversation_id=None, data=None, use_tools=False, raw=False, stream=False, **kwargs
     ):
         assert self.data_store, "chat requires a data_store, specify data_store=om.datasets"
         assert self.tracking, "chat requires a tracking instance, use with om.runtime.experiment(): ... "

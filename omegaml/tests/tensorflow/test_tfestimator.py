@@ -13,11 +13,10 @@ def make_data():
     # read data from csv
     import numpy as np
     import pandas as pd
+
     columns = ['f1', 'f2', 'f3', 'f4', 'f5']
-    train_data = pd.DataFrame(np.random.random_sample((20, 5)),
-                              columns=columns).astype(int)
-    test_data = pd.DataFrame(np.random.random_sample((20, 5)),
-                             columns=columns).astype(int)
+    train_data = pd.DataFrame(np.random.random_sample((20, 5)), columns=columns).astype(int)
+    test_data = pd.DataFrame(np.random.random_sample((20, 5)), columns=columns).astype(int)
     # separate train data
     train_x = train_data[columns[:-1]]
     train_y = train_data.loc[:, columns[-1]]
@@ -32,10 +31,9 @@ def make_estimator_fn():
     # this is to ensure we get a serializable function
     def make_estimator(model_dir=None):
         import tensorflow as tf
-        feature_columns = [tf.feature_column.numeric_column(key=key)
-                           for key in ['f1', 'f2', 'f3', 'f4']]
-        classifier = tf.estimator.LinearClassifier(feature_columns=feature_columns,
-                                                   n_classes=3, model_dir=model_dir)
+
+        feature_columns = [tf.feature_column.numeric_column(key=key) for key in ['f1', 'f2', 'f3', 'f4']]
+        classifier = tf.estimator.LinearClassifier(feature_columns=feature_columns, n_classes=3, model_dir=model_dir)
         return classifier
 
     return make_estimator
@@ -48,9 +46,7 @@ def make_input_fn():
     # we need to use a custom input_fn as the default won't be able to figure
     # out column names from numpy inputs
     def input_fn(mode, X, Y=None, batch_size=1):
-        X = {
-            'f{}'.format(i + 1): X[:, i] for i in range(X.shape[1])
-        }
+        X = {'f{}'.format(i + 1): X[:, i] for i in range(X.shape[1])}
         return _tffn('numpy_input_fn')(x=X, y=Y, num_epochs=1, shuffle=False)
 
     return input_fn
@@ -136,6 +132,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModel
 
         import tensorflow as tf
+
         om = self.om
         # create classifier and save
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn())
@@ -154,6 +151,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModel
 
         import numpy as np
+
         om = self.om
         # create classifier and save
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn())
@@ -175,14 +173,16 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModel
 
         import numpy as np
+
         om = self.om
         # create classifier and save
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn())
         train_x, train_y, test_x, test_y = make_data()
         estmdl.fit(train_x, train_y)
         predict = [v for v in estmdl.predict(test_x)]
-        meta = om.models.put(TFEstimatorModel(estimator_fn=make_estimator_fn(),
-                                              model=estmdl.estimator), 'estimator-model')
+        meta = om.models.put(
+            TFEstimatorModel(estimator_fn=make_estimator_fn(), model=estmdl.estimator), 'estimator-model'
+        )
         # restore and use
         estmdl_r = om.models.get('estimator-model')
         self.assertIsInstance(estmdl_r, estmdl.__class__)
@@ -197,6 +197,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModel
 
         import numpy as np
+
         om = self.om
         # create classifier and save untrained
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn())
@@ -224,6 +225,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModel
 
         import pandas as pd
+
         om = self.om
         # create classifier and save untrained, note we use the default input_fn
         # provided by TFEstimatorModel as it deals easily with DataFrames
@@ -244,6 +246,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModel
 
         import pandas as pd
+
         om = self.om
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn(), input_fn=make_input_fn())
         train_x, train_y, test_x, test_y = make_data()
@@ -267,6 +270,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModel
 
         import pandas as pd
+
         om = self.om
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn())
         train_x, train_y, test_x, test_y = make_data()
@@ -275,9 +279,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
             # convert dataframe to feature vectors suitable for numpy_inputfn
             cols = range(x.shape[1])
             x = x.values
-            features = {
-                'col'.format(i + 1): x[:, i] for i, col in zip(cols, names)
-            }
+            features = {'col'.format(i + 1): x[:, i] for i, col in zip(cols, names)}
             return features
 
         train_x = as_features(train_x, train_x.columns)
@@ -299,6 +301,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         from omegaml.backends.tensorflow.tfestimatormodel import TFEstimatorModel
 
         import pandas as pd
+
         om = self.om
         # create classifier and save untrained
         estmdl = TFEstimatorModel(estimator_fn=make_estimator_fn())
@@ -325,6 +328,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         def train_xy_fn(Xname=None, Yname=None, **kwargs):
             import omegaml as om
             from omegaml.backends.tensorflow import _tffn
+
             X = om.datasets.get(Xname)
             Y = om.datasets.get(Yname)
             dataset = _tffn('pandas_input_fn')(X, Y, shuffle=True)
@@ -334,6 +338,7 @@ class TFEstimatorModelBackendTests(OmegaTestMixin, TestCase):
         def test_x_fn(Xname=None, **kwargs):
             import omegaml as om
             from omegaml.backends.tensorflow import _tffn
+
             X = om.datasets.get(Xname)
             dataset = _tffn('pandas_input_fn')(X, shuffle=False)
             return dataset

@@ -24,7 +24,7 @@ class JobResourceTests(OmegaTestMixin, TestCase):
     def url(self, pk=None, action=None, query=None):
         url = '/api/v1/job/'
         if pk is not None:
-            url += '{pk}/'.format(pk=quote(pk, safe='')) # encode / in name
+            url += '{pk}/'.format(pk=quote(pk, safe=''))  # encode / in name
         if action is not None:
             url += '{action}'.format(**locals())
         if query is not None:
@@ -74,7 +74,10 @@ class JobResourceTests(OmegaTestMixin, TestCase):
         # put notebook
         meta = om.jobs.put(notebook, 'testjob')
         # run the job on the cluster
-        resp = self.client.post(self.url('testjob', action='run'), json={})
+        resp = self.client.post(
+            self.url('testjob', action='run'),
+            json={},
+        )
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         self.assertIn('created', data)
@@ -97,8 +100,11 @@ class JobResourceTests(OmegaTestMixin, TestCase):
         # put notebook
         meta = om.jobs.put(notebook, 'testjob')
         # run the job on the cluster
-        resp = self.client.post(self.url('testjob', action='run'),
-                                headers=self._async_headers, json={})
+        resp = self.client.post(
+            self.url('testjob', action='run'),
+            headers=self._async_headers,
+            json={},
+        )
         resp = self._check_async(resp)
         self.assertHttpOK(resp)
         data = self.deserialize(resp)['response']
@@ -111,5 +117,3 @@ class JobResourceTests(OmegaTestMixin, TestCase):
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         self.assertIn('source_job', data)
-
-

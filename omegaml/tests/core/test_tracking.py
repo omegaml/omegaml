@@ -28,7 +28,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         om = self.om
         exp = om.runtime.experiment('test')
         coll = om.datasets.collection(exp._data_name)
-        # SON(..., 'keys': { key: order, ...}) => ['key', ...]
+        # SON(..., 'keys': { key: order, ...},) => ['key', ...]
         idxs = [son.to_dict()['key'] for son in coll.list_indexes()]
         idxs_keys = [list(sorted(d.keys())) for d in idxs]
         self.assertTrue(any(set(keys) & {'data.event', 'data.key', 'data.run'} for keys in idxs_keys))
@@ -38,7 +38,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         om = self.om
         exp = om.runtime.experiment('test')
         with exp:
-            exp.log_metric('accuracy', .98)
+            exp.log_metric('accuracy', 0.98)
         self.assertEqual(len(exp.data()), 3)
         exp.clear(force=True)
         self.assertIsNone(exp.data())
@@ -71,7 +71,10 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
             xexp.log_param('foo', 'bar')
         data = xexp.data()
         self.assertEqual(len(data), 3)
-        self.assertEqual(set(data['event']), {'start', 'stop', 'param'})
+        self.assertEqual(
+            set(data['event']),
+            {'start', 'stop', 'param'},
+        )
         self.assertEqual(data['run'].iloc[-1], run + 1)
 
     def test_simple_tracking(self):
@@ -148,10 +151,11 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         data = exp.data()
         self.assertIsNone(data)
         # implicit tracking via metadata
-        om.models.put(lr, 'mymodel', attributes={
-            'tracking': {
-                'default': 'expfoo2',
-            }})
+        om.models.put(
+            lr,
+            'mymodel',
+            attributes={'tracking': {'default': 'expfoo2'}},
+        )
         om.runtime.model('mymodel').score(X, Y)
         tracker = om.runtime.experiment('expfoo2')
         exp = tracker.experiment
@@ -167,11 +171,11 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         Y = iris.target
         lr = LogisticRegression()
         lr.fit(X, Y)
-        om.models.put(lr, 'mymodel', attributes={
-            'tracking': {
-                'default': 'expfoo'
-            }
-        })
+        om.models.put(
+            lr,
+            'mymodel',
+            attributes={'tracking': {'default': 'expfoo'}},
+        )
         om.runtime.model('mymodel').score(X, Y)
         tracker = om.runtime.experiment('expfoo')
         exp = tracker.experiment
@@ -264,7 +268,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
     def test_experiment_explicit_logging(self):
         om = self.om
         with om.runtime.experiment('myexp') as exp:
-            exp.log_metric('accuracy', .98)
+            exp.log_metric('accuracy', 0.98)
         exp = om.models.get('experiments/myexp', data_store=om.datasets)
         self.assertEqual(len(exp.data(event='metric')), 1)
 
@@ -411,21 +415,25 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         om = self.om
         for i in range(10):
             with om.runtime.experiment('myexp') as exp:
-                exp.log_metric('accuracy', .98)
-                exp.log_metric('mse', .02)
+                exp.log_metric('accuracy', 0.98)
+                exp.log_metric('mse', 0.02)
         summary = exp.summary()
         self.assertEqual(len(summary.loc['metric']), 3)
-        self.assertEqual(set(summary.loc['metric'].index), {'accuracy', 'mse', 'latency'})
+        self.assertEqual(
+            set(summary.loc['metric'].index),
+            {'accuracy', 'mse', 'latency'},
+        )
         summary = exp.summary(perf_stats=True)
         self.assertEqual(len(summary.loc['metric']), 5)
-        self.assertEqual(set(summary.loc['metric'].index),
-                         {'accuracy', 'mse', 'latency', 'utilization', 'group_latency'})
+        self.assertEqual(
+            set(summary.loc['metric'].index), {'accuracy', 'mse', 'latency', 'utilization', 'group_latency'}
+        )
 
     def test_latency(self):
         om = self.om
         for i in range(10):
             with om.runtime.experiment('myexp') as exp:
-                exp.log_metric('accuracy', .98)
+                exp.log_metric('accuracy', 0.98)
         latency = exp.stats.latency(run='all', percentiles=False)
         self.assertEqual(len(latency), 10)
         latency_perc = exp.stats.latency(run='all', percentiles=True)
@@ -493,9 +501,9 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
 
     def test_model_autotrack(self):
         om = self.om
-        df = pd.DataFrame({
-            'x': range(1, 10)
-        })
+        df = pd.DataFrame(
+            {'x': range(1, 10)},
+        )
         df['y'] = df['x'] * 5 + 3
         reg = LinearRegression()
         om.models.put(reg, 'regmodel')
@@ -580,6 +588,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
 
     def test_dtrelative(self):
         from datetime import datetime, timedelta
+
         # Define a fixed 'now' for testing purposes
         now = datetime(2024, 10, 16, 12, 0, 0)  # Oct 16, 2024, 12:00:00
         # Test cases for each unit with positive and negative deltas
@@ -622,16 +631,21 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
             self.assertEqual(len(data), i + 1)
         # try datetime for arbitrary ranges
         for delta_start, delta_end in [(1, 4), (2, 6)]:
-            data = exp.data(event='metric', key='acc',
-                            since=dt_start + datetime.timedelta(hours=delta_start),
-                            end=dt_start + datetime.timedelta(hours=delta_end))
+            data = exp.data(
+                event='metric',
+                key='acc',
+                since=dt_start + datetime.timedelta(hours=delta_start),
+                end=dt_start + datetime.timedelta(hours=delta_end),
+            )
             self.assertEqual(len(data), delta_end - delta_start + 1, f'{delta_start} {delta_end}')
 
     def test_restore_xy_data(self):
         om = self.om
         exp: OmegaSimpleTracker
         with om.runtime.experiment('myexp') as exp:
-            df = pd.DataFrame({'x': range(0, 10)})
+            df = pd.DataFrame(
+                {'x': range(0, 10)},
+            )
             exp.log_data('Y', df['x'])
         with om.runtime.experiment('myexp') as exp:
             ds = pd.Series(range(0, 10)).values

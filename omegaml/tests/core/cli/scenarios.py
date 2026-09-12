@@ -82,11 +82,11 @@ class CliTestScenarios:
         return list(' '.join(args) for args in entries) if as_text else entries
 
     def assertLogSize(self, level, size):
-        """ assert log of level has number of entries (lines) """
+        """assert log of level has number of entries (lines)"""
         self.assertEqual(size, len(self.get_log(level)))
 
     def assertLogEqual(self, level, expected):
-        """ assert log of level has expected contents """
+        """assert log of level has expected contents"""
         self.assertEqual(expected, self.get_log(level))
 
     def assertLogContains(self, level, expected, compare_as=str):
@@ -159,9 +159,10 @@ class CliTestScenarios:
             Metadata of the dataset
         """
         import pandas as pd
+
         df = pd.DataFrame({
             'x': range(N),
-            'y': range(N)
+            'y': range(N),
         })
         df['y'] = df['x'] * m + b
         return self.om.datasets.put(df, name, append=False)
@@ -178,13 +179,14 @@ class CliTestScenarios:
 
         """
         data = np.random.randint(0, 100, size=size)
-        df = pd.DataFrame(data, columns=list(string.ascii_uppercase[0:size[1]]))
+        df = pd.DataFrame(data, columns=list(string.ascii_uppercase[0 : size[1]]))
         df.to_csv(path, index=None, sep=sep)
         return df
 
     def create_local_image_file(self, path):
         from imageio import imsave
         import numpy as np
+
         img = np.zeros([100, 100, 3], dtype=np.uint8)
         img.fill(255)
         imsave(path, img)

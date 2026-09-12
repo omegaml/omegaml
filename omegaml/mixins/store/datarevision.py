@@ -1,14 +1,15 @@
 # TODO implement drop for revisions!
-import pandas as pd
 import sys
 from datetime import datetime
+
+import pandas as pd
 from tqdm import tqdm
 
 from omegaml.util import tryOr
 
 
 class DataRevisionMixin:
-    """ Enable automatically versioned dataframes in om.datasets
+    """Enable automatically versioned dataframes in om.datasets
 
     Works by storing a current version of the dataframe with all changes applied
     as the most recent revision. All changes are stored separately in sequence,
@@ -75,8 +76,7 @@ class DataRevisionMixin:
         return store.prefix == 'data/'
 
     def metadata(self, name, raw=False, **kwargs):
-        return (super().metadata(name, **kwargs) if not raw
-                else super().metadata(self._revname(name), **kwargs))
+        return super().metadata(name, **kwargs) if not raw else super().metadata(self._revname(name), **kwargs)
 
     def _has_revisions(self, name, revisions=False):
         # return True if revisions exist for dataset name, or if requested
@@ -89,7 +89,7 @@ class DataRevisionMixin:
         return f'.revisions.{name}'
 
     def _build_revision(self, df, name, append=True, revision_dt=None, tag=None, delete=False, **kwargs):
-        """ build a new revision
+        """build a new revision
 
         Creates and updates a 'revisions' entry in the datasets meta.kind_meta, keeping
         track of all changes:
@@ -130,7 +130,7 @@ class DataRevisionMixin:
         changesets = revisions.setdefault('changes', [])
         revisions.update({
             'seq': revision,
-            'name': revname
+            'name': revname,
         })
         changesets.append({
             'dt': revision_dt or datetime.utcnow(),
@@ -204,11 +204,13 @@ class DataRevisionMixin:
             if changes is None:
                 continue
             # apply upserts, step 1
-            base = base.merge(changes,
-                              how='outer',
-                              left_index=True,
-                              right_index=True,
-                              suffixes=(None, '_r_'))
+            base = base.merge(
+                changes,
+                how='outer',
+                left_index=True,
+                right_index=True,
+                suffixes=(None, '_r_'),
+            )
             # apply upserts, step 2
             revcols = []
             for col in [c for c in base.columns if not c.endswith('_r_')]:
@@ -242,8 +244,8 @@ class DataRevisionMixin:
                 updates = {
                     '$set': data,
                     '$setOnInsert': {
-                        '_om#rowid': row['_om#rowid']
-                    }
+                        '_om#rowid': row['_om#rowid'],
+                    },
                 }
                 key = {k: v for k, v in data.items() if k.startswith('_idx#')}
                 if data.get('_delete_', delete):
@@ -264,7 +266,7 @@ class DataRevisionMixin:
         return df
 
     def put(self, df, name, revisions=False, tag=None, revision_dt=None, trace_revisions=False, **kwargs):
-        """ store a dataset revision
+        """store a dataset revision
 
         Args:
             df (pd.DataFrame): a dataframe
@@ -282,8 +284,7 @@ class DataRevisionMixin:
         # revisions apply
         append = kwargs.pop('append', True)
         delete = kwargs.pop('delete', False)
-        meta = self._build_revision(df, name, append=append, tag=tag, delete=delete,
-                                    revision_dt=revision_dt, **kwargs)
+        meta = self._build_revision(df, name, append=append, tag=tag, delete=delete, revision_dt=revision_dt, **kwargs)
         if append:
             # _fast_insert is a callback to process the upserts
             super().put(df, name, _fast_insert=self._make_upsert_fn(name, delete=delete))
@@ -291,7 +292,7 @@ class DataRevisionMixin:
         return meta
 
     def get(self, name, revision=-1, changeset=None, trace_revisions=False, **kwargs):
-        """ retrieve a dataset with revisions
+        """retrieve a dataset with revisions
 
         Retrieve a specific revision, including all changes applied until that point. If
         revision is -1 (latest), the current dataset is returned. For any other revision,
@@ -318,19 +319,21 @@ class DataRevisionMixin:
         if isinstance(revision, str):
             revision = tryOr(lambda: int(revision), revision)
             revision = tryOr(lambda: pd.to_datetime(revision).to_pydatetime(), revision)
-        data = self._retrieve_revision(name,
-                                       revision=revision,
-                                       changeset=changeset,
-                                       trace_revisions=trace_revisions,
-                                       **kwargs)
+        data = self._retrieve_revision(
+            name,
+            revision=revision,
+            changeset=changeset,
+            trace_revisions=trace_revisions,
+            **kwargs,
+        )
         return data
 
     def revisions(self, name, raw=False):
         if self._has_revisions(name):
             meta = self.metadata(name)
             changes = meta.kind_meta.get('revisions', {}).get('changes', [])
-            as_list = lambda v : [f'{name}@{c.get("tag", i)}' for i, c in enumerate(v)]
-            as_raw = lambda v : [self.metadata(m, raw=True) for m in as_list(v)]
+            as_list = lambda v: [f'{name}@{c.get("tag", i)}' for i, c in enumerate(v)]
+            as_raw = lambda v: [self.metadata(m, raw=True) for m in as_list(v)]
             display = (lambda v: pd.DataFrame(v)) if sys.flags.interactive else as_list
             return display(changes) if not raw else as_raw(changes)
         return None

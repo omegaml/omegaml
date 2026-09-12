@@ -11,6 +11,7 @@ class UsersView(ListDetailMixin, BaseView):
     def store(self):
         return self.om.system
 
+
 def create_view(bp):
     view = UsersView('users')
     view.create_routes(bp)

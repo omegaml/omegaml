@@ -1,7 +1,7 @@
 import json
 import mimetypes
 import os
-from base64 import encodebytes, decodebytes
+from base64 import decodebytes, encodebytes
 from datetime import datetime
 from io import BytesIO
 from urllib.parse import unquote
@@ -39,6 +39,7 @@ class OmegaStoreContentsManager(ContentsManager):
         """
         if self._omega is None:
             import omegaml as om
+
             self._omega = om
         self._omega.jobs._include_dir_placeholder = True
         return self._omega
@@ -72,7 +73,7 @@ class OmegaStoreContentsManager(ContentsManager):
             # the frontend will request the specific contents
             model = self._dir_model(path, content=False)
         else:
-            raise web.HTTPError(404, u'Type {} at {} is not supported'.format(type, path))
+            raise web.HTTPError(404, 'Type {} at {} is not supported'.format(type, path))
         return model
 
     def save(self, model, path):
@@ -87,7 +88,7 @@ class OmegaStoreContentsManager(ContentsManager):
         name = model.get('name')
         self.run_pre_save_hooks(model=model, path=path)
         if type is None:
-            raise web.HTTPError(400, u'No file type provided')
+            raise web.HTTPError(400, 'No file type provided')
         try:
             if type == 'notebook' or (type == 'file' and path.endswith('.ipynb')):
                 content = model.get('content')
@@ -103,7 +104,7 @@ class OmegaStoreContentsManager(ContentsManager):
                     model['content'] = content
                     model['format'] = None
                 if content is None or not isinstance(content, dict):
-                    raise web.HTTPError(400, u'No file content provided or wrong format')
+                    raise web.HTTPError(400, 'No file content provided or wrong format')
                 # create notebook
                 nb = nbformat.from_dict(content)
                 self.check_and_sign(nb, path)
@@ -126,15 +127,12 @@ class OmegaStoreContentsManager(ContentsManager):
                 self._save_file(path, content, fmt)
                 model = self.get(path, content=False, type=type)
             else:
-                raise web.HTTPError(
-                    400, "Unhandled contents type: %s" % model['type'])
+                raise web.HTTPError(400, "Unhandled contents type: %s" % model['type'])
         except web.HTTPError:
             raise
         except Exception as e:
-            self.log.error(
-                u'Error while saving file: %s %s', path, e, exc_info=True)
-            raise web.HTTPError(
-                500, u'Unexpected error while saving file: %s %s' % (path, e))
+            self.log.error('Error while saving file: %s %s', path, e, exc_info=True)
+            raise web.HTTPError(500, 'Unexpected error while saving file: %s %s' % (path, e))
         return model
 
     def delete_file(self, path):
@@ -159,9 +157,9 @@ class OmegaStoreContentsManager(ContentsManager):
         new_path = unquote(new_path).strip('/')
         # check file or directory
         if self.file_exists(new_path):
-            raise web.HTTPError(409, u'Notebook already exists: %s' % new_path)
+            raise web.HTTPError(409, 'Notebook already exists: %s' % new_path)
         elif self.dir_exists(new_path):
-            raise web.HTTPError(409, u'Directory already exists: %s' % new_path)
+            raise web.HTTPError(409, 'Directory already exists: %s' % new_path)
         # do the renaming
         if self.dir_exists(old_path):
             old_dirname = old_path + '/' + self._dir_placeholder
@@ -331,8 +329,7 @@ class OmegaStoreContentsManager(ContentsManager):
             try:
                 entry = self._notebook_model(meta.name, content=content, meta=meta)
             except Exception as e:
-                msg = ('_dir_model error, cannot get {}, '
-                       'removing from list, exception {}'.format(meta.name, str(e)))
+                msg = '_dir_model error, cannot get {}, removing from list, exception {}'.format(meta.name, str(e))
                 self.log.warning(msg)
             else:
                 contents.append(entry)
@@ -349,7 +346,7 @@ class OmegaStoreContentsManager(ContentsManager):
             if model['mimetype'] is None:
                 default_mime = {
                     'text': 'text/plain',
-                    'base64': 'application/octet-stream'
+                    'base64': 'application/octet-stream',
                 }[format]
                 model['mimetype'] = default_mime
 
@@ -357,7 +354,6 @@ class OmegaStoreContentsManager(ContentsManager):
                 content=content,
                 format=format,
             )
-
         return model
 
     def _read_file(self, os_path, format):
@@ -387,20 +383,13 @@ class OmegaStoreContentsManager(ContentsManager):
                 return bcontent.decode('utf8'), 'text'
             except UnicodeError:
                 if format == 'text':
-                    raise web.HTTPError(
-                        400,
-                        "%s is not UTF-8 encoded" % os_path,
-                        reason='bad format',
-                    )
+                    raise web.HTTPError(400, "%s is not UTF-8 encoded" % os_path, reason='bad format')
         return encodebytes(bcontent).decode('ascii'), 'base64'
 
     def _save_file(self, os_path, content, format):
         """Save content of a generic file."""
         if format not in {'text', 'base64'}:
-            raise web.HTTPError(
-                400,
-                "Must specify format of file contents as 'text' or 'base64'",
-            )
+            raise web.HTTPError(400, "Must specify format of file contents as 'text' or 'base64'")
         try:
             if format == 'text':
                 bcontent = content.encode('utf8')
@@ -408,9 +397,7 @@ class OmegaStoreContentsManager(ContentsManager):
                 b64_bytes = content.encode('ascii')
                 bcontent = decodebytes(b64_bytes)
         except Exception as e:
-            raise web.HTTPError(
-                400, u'Encoding error saving %s: %s' % (os_path, e)
-            )
+            raise web.HTTPError(400, 'Encoding error saving %s: %s' % (os_path, e))
 
         self.omega.datasets.put(BytesIO(bcontent), os_path)
 

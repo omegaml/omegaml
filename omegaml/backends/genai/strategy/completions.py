@@ -9,19 +9,19 @@ logger = logging.getLogger(__name__)
 
 class CompletionsMixin:
     def complete(
-            self,
-            prompt,
-            messages=None,
-            conversation_id=None,
-            raw=False,
-            data=None,
-            stream=False,
-            use_tools=True,
-            chat=False,
-            trace=None,
-            agentic=False,
-            tools=None,
-            **kwargs,
+        self,
+        prompt,
+        messages=None,
+        conversation_id=None,
+        raw=False,
+        data=None,
+        stream=False,
+        use_tools=True,
+        chat=False,
+        trace=None,
+        agentic=False,
+        tools=None,
+        **kwargs,
     ):
         """complete a prompt
 
@@ -134,8 +134,7 @@ class CompletionsMixin:
         return response_gen if stream else [response for response in response_gen][-1]
 
     def _do_complete(
-            self, prompt, messages=None, conversation_id=None, data=None, stream=False, use_tools=False, raw=False,
-            **kwargs
+        self, prompt, messages=None, conversation_id=None, data=None, stream=False, use_tools=False, raw=False, **kwargs
     ):
         conversation_id = conversation_id or uuid4().hex
         messages = messages or []
@@ -147,15 +146,15 @@ class CompletionsMixin:
         # prepare template
         _template = self._prepare_template(self.template, data=data)
         template = (
-                self.pipeline(
-                    method='template',
-                    prompt_message=prompt,
-                    messages=messages,
-                    template=self.template,
-                    conversation_id=conversation_id,
-                    **kwargs,
-                )
-                or _template
+            self.pipeline(
+                method='template',
+                prompt_message=prompt,
+                messages=messages,
+                template=self.template,
+                conversation_id=conversation_id,
+                **kwargs,
+            )
+            or _template
         )
         if prompt and isinstance(prompt, str):
             # support direct text input
@@ -189,15 +188,15 @@ class CompletionsMixin:
         # prepare messages
         _default_messages = messages
         messages = (
-                self.pipeline(
-                    method='prepare',
-                    prompt_message=prompt_message,
-                    messages=messages,
-                    template=template,
-                    conversation_id=conversation_id,
-                    **kwargs,
-                )
-                or _default_messages
+            self.pipeline(
+                method='prepare',
+                prompt_message=prompt_message,
+                messages=messages,
+                template=template,
+                conversation_id=conversation_id,
+                **kwargs,
+            )
+            or _default_messages
         )
         # produce a response by calling the pipeline or the model
         response = self.pipeline(
@@ -213,7 +212,7 @@ class CompletionsMixin:
         response = response or self.provider.complete(messages=messages, model=self.model, **kwargs)
 
         def capture_tool_calls(
-                response, prompt_message, response_message, use_tools=False, as_delta=False, chunks=None
+            response, prompt_message, response_message, use_tools=False, as_delta=False, chunks=None
         ):
             """capture toolcalls across stream messages to consolidate into a single, fully formatted toolcall
 
@@ -245,17 +244,17 @@ class CompletionsMixin:
                     tool_calls = tool_message.get('tool_calls')
                 if use_tools and tool_calls:
                     tool_calls = (
-                            self.pipeline(
-                                method='toolprepare',
-                                prompt_message=prompt_message,
-                                response_message=response_message,
-                                messages=messages,
-                                tool_calls=tool_calls,
-                                template=template,
-                                conversation_id=conversation_id,
-                                **kwargs,
-                            )
-                            or tool_calls
+                        self.pipeline(
+                            method='toolprepare',
+                            prompt_message=prompt_message,
+                            response_message=response_message,
+                            messages=messages,
+                            tool_calls=tool_calls,
+                            template=template,
+                            conversation_id=conversation_id,
+                            **kwargs,
+                        )
+                        or tool_calls
                     )
                     response_message['tool_calls'] = tool_calls
             return response, prompt_message, response_message
@@ -283,16 +282,16 @@ class CompletionsMixin:
                 response, prompt_message, response_message, use_tools=use_tools
             )
             response_message = (
-                    self.pipeline(
-                        method='process',
-                        response_message=response_message,
-                        prompt_message=prompt_message,
-                        messages=messages,
-                        template=template,
-                        conversation_id=conversation_id,
-                        **kwargs,
-                    )
-                    or response_message
+                self.pipeline(
+                    method='process',
+                    response_message=response_message,
+                    prompt_message=prompt_message,
+                    messages=messages,
+                    template=template,
+                    conversation_id=conversation_id,
+                    **kwargs,
+                )
+                or response_message
             )
             return response, prompt_message, response_message, raw_response
 
@@ -346,16 +345,16 @@ class CompletionsMixin:
                     chunk, prompt_message, response_message, use_tools=use_tools, as_delta=True, chunks=chunks
                 )
                 response_message = (
-                        self.pipeline(
-                            method='process',
-                            response_message=response_message,
-                            prompt_message=prompt_message,
-                            messages=messages,
-                            template=template,
-                            conversation_id=conversation_id,
-                            **kwargs,
-                        )
-                        or response_message
+                    self.pipeline(
+                        method='process',
+                        response_message=response_message,
+                        prompt_message=prompt_message,
+                        messages=messages,
+                        template=template,
+                        conversation_id=conversation_id,
+                        **kwargs,
+                    )
+                    or response_message
                 )
             else:
                 content = ''

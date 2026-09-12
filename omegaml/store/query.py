@@ -6,7 +6,6 @@ from omegaml.util import restore_index
 
 
 class MongoQ(object):
-
     """
     Query object to filter mongodb collections
 
@@ -44,6 +43,7 @@ class MongoQ(object):
     2. return the dataframe
 
     """
+
     def __init__(self, _trusted=False, **kwargs):
         self.conditions = self._sanitize_filter(kwargs, trusted=_trusted)
         self.qlist = [('', self)]
@@ -137,6 +137,7 @@ class MongoQ(object):
         """
         query = {}
         qops = MongoQueryOps()
+
         def addq(k, v):
             if k not in query:
                 query[k] = v
@@ -147,7 +148,10 @@ class MongoQ(object):
                     if isinstance(vv, (list, tuple)):
                         subq.extend(vv)
                     else:
-                        subq.append({k: vv})
+                        subq.append(
+                            {k: vv},
+                        )
+
         for k, v in self.conditions.items():
             # transform query operators as '<foo>__<op>',
             # however preserve dunder '__<foo>' names ss columns
@@ -164,8 +168,7 @@ class MongoQ(object):
                 addq(k, getattr(qops, op)(v))
             # type queries
             elif op == 'between':
-                addq("$and", [{k: qops.GTE(v[0])},
-                              {k: qops.LTE(v[1])}])
+                addq("$and", [{k: qops.GTE(v[0])}, {k: qops.LTE(v[1])}])
             elif op == 'isstring':
                 addq(k, qops.EQ(qops.TYPE('string')))
             elif op == 'isarray':
@@ -235,12 +238,11 @@ class MongoQ(object):
 
     def _sanitize_filter(self, filter, trusted=False):
         from omegaml.store.queryops import sanitize_filter
+
         return sanitize_filter(filter, trusted=trusted)
 
 
-
 class Filter(object):
-
     """
     Filter for OmegaStore objects
 
@@ -264,6 +266,7 @@ class Filter(object):
         filter.filter(month=1)
         filter.exclude(day=15)
     """
+
     _debug = False
 
     def __init__(self, coll, __query=None, _trusted=False, **kwargs):
@@ -341,8 +344,7 @@ class Filter(object):
             self.exc = e
             if self.trace:
                 raise
-            raise SyntaxError(
-                'Error in Q object: column %s is unknown (KeyError on dataframe)' % e)
+            raise SyntaxError('Error in Q object: column %s is unknown (KeyError on dataframe)' % e)
         return value
 
     def filter(self, query=None, **kwargs):
@@ -385,11 +387,11 @@ class Filter(object):
         result = self.q.apply_filter(self.coll)
         try:
             import pandas as pd
+
             result = pd.DataFrame.from_records(result)
             if '_id' in result.columns:
                 del result['_id']
-            result = restore_index(result, dict(),
-                                   rowid_sort=not self.q.sorted)
+            result = restore_index(result, dict(), rowid_sort=not self.q.sorted)
         except ImportError:
             result = list(result)
         return result
@@ -405,5 +407,4 @@ class Filter(object):
         return self.value == self.value
 
     def __repr__(self):
-        return ' '.join(f'Filter({self.q})'.replace('\n', ' ').split())
-
+        return ' '.join(f'Filter({self.q},)'.replace('\n', ' ').split())

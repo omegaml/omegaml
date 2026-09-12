@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from scipy.stats import chi2, chisquare, entropy, ks_2samp, wasserstein_distance
+
 from omegaml.util import ensure_list, extend_instance
-from scipy.stats import ks_2samp, wasserstein_distance, entropy, chisquare, chi2
 
 
 class DriftStatsCalc:
-    """ Drift statistics calculator
+    """Drift statistics calculator
 
     The DriftStatsCalc class calculates drift statistics for two distributions.
     The distributions can be either numeric or categorical. The calculator is
@@ -97,6 +98,7 @@ class DriftStatsCalc:
         apply mixins in defaults.OMEGA_MONITOR_MIXINS
         """
         import omegaml as om
+
         mixins = mixins or om.defaults.OMEGA_MONITORING_MIXINS.get('DriftStatsCalc', [])
         for mixin in mixins:
             extend_instance(self, mixin)
@@ -104,7 +106,7 @@ class DriftStatsCalc:
     def metrics(self, kind=None):
         return self._metrics.get(kind) if kind else self._metrics
 
-    def ks_2samp(self, d1, d2, ci=.95, **kwargs):
+    def ks_2samp(self, d1, d2, ci=0.95, **kwargs):
         # two-sample Kolmogorov-Smirnov test for goodness of fit
         # -- H0: d1, d2 are from the same distribution (=> no drift)
         # -- H1: alternative (=> drift)
@@ -121,7 +123,7 @@ class DriftStatsCalc:
             'location': result.statistic_location,
         }
 
-    def psi(self, baseline, target, ci=.99, sd=None, **kwargs):
+    def psi(self, baseline, target, ci=0.99, sd=None, **kwargs):
         """Calculate Population Stability Index (PSI)"""
 
         def calculate_psi(expected, actual, bins=10):
@@ -131,9 +133,7 @@ class DriftStatsCalc:
             hist_expected += 1e-10  # Avoid division by zero
             hist_actual += 1e-10
 
-            psi_value = np.sum(
-                (hist_expected - hist_actual) * np.log(hist_expected / hist_actual)
-            )
+            psi_value = np.sum((hist_expected - hist_actual) * np.log(hist_expected / hist_actual))
             return psi_value
 
         psi_value = calculate_psi(baseline, target)
@@ -147,7 +147,7 @@ class DriftStatsCalc:
             "location": None,
         }
 
-    def kl_divergence(self, baseline, target, ci=.99, sd=None, **kwargs):
+    def kl_divergence(self, baseline, target, ci=0.99, sd=None, **kwargs):
         """Calculate Kullback-Leibler Divergence (KL)"""
         hist_baseline, _ = np.histogram(baseline, bins=100, density=True)
         hist_target, _ = np.histogram(target, bins=100, density=True)
@@ -167,7 +167,7 @@ class DriftStatsCalc:
             "location": None,
         }
 
-    def js_divergence(self, baseline, target, ci=.99, sd=None, **kwargs):
+    def js_divergence(self, baseline, target, ci=0.99, sd=None, **kwargs):
         """Calculate Jensen-Shannon Divergence (JS)"""
         hist_baseline, _ = np.histogram(baseline, bins=100, density=True)
         hist_target, _ = np.histogram(target, bins=100, density=True)
@@ -185,7 +185,7 @@ class DriftStatsCalc:
             "location": None,
         }
 
-    def wasserstein_distance(self, d1, d2, ci=.95, sd=None, **kwargs):
+    def wasserstein_distance(self, d1, d2, ci=0.95, sd=None, **kwargs):
         # Wasserstein distance between two distributions
         # calculates a normalized distance between two distributions
         # -- normalized by the standard deviation of d1
@@ -196,7 +196,7 @@ class DriftStatsCalc:
         sd = sd or np.std(d1, ddof=1)
         wd = wasserstein_distance(d1, d2)
         score = min(wd / sd, 1)
-        is_drift = (score > (1 - ci))
+        is_drift = score > (1 - ci)
         return {
             'metric': wd,
             'score': score,
@@ -205,7 +205,7 @@ class DriftStatsCalc:
             'location': None,
         }
 
-    def chisquared_test(self, d1, d2, ci=.99, sd=None, **kwargs):
+    def chisquared_test(self, d1, d2, ci=0.99, sd=None, **kwargs):
         # one-way chi-square test
         # -- H0: categorical frequencies in d2 match the expectation in d1 (=> no drift)
         # -- H1: alterantive (=> drift)
@@ -234,7 +234,7 @@ class DriftStatsCalc:
         return self.rng.choice(groups, size=n, p=probs)
 
     def mean_std_from_hist(self, counts, bins):
-        """ calculated the standard deviation from a histogram """
+        """calculated the standard deviation from a histogram"""
         # adopted from https://stackoverflow.com/a/57400289/890242
         mids = 0.5 * (bins[1:] + bins[:-1])
         probs = counts / np.sum(counts)
@@ -243,7 +243,7 @@ class DriftStatsCalc:
         return mean, sd
 
     def cdf_from_hist(self, counts, bins):
-        """ calculate the estimated CDF from a histogram """
+        """calculate the estimated CDF from a histogram"""
         # adopted from https://stackoverflow.com/a/74032972/890242
         cdf = np.cumsum(counts * np.diff(bins))
         return cdf
@@ -253,7 +253,7 @@ class DriftStatsCalc:
 
 
 class DriftStats:
-    """ Drift statistics for a given column, statistic or sequence
+    """Drift statistics for a given column, statistic or sequence
 
     Drift statistics are represented for a given column, statistic or sequence, or a combination
     of these.
@@ -324,16 +324,19 @@ class DriftStats:
     def describe(self, column=None, statistic=None, percentiles=None, kind='drift', **query):
         df = self.as_dataframe(self.drifts, column=column, statistic=statistic, **query)
         if kind == 'drift':
-            result = (df.groupby(['column', 'statistic'])[['metric', 'pvalue']]
-                      .describe(percentiles=percentiles)
-                      .fillna(0)
-                      .round(2))
+            result = (
+                df
+                .groupby(['column', 'statistic'])[['metric', 'pvalue']]
+                .describe(percentiles=percentiles)
+                .fillna(0)
+                .round(2)
+            )
         else:
             return None
         return result
 
     def summary(self, column=None, statistic=None, raw=False, **query):
-        """ describe drifted features
+        """describe drifted features
 
         Args:
             column (str): the column to filter by
@@ -381,32 +384,24 @@ class DriftStats:
             # prepare summary
             drifted = df['drift']
             dfx = df[drifted]
-            drifted_seqs = (dfx[['seq_from', 'seq_to']]
-                            .drop_duplicates()
-                            .apply(lambda v: [v['seq_from'], v['seq_to']], axis=1)
-                            .tolist())
+            drifted_seqs = (
+                dfx[['seq_from', 'seq_to']]
+                .drop_duplicates()
+                .apply(lambda v: [v['seq_from'], v['seq_to']], axis=1)
+                .tolist()
+            )
             result = {
-                'columns': (df.groupby('column')
-                            ['drift'].sum() > 0).to_dict(),
-                'summary': (df.groupby('kind')
-                            ['drift'].sum() > 0).to_dict(),
-                'info': (df.groupby('kind')
-                         .apply(lambda v: list(v['column'].sort_values().unique()))
-                         .to_dict()),
-                'score': (df.groupby('kind')
-                          .apply(lambda v: v['score'].max())
-                          .to_dict()),
+                'columns': (df.groupby('column')['drift'].sum() > 0).to_dict(),
+                'summary': (df.groupby('kind')['drift'].sum() > 0).to_dict(),
+                'info': (df.groupby('kind').apply(lambda v: list(v['column'].sort_values().unique())).to_dict()),
+                'score': (df.groupby('kind').apply(lambda v: v['score'].max()).to_dict()),
             }
             result['info']['seq'] = drifted_seqs
         if not raw:
             # convert summary to pd.DataFrame
             s = result
-            col_by_kind = {col: kind for kind, cols in s['info'].items()
-                           for col in cols if kind != 'seq'}
-            df = pd.DataFrame({
-                'column': s['columns'].keys(),
-                'drift': s['columns'].values(),
-            })
+            col_by_kind = {col: kind for kind, cols in s['info'].items() for col in cols if kind != 'seq'}
+            df = pd.DataFrame({'column': s['columns'].keys(), 'drift': s['columns'].values()})
             df['kind'] = df['column'].apply(lambda v: col_by_kind.get(v))
             df['seq'] = pd.Series(s['info']['seq'] * len(df))
             df['score'] = pd.Series([s['score'].get(k) for k in df['kind']])
@@ -456,17 +451,31 @@ class DriftStats:
             The .df dataframe filtered by the given spec
         """
         df = abortIfEmpty(self.df, "no data available")
-        seq_from, seq_to = self._expand_seq(seq, default='baseline', column=column, statistic=statistic) if seq else (
-            None, None)
+        seq_from, seq_to = (
+            self._expand_seq(seq, default='baseline', column=column, statistic=statistic) if seq else (None, None)
+        )
         flt = df['column'].isin(ensure_list(column)) if column else (df.index == df.index)
         flt &= df['statistic'].isin(ensure_list(statistic)) if statistic else True
         flt &= df['seq_from'].isin(ensure_list(seq_from)) if seq_from is not None else True
         flt &= df['seq_to'].isin(ensure_list(seq_to)) if seq_to is not None else True
         return df[flt]
 
-    def plot(self, column=None, statistic=None, seq=None, kind='dist', ax=None, sample=True, logx=False,
-             logy=False, xlim=None, ylim=None, raw=False, **kwargs):
-        """ plot drift statistics
+    def plot(
+        self,
+        column=None,
+        statistic=None,
+        seq=None,
+        kind='dist',
+        ax=None,
+        sample=True,
+        logx=False,
+        logy=False,
+        xlim=None,
+        ylim=None,
+        raw=False,
+        **kwargs,
+    ):
+        """plot drift statistics
 
         Plots drift statistics for a given column, statistic, seq_from, seq_to. If no column is given,
         plots all columns for the given seq_from, seq_to. If no seq_from, seq_to is given, plots the
@@ -528,11 +537,11 @@ class DriftStats:
         dt2 = target_df['dt_to'].iloc[0]
         if kind in ('dist', 'box', 'hist'):
             kind = 'hist' if kind == 'dist' else kind
-            ax = self._plot_dist(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, sample=sample,
-                                 raw=raw, kind=kind, **kwargs)
+            ax = self._plot_dist(
+                column, statistic, s1, s2, baseline, target, dt1, dt2, ax, sample=sample, raw=raw, kind=kind, **kwargs
+            )
         elif kind == 'time':
-            ax = self._plot_timeline(column, statistic, s1, s2, baseline, target, dt1, dt2, ax,
-                                     raw=raw, **kwargs)
+            ax = self._plot_timeline(column, statistic, s1, s2, baseline, target, dt1, dt2, ax, raw=raw, **kwargs)
         return ax
 
     def _plot_all(self, statistic, seq, kind, ax, columns=None, raw=False, **kwargs):
@@ -558,8 +567,23 @@ class DriftStats:
         plt.ylim((0, dfx.select_dtypes(include='number').max().max()))
         return (ax, dfx, plottype) if raw else ax
 
-    def _plot_dist(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, sample=None,
-                   raw=False, kind=None, normalize=False, **kwargs):
+    def _plot_dist(
+        self,
+        column,
+        statistic,
+        s1,
+        s2,
+        baseline,
+        target,
+        dt1,
+        dt2,
+        ax,
+        sample=None,
+        raw=False,
+        kind=None,
+        normalize=False,
+        **kwargs,
+    ):
         # prepare drift message
         drift_ind = 'detected' if self[column, statistic]['drift'].sum() > 0 else 'not detected'
         drift_stats = self[column, statistic, (None, s2)].iloc[0]['stats']
@@ -573,15 +597,9 @@ class DriftStats:
                 'baseline': {'alpha': 1.0, 'linestyle': '--', 'fill': False},
                 'target': {'alpha': 0.3, 'fill': True},
             },
-            'box': {
-                'baseline': {'alpha': 1.0},
-                'target': {'alpha': 0.3},
-            },
+            'box': {'baseline': {'alpha': 1.0}, 'target': {'alpha': 0.3}},
         }
-        data_style_map = [
-            (baseline, 'baseline'),
-            (target, 'target')
-        ]
+        data_style_map = [(baseline, 'baseline'), (target, 'target')]
         stats_calc = DriftStatsCalc()
         data = None
         ax = None
@@ -629,6 +647,7 @@ class DriftStats:
 
     def _plot_timeline(self, column, statistic, s1, s2, baseline, target, dt1, dt2, ax, raw=False, **kwargs):
         from matplotlib.dates import DateFormatter
+
         date_form = DateFormatter("%Y-%m-%d")
         print(column, statistic, s1, s2)
         d1 = self[column, statistic, (s1, None)]
@@ -636,13 +655,7 @@ class DriftStats:
         dff = pd.concat([d1, d2])
         # wide format for plotting
         # -- one column for each column, statistic
-        dfx = (dff
-               .pivot_table(index='seq_to',
-                            columns=['column', 'statistic'],
-                            values='metric',
-                            aggfunc='max',
-                            )
-               )
+        dfx = dff.pivot_table(index='seq_to', columns=['column', 'statistic'], values='metric', aggfunc='max')
         dfx.index = dfx.index.astype(str)
         ax = dfx.plot.line(style='--', marker='X')
         # Rotate and format the x-axis labels
@@ -681,7 +694,7 @@ class DriftStats:
         return seq_from, seq_to
 
     def baseline(self, column=None, seq=None):
-        """ get the baseline statistics
+        """get the baseline statistics
 
         Args:
             column (str): the column to get statistics for. If None, returns all a DataFrame with
@@ -700,12 +713,11 @@ class DriftStats:
               .describe() respectively
         """
         if column is None:
-            return DriftStatsDataFrame([self._stats_series('baseline', column, seq)
-                                        for column in self.columns])
+            return DriftStatsDataFrame([self._stats_series('baseline', column, seq) for column in self.columns])
         return self._stats_series('baseline', column, seq)
 
     def target(self, column=None, seq=None):
-        """ get the target statistics
+        """get the target statistics
 
         Args:
             column (str): the column to get statistics for
@@ -723,8 +735,7 @@ class DriftStats:
               .describe() respectively
         """
         if column is None:
-            return DriftStatsDataFrame([self._stats_series('target', column, seq)
-                                        for column in self.columns])
+            return DriftStatsDataFrame([self._stats_series('target', column, seq) for column in self.columns])
         return self._stats_series('target', column, seq)
 
     def _stats_series(self, period, column, seq):
@@ -739,8 +750,9 @@ class DriftStats:
         if isinstance(drift, list):
             if not drift:
                 return pd.DataFrame()
-            return self._filter_df(pd.concat([self.as_dataframe(drift_data=d) for d in drift]
-                                             or [pd.DataFrame()]), **query)
+            return self._filter_df(
+                pd.concat([self.as_dataframe(drift_data=d) for d in drift] or [pd.DataFrame()]), **query
+            )
 
         info = drift['info']
         stats = drift['stats']
@@ -789,7 +801,7 @@ class DriftStatsSeries(pd.Series):
         super().__init__(values, **kwargs)
 
     def hist(self, *args, sample=False, **kwargs):
-        """ plot a histogram of the drift statistics
+        """plot a histogram of the drift statistics
 
         Args:
             sample (int): the number of samples to draw from the histogram
@@ -801,7 +813,7 @@ class DriftStatsSeries(pd.Series):
         return self.plot(sample=sample, **kwargs)
 
     def plot(self, sample=False, **kwargs):
-        """ plot the drift statistics
+        """plot the drift statistics
 
         Plot the drift statistics as a histogram or bar plot, depending on the data type.
         For numeric data, a histogram is plotted. For categorical data, a bar plot is plotted.
@@ -820,15 +832,15 @@ class DriftStatsSeries(pd.Series):
                 stats_calc = DriftStatsCalc()
                 h = stats_calc.sample_from_hist(counts, edges, n=sample)
                 counts, edges = np.histogram(h, bins=len(edges))
-            ax = plt.stairs(counts, edges, fill=True, alpha=.8, **kwargs)
+            ax = plt.stairs(counts, edges, fill=True, alpha=0.8, **kwargs)
         elif 'groups' in self:
-            ax = plt.bar(self['groups'].keys(), self['groups'].values(), alpha=.8, **kwargs)
+            ax = plt.bar(self['groups'].keys(), self['groups'].values(), alpha=0.8, **kwargs)
         else:
             raise ValueError('no histogram or groups found in drift data')
         return ax
 
     def describe(self, **kwargs):
-        """ describe the drift statistics
+        """describe the drift statistics
 
         Describe the drift statistics for the given column, statistic, seq_from, seq_to
         """
@@ -845,7 +857,7 @@ class DriftStatsSeries(pd.Series):
         return info
 
     def sample(self, n=100, seed=None, **kwargs):
-        """ sample from the drift statistics
+        """sample from the drift statistics
 
         Sample from the drift statistics for the given column, statistic, seq_from, seq_to.
         The sampling is done from the histogram (numerical columns) and groups data (categorical columns)
@@ -894,7 +906,7 @@ class DriftStatsDataFrame(pd.DataFrame):
         return df
 
     def sample(self, n=100, seed=None, **kwargs):
-        """ sample from all columns
+        """sample from all columns
 
         This samples from all columns in the DataFrame. The sample function is called with the
         given arguments for each column in the DataFrame. The resulting samples are concatenated
@@ -915,7 +927,7 @@ class DriftStatsDataFrame(pd.DataFrame):
         return df
 
     def corr(self, method='pearson', **kwargs):
-        """ return the correlation matrix for all columns
+        """return the correlation matrix for all columns
 
         Returns the correlation matrix for all numerical columns in the DataFrame. The correlation matrix is
         not re-calculated. It represents the respective correlation at the time of the snapshot. If the
@@ -937,7 +949,7 @@ class DriftStatsDataFrame(pd.DataFrame):
         return corr_df[sorted(corr_df.columns)].sort_index()
 
     def plot(self, column, sample=False, **kwargs):
-        """ plot histograms for a given column
+        """plot histograms for a given column
 
         this is equivalent to calling DriftStatsDataFrame[column].plot(sample=sample, **kwargs) or
         DriftStatsSeries.plot(sample=sample, **kwargs) for the given column.
@@ -954,10 +966,7 @@ class DriftStatsDataFrame(pd.DataFrame):
 
 
 def abortIfEmpty(df, error):
-    conditions = (
-        None,
-        isinstance(df, pd.DataFrame) and df.empty
-    )
+    conditions = (None, isinstance(df, pd.DataFrame) and df.empty)
     if any(conditions):
         raise ValueError(error)
     return df

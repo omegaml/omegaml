@@ -12,11 +12,13 @@ class TensorflowKerasBackend(KerasBackend):
     .. deprecated:: 0.18.0
         Use an object helper or a serializer/loader combination instead.
     """
+
     KIND = 'tfkeras.h5'
 
     @classmethod
     def supports(self, obj, name, **kwargs):
         import tensorflow as tf
+
         tfSequential = tf.keras.models.Sequential
         tfModel = tf.keras.models.Model
         return isinstance(obj, (tfSequential, tfModel)) and not kwargs.get('as_savedmodel')
@@ -25,6 +27,7 @@ class TensorflowKerasBackend(KerasBackend):
         # override to implement model saving
         import tensorflow as tf
         from tensorflow import keras
+
         if tf.executing_eagerly():
             self._fix_model_for_saving(model)
         keras.models.save_model(model, fn)
@@ -33,6 +36,7 @@ class TensorflowKerasBackend(KerasBackend):
         # see
         import tensorflow as tf
         from tensorflow.python.keras import backend as K
+
         with K.name_scope(model.optimizer.__class__.__name__):
             try:
                 for i, var in enumerate(model.optimizer.weights):
@@ -44,6 +48,7 @@ class TensorflowKerasBackend(KerasBackend):
     def _extract_model(self, infile, key, tmpfn, **kwargs):
         # override to implement model loading
         from tensorflow import keras
+
         with open(tmpfn, 'wb') as pkgfn:
             pkgfn.write(infile.read())
         return keras.models.load_model(tmpfn)
@@ -56,16 +61,19 @@ class TensorflowKerasBackend(KerasBackend):
                 result = self._fit_tpu(modelname, Xname, Yname=Yname, tpu_specs=tpu_specs, **kwargs)
             except:
                 import logging
+
                 logger = logging.getLogger(__name__)
                 logger.warning('Error in _fit_tpu, reverting to fit on CPU')
             else:
                 return result
-        result = super(TensorflowKerasBackend, self).fit(modelname, Xname, Yname=Yname, pure_python=pure_python,
-                                                         **kwargs)
+        result = super(TensorflowKerasBackend, self).fit(
+            modelname, Xname, Yname=Yname, pure_python=pure_python, **kwargs
+        )
         return result
 
     def _fit_tpu(self, modelname, Xname, Yname=None, tpu_specs=None, **kwargs):
         import tensorflow as tf
+
         # adopted from https://www.dlology.com/blog/how-to-train-keras-model-x20-times-faster-with-tpu-for-free/
         # This address identifies the TPU we'll use when configuring TensorFlow.
         # FIXME this will fail in tf 2.0, see https://github.com/tensorflow/tensorflow/issues/24412#issuecomment-491980177
@@ -80,8 +88,8 @@ class TensorflowKerasBackend(KerasBackend):
         model = self.get_model(modelname)
         tpu_model = tf.contrib.tpu.keras_to_tpu_model(
             model,
-            strategy=tf.contrib.tpu.TPUDistributionStrategy(
-                tf.contrib.cluster_resolver.TPUClusterResolver(tpu_worker)))
+            strategy=tf.contrib.tpu.TPUDistributionStrategy(tf.contrib.cluster_resolver.TPUClusterResolver(tpu_worker)),
+        )
         X = self.data_store.get(Xname)
         Y = self.data_store.get(Yname)
         tpu_model.fit(X, Y)

@@ -16,9 +16,13 @@ class ObjectInformationMixinTests(OmegaTestMixin, TestCase):
     def test_summary(self):
         om = self.om
         data = [1, 2, 3]
-        om.datasets.put(data, 'test', attributes={
-            'docs': 'foobar'
-        })
+        om.datasets.put(
+            data,
+            'test',
+            attributes={
+                'docs': 'foobar',
+            },
+        )
         summary = om.datasets.summary('test')
         self.assertIsInstance(summary, dict)
         self.assertIn('docs', summary)
@@ -51,16 +55,20 @@ class ObjectInformationMixinTests(OmegaTestMixin, TestCase):
             self.assertIn('models', stats)
             self.assertEqual(stats['datasets']['count'], 2)
             self.assertEqual(stats['models']['count'], 1)
-            self.assertEqual(stats['datasets']['totalSize'],
-                             bytes_stats['datasets']['totalSize'] // scalef)
+            self.assertEqual(
+                stats['datasets']['totalSize'],
+                bytes_stats['datasets']['totalSize'] // scalef,
+            )
             # by scale factor as a float
             stats = om.stats(scale=scalef, as_dict=True)
             self.assertIn('datasets', stats)
             self.assertIn('models', stats)
             self.assertEqual(stats['datasets']['count'], 2)
             self.assertEqual(stats['models']['count'], 1)
-            self.assertEqual(stats['datasets']['totalSize'],
-                             bytes_stats['datasets']['totalSize'] // scalef)
+            self.assertEqual(
+                stats['datasets']['totalSize'],
+                bytes_stats['datasets']['totalSize'] // scalef,
+            )
 
     def test_all_store_stats_as_df(self):
         om = self.om

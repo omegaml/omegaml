@@ -77,6 +77,7 @@ class VirtualObjectBackend(BaseDataBackend):
         context, respectively - virtual objects can be injected by anyone
         who are authorized to write data.
     """
+
     # TODO split VirtualObjectBackend into VirtualModelBackend and VirtualDataBackend
     #      to avoid confusion between the two (currently the same class is used for both)
     KIND = 'virtualobj.dill'
@@ -111,7 +112,8 @@ class VirtualObjectBackend(BaseDataBackend):
             bucket=self.model_store.bucket,
             kind=self.KIND,
             attributes=attributes,
-            gridfile=gridfile).save()
+            gridfile=gridfile,
+        ).save()
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):
         meta = self.model_store.metadata(name)
@@ -130,8 +132,9 @@ class VirtualObjectBackend(BaseDataBackend):
         meta = self.model_store.metadata(modelname)
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
-        return handler(method='predict', data=X, meta=meta, store=self.model_store, rName=rName,
-            tracking=self.tracking, **kwargs)
+        return handler(
+            method='predict', data=X, meta=meta, store=self.model_store, rName=rName, tracking=self.tracking, **kwargs
+        )
 
     def fit(self, modelname, xName, yName=None, rName=None, **kwargs):
         # make this work as a model backend too
@@ -139,8 +142,9 @@ class VirtualObjectBackend(BaseDataBackend):
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
         y = self.data_store.get(yName) if yName else None
-        return handler(method='fit', data=(X, y), meta=meta, store=self.model_store, rName=rName,
-            tracking=self.tracking, **kwargs)
+        return handler(
+            method='fit', data=(X, y), meta=meta, store=self.model_store, rName=rName, tracking=self.tracking, **kwargs
+        )
 
     def score(self, modelname, xName, yName=None, rName=None, **kwargs):
         # make this work as a model backend too
@@ -148,8 +152,15 @@ class VirtualObjectBackend(BaseDataBackend):
         handler = self._ensure_handler_instance(self.get(modelname))
         X = self.data_store.get(xName)
         y = self.data_store.get(yName) if yName else None
-        return handler(method='score', data=(X, y), meta=meta, store=self.model_store, rName=rName,
-            tracking=self.tracking, **kwargs)
+        return handler(
+            method='score',
+            data=(X, y),
+            meta=meta,
+            store=self.model_store,
+            rName=rName,
+            tracking=self.tracking,
+            **kwargs,
+        )
 
     def run(self, scriptname, *args, **kwargs):
         # run as a script
@@ -179,8 +190,15 @@ class VirtualObjectBackend(BaseDataBackend):
         """
         meta = self.model_store.metadata(modelname)
         handler = self._ensure_handler_instance(self.get(modelname))
-        return handler(method='reduce', data=results, meta=meta, store=self.model_store, rName=rName,
-            tracking=self.tracking, **kwargs)
+        return handler(
+            method='reduce',
+            data=results,
+            meta=meta,
+            store=self.model_store,
+            rName=rName,
+            tracking=self.tracking,
+            **kwargs,
+        )
 
 
 def virtualobj(fn):
@@ -213,6 +231,7 @@ class VirtualObjectHandler(object):
     """
     Object-oriented API for virtual object functions
     """
+
     _omega_virtual = True
 
     def _vobj_call_map(self):
@@ -273,9 +292,11 @@ class _DillDip:
         #    obj = obj()
         self._check(obj)
         # FIXME respect as_source before _dill_main
-        data = (self._dill_main(obj, **dill_kwargs) or
-                self._dill_types_or_function(obj, as_source=as_source, **dill_kwargs) or
-                self._dill_dill(obj, **dill_kwargs))
+        data = (
+            self._dill_main(obj, **dill_kwargs)
+            or self._dill_types_or_function(obj, as_source=as_source, **dill_kwargs)
+            or self._dill_dill(obj, **dill_kwargs)
+        )
         return data
 
     def loads(self, data):
@@ -302,7 +323,8 @@ class _DillDip:
         freevars = [n for n in set(freevars) if n not in dir(builtins)]
         if len(freevars):
             warnings.warn(
-                f'The {repr(obj)} module references {freevars}, this may lead to errors at runtime; import/declare all variables within method/function scope')
+                f'The {repr(obj)} module references {freevars}, this may lead to errors at runtime; import/declare all variables within method/function scope'
+            )
 
     def _dill_dill(self, obj, **dill_kwargs):
         # fallback to standard dill
@@ -326,10 +348,12 @@ class _DillDip:
         try:
             # FIXME: include python version
             source = dill.source.getsource(obj, lstrip=True)
-            source_obj = {'__dipped__': self.__calories,
-                          'source': ''.join(source),
-                          'name': getattr(obj, '__name__'),
-                          '__dict__': getattr(obj, '__dict__', {})}
+            source_obj = {
+                '__dipped__': self.__calories,
+                'source': ''.join(source),
+                'name': getattr(obj, '__name__'),
+                '__dict__': getattr(obj, '__dict__', {}),
+            }
         except:
             source_obj = {}
         else:
@@ -356,6 +380,7 @@ class _DillDip:
 
     def _dynamic_compile(self, obj, module='__main__'):
         from omegaml.backends.genai import GenAIModelHandler, virtual_genai
+
         # re-compile source obj in __main__
         if self.isdipped(obj):
             # FIXME and check python version; if not the same don't load the dill object (it may load but still not be executable)
@@ -368,11 +393,13 @@ class _DillDip:
                     return obj
             source, data = obj.get('source'), obj.get('__dict__', {})
             mod = types.ModuleType(module)
-            mod.__dict__.update({'__compiling__': True,
-                                 'virtualobj': virtualobj,
-                                 'virtual_genai': virtual_genai,
-                                 'VirtualObjectHandler': VirtualObjectHandler,
-                                 'GenAIModelHandler': GenAIModelHandler})
+            mod.__dict__.update({
+                '__compiling__': True,
+                'virtualobj': virtualobj,
+                'virtual_genai': virtual_genai,
+                'VirtualObjectHandler': VirtualObjectHandler,
+                'GenAIModelHandler': GenAIModelHandler,
+            })
             sys.modules[module] = mod
             code = compile(source, '<string>', 'exec')
             exec(code, mod.__dict__)

@@ -49,6 +49,3 @@ class CliModelsTest(CliTestScenarios, OmegaTestMixin, TestCase):
         self.assertLogContains('info', expected)
         expected = self.pretend_log('"name": "reg"')
         self.assertLogContains('info', expected)
-
-
-

@@ -26,7 +26,6 @@ else:
     from mlflow.exceptions import MlflowException
     import mlflow
 
-
     @unittest.skipUnless(module_available('mlflow'), 'mlflow not available')
     class TestMLFlowModels(OmegaTestMixin, TestCase):
         @classmethod
@@ -48,7 +47,7 @@ else:
             self._enable_mlflow_exit_handling()
 
         def test_save_mlflow_saved_model_path(self):
-            """ test deploying a model saved by MLflow, from path """
+            """test deploying a model saved by MLflow, from path"""
             import mlflow
 
             model_path = os.path.join(omegaml.defaults.OMEGA_TMP, 'mymodel')
@@ -70,7 +69,7 @@ else:
             assert_array_equal(yhat_rt, yhat_direct)
 
         def test_save_mlflow_saved_model_file(self):
-            """ test deploying model saved by MLFlow, by file """
+            """test deploying model saved by MLFlow, by file"""
             import mlflow
 
             model_path = os.path.join(omegaml.defaults.OMEGA_TMP, 'mymodel')
@@ -83,8 +82,7 @@ else:
 
             om = self.om
             # test multiple ways of storing
-            for fn in ('mlflow://' + os.path.join(model_path, 'MLmodel'),
-                       'mlflow://' + model_path):
+            for fn in ('mlflow://' + os.path.join(model_path, 'MLmodel'), 'mlflow://' + model_path):
                 # store with just the MLmodel file as a reference, no kind necessary
                 om.models.drop('mymodel', force=True)
                 meta = om.models.put(fn, 'mymodel')
@@ -97,7 +95,7 @@ else:
                 assert_array_equal(yhat_rt, yhat_direct)
 
         def test_save_mlflow_pyfunc_model(self):
-            """ test deploying a custom MLFlow PythonModel"""
+            """test deploying a custom MLFlow PythonModel"""
             import mlflow
 
             class MyModel(mlflow.pyfunc.PythonModel):
@@ -116,7 +114,7 @@ else:
             assert_array_equal(yhat_rt, reshaped(yhat_direct))
 
         def test_inferred_model_flavor(self):
-            """ test deploying an arbitrary model by inferring MLFlow flavor """
+            """test deploying an arbitrary model by inferring MLFlow flavor"""
             import mlflow
 
             om = self.om
@@ -135,7 +133,7 @@ else:
                 self.fail('saving the same model twice should not raise error')
 
         def test_save_mlflow_model_run(self):
-            """ test deploying an MLModel from a tracking server URI """
+            """test deploying an MLModel from a tracking server URI"""
             import mlflow
 
             mlflow.set_tracking_uri(self.mlflow_tracking_db)
@@ -146,9 +144,9 @@ else:
                 X = pd.Series(range(0, 10))
                 Y = pd.Series(X) * 2 + 3
                 model.fit(reshaped(X), reshaped(Y))
-            mlflow.sklearn.log_model(sk_model=model,
-                                     artifact_path='sklearn-model',
-                                     registered_model_name='sklearn-model')
+            mlflow.sklearn.log_model(
+                sk_model=model, artifact_path='sklearn-model', registered_model_name='sklearn-model'
+            )
 
             # simulate a new session on another device (tracking URI comes from repo)
             mlflow.set_tracking_uri(None)
@@ -165,7 +163,7 @@ else:
             assert_array_equal(yhat_rt, yhat_direct)
 
         def test_save_mlflow_model_run_file_tracking(self):
-            """ test deploying an MLModel from a tracking URI using file path """
+            """test deploying an MLModel from a tracking URI using file path"""
             import mlflow
 
             om = self.om
@@ -182,6 +180,7 @@ else:
         @classmethod
         def _clean_mlruns(self):
             from mlflow.store import tracking
+
             mlruns_path = Path(__file__).parent / tracking.DEFAULT_LOCAL_FILE_AND_ARTIFACT_PATH
             shutil.rmtree(mlruns_path, ignore_errors=True)
             mlruns_path.mkdir(parents=True)

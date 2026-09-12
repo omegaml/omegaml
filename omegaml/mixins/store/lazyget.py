@@ -20,6 +20,7 @@ class LazyGetMixin:
 
             mdf = om.datasets.get('foo#rows:start=1,end=10')
     """
+
     # requires a trailing ; to work in all cases, see https://regex101.com/r/lYeKAw/1
     ops_pattern = re.compile(r"(?P<name>.*)#(?P<opspec>.*?);(.*)$")
 

@@ -4,18 +4,18 @@ implements REST API resource helpers to process async results (promises)
 AsyncResponseMixin - a mixin to enable a given Resource to return actual and async results, from the same code
 AsyncTaskResourceMixin - a mixin to enable the TaskResource to return status information and resolve results given a task id
 """
+
 from http import HTTPStatus
 
 import celery
 import flask
 from celery.result import AsyncResult, EagerResult
-from flask import request, make_response
+from flask import make_response, request
 from werkzeug.exceptions import NotFound
 
 EAGER_RESULTS = {}
 
-truefalse = lambda v: (v if isinstance(v, bool) else
-                       any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
+truefalse = lambda v: v if isinstance(v, bool) else any(str(v).lower().startswith(c) for c in ('y', 't', '1'))
 
 
 class AsyncResponseMixin:
@@ -88,6 +88,7 @@ class AsyncResponseMixin:
             result_uri = '/api/task/{id}/result'
 
     """
+
     # Flask Restplus Resource adapter
     result_uri = '/task/{id}/result'
 
@@ -95,23 +96,23 @@ class AsyncResponseMixin:
         # inline with we do not use x-async https://tools.ietf.org/html/rfc6648
         # note in Flask request headers are always as-is and lower-case
         # see https://stackoverflow.com/a/57562733/890242
-        self.is_async = (truefalse(request.args.get('async', False)) or
-                         truefalse(request.headers.get('async', False)))
+        self.is_async = truefalse(request.args.get('async', False)) or truefalse(request.headers.get('async', False))
         return super().dispatch_request(*args, **kwargs)
 
     @property
     def resource_uri(self):
         return flask.request.path
 
-    def create_maybe_async_response(self, result, status=None, headers=None, async_body=None, cookies=None,
-                                    request=None, **kwargs):
+    def create_maybe_async_response(
+        self, result, status=None, headers=None, async_body=None, cookies=None, request=None, **kwargs
+    ):
         # request is forwarded to self.response(, request=request) for subclassing purpose, see self.response()
         if isinstance(result, AsyncResult):
             if isinstance(result, EagerResult):
                 EAGER_RESULTS[result.id] = result
             headers = headers or {}
             headers.update({
-                'Location': self.result_uri.format(id=result.id)
+                'Location': self.result_uri.format(id=result.id),
             })
             body = async_body or {}
             body.update({
@@ -196,6 +197,7 @@ class AsyncTaskResourceMixin:
           Here the 'resource_uri' is provided in the request payload, referencing the original resource route used to generate
           the async result (i.e. by your SomeResource). The provided resource method will be called as method(value, **kwargs).
     """
+
     celeryapp = celery.current_app
     is_async = False  # AsyncTaskResource does not support async processing by itself
 
@@ -244,7 +246,7 @@ class AsyncTaskResourceMixin:
         result = {
             'task_id': taskid,
             'status': status,
-            'response': data
+            'response': data,
         }
         return result
 

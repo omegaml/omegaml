@@ -1,5 +1,5 @@
 import warnings
-from itertools import tee, islice
+from itertools import islice, tee
 from pathlib import Path
 from types import GeneratorType, NoneType
 
@@ -33,10 +33,13 @@ class VectorStore:
     def load(self, name, store=None, vector_size=None, embedding_model=None, index_cls=None, **kwargs):
         index_cls = index_cls or DocumentIndex
         embedding_model = embedding_model if embedding_model is not None else SimpleEmbeddingModel()
-        self.index = index_cls(name,
+        self.index = index_cls(
+            name,
             store=store,
             vector_size=vector_size,
-            embedding_model=embedding_model, **kwargs)
+            embedding_model=embedding_model,
+            **kwargs,
+        )
         return self
 
     def list(self, name):
@@ -59,8 +62,21 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
     KIND = 'vector.conx'
     PROMOTE = 'metadata'
 
-    def get(self, name, query=None, document=None, collection=None, vector_size=None, embedding_model=None,
-            raw=False, top=1, distance=None, max_distance=None, filter=None, **kwargs):
+    def get(
+        self,
+        name,
+        query=None,
+        document=None,
+        collection=None,
+        vector_size=None,
+        embedding_model=None,
+        raw=False,
+        top=1,
+        distance=None,
+        max_distance=None,
+        filter=None,
+        **kwargs,
+    ):
         filter = filter or kwargs
         meta = self.data_store.metadata(name)
         document = query or document
@@ -71,17 +87,30 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
             real_embedding_model = self.model_store.get(embedding_model or model)
         else:
             real_embedding_model = embedding_model
-        self.vector_store: VectorStore = self.load(name, store=self, vector_size=vector_size,
-            embedding_model=real_embedding_model)
+        self.vector_store: VectorStore = self.load(
+            name, store=self, vector_size=vector_size, embedding_model=real_embedding_model
+        )
         if document is not None:
-            data = self.vector_store.index.retrieve(document, top=top, distance=distance, max_distance=max_distance,
-                filter=filter)
+            data = self.vector_store.index.retrieve(
+                document, top=top, distance=distance, max_distance=max_distance, filter=filter
+            )
             return data
         return self.vector_store.index
 
-    def put(self, obj, name, collection=None, vector_size=None, embedding_model=None,
-            attributes=None, append=True, loader=None, chunker=None, **kwargs):
-        """ Create a vector store, or insert a document into an existing store
+    def put(
+        self,
+        obj,
+        name,
+        collection=None,
+        vector_size=None,
+        embedding_model=None,
+        attributes=None,
+        append=True,
+        loader=None,
+        chunker=None,
+        **kwargs,
+    ):
+        """Create a vector store, or insert a document into an existing store
 
         Args:
             obj (str|list|tuple|dict): if an object by <name> does not exist yet, pass the
@@ -106,14 +135,10 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
         if meta is None:
             url = obj
             collection = collection or self._default_collection(name)
-            meta = self._put_as_connection(url, name, collection=collection,
-                attributes=attributes, **kwargs)
+            meta = self._put_as_connection(url, name, collection=collection, attributes=attributes, **kwargs)
             # update kind_meta to reflect all collections stored through this vectordb
             collections = meta.kind_meta.setdefault('collections', {})
-            collections[collection] = {
-                'vector_size': vector_size,
-                'embedding_model': str(embedding_model),
-            }
+            collections[collection] = {'vector_size': vector_size, 'embedding_model': str(embedding_model)}
         elif meta is not None:
             if isinstance(embedding_model, (NoneType, str)):
                 collection, vector_size, model = self._get_collection(name)
@@ -121,9 +146,15 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
             else:
                 real_embedding_model = embedding_model
                 vector_size = vector_size or getattr(real_embedding_model, 'dimensions', None)
-            self._put_via(name, obj, collection=collection,
-                vector_size=vector_size, embedding_model=real_embedding_model,
-                loader=loader, chunker=chunker)
+            self._put_via(
+                name,
+                obj,
+                collection=collection,
+                vector_size=vector_size,
+                embedding_model=real_embedding_model,
+                loader=loader,
+                chunker=chunker,
+            )
         else:
             raise ValueError('type {} is not supported by {}'.format(type(obj), self.KIND))
         meta.attributes.update(attributes) if attributes else None
@@ -139,24 +170,18 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
             warnings.warn(text)
         return True if obj is not None else super().drop(name, force=force, **kwargs)
 
-    def _put_as_connection(self, url, name, attributes=None,
-                           collection=None, **kwargs):
-        kind_meta = {
-            'connection': str(url),
-            'collection': collection,
-            'kwargs': kwargs,
-        }
+    def _put_as_connection(self, url, name, attributes=None, collection=None, **kwargs):
+        kind_meta = {'connection': str(url), 'collection': collection, 'kwargs': kwargs}
         meta = self.data_store.metadata(name)
         if meta is not None:
             meta.kind_meta.update(kind_meta)
         else:
-            meta = self.data_store.make_metadata(name, self.KIND,
-                kind_meta=kind_meta,
-                attributes=attributes)
+            meta = self.data_store.make_metadata(name, self.KIND, kind_meta=kind_meta, attributes=attributes)
         return meta.save()
 
-    def _put_via(self, name, obj, collection=None, vector_size=None, embedding_model=None, loader=None, chunker=None,
-                 **kwargs):
+    def _put_via(
+        self, name, obj, collection=None, vector_size=None, embedding_model=None, loader=None, chunker=None, **kwargs
+    ):
         meta = self.data_store.metadata(name)
         collection = collection or meta.kind_meta.get('collection') or self._default_collection(name)
         vector_size = vector_size or meta.kind_meta['collections'][collection]['vector_size']
@@ -182,7 +207,7 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
 
 
 class DocumentIndex:
-    """ Abstract implementation for a document index
+    """Abstract implementation for a document index
 
     The DocumentIndex is a high-level abstraction for an embedding-based document index.
     It takes an embedding model and a vector store as it's base
@@ -220,14 +245,15 @@ class DocumentIndex:
         if isinstance(document, str):
             assert self.model is not None, "require embedding model to query by text"
             document = self.model.embed(document)[0]
-        return self.store.find_similar(self.name, document,
-            top=top, filter=filter, distance=distance, max_distance=max_distance, **kwargs)
+        return self.store.find_similar(
+            self.name, document, top=top, filter=filter, distance=distance, max_distance=max_distance, **kwargs
+        )
 
     def clear(self, filter=None, **kwargs):
         self.store.delete(self.name, filter=filter, **kwargs)
 
     def list(self):
-        """ List all documents in the index """
+        """List all documents in the index"""
         return self.store.list(self.name)
 
     def delete(self, name, obj=None, filter=None, **kwargs):
@@ -257,13 +283,15 @@ class DocumentIndex:
             # text, attributes
             'text_tuple': lambda obj: isinstance(obj, (tuple, list)) and len(obj) > 1 and isinstance(probe[1], dict),
             # chunks, embeddings[, attributes]
-            'embedded_tuple': lambda obj: isinstance(obj, (list, tuple)) and len(obj) > 1 and isinstance(probe[1],
-                list),
+            'embedded_tuple': lambda obj: (
+                isinstance(obj, (list, tuple)) and len(obj) > 1 and isinstance(probe[1], list)
+            ),
             # dict(chunks=, embeddings=, attributes=None)
             'embedded_dict': lambda obj: isinstance(obj, dict) and 'chunks' in obj and 'embeddings' in obj,
             # list, tuple, generator of str|list|tuple|dict
-            'documents': lambda obj: isinstance(obj, (list, tuple, GeneratorType)) and isinstance(probe[0],
-                (str, list, tuple)),
+            'documents': lambda obj: (
+                isinstance(obj, (list, tuple, GeneratorType)) and isinstance(probe[0], (str, list, tuple))
+            ),
         }
         for k, testfn in TYPES.items():
             if testfn(obj):
@@ -287,8 +315,7 @@ class DocumentIndex:
             self._index_chunks(chunks, embeddings, attributes)
         elif doc_type == 'embedded_dict':
             # dict(chunks=, embeddings=, attribute=)
-            self._index_chunks(document['chunks'], document['embeddings'],
-                document.get('attributes'))
+            self._index_chunks(document['chunks'], document['embeddings'], document.get('attributes'))
         elif doc_type == 'text_tuple':
             # (text, attributes)
             assert self.model is not None, "need an embedding model to insert raw text"

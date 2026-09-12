@@ -36,11 +36,13 @@ MOCK_DATA = {
 # calculate and expose latest version
 from sphinx_polyversion.git import refs_by_type
 
+
 def root_data(driver: DefaultDriver):
     revisions = driver.builds
-    tags, branches  = refs_by_type(revisions)
+    tags, branches = refs_by_type(revisions)
     latest = max(tags or branches)
     return {"revisions": revisions, "latest": latest}
+
 
 # Load overrides read from commandline to global scope
 apply_overrides(globals())

@@ -32,10 +32,7 @@ def splinter_browser(context):
         # capabilities are no passed through options https://stackoverflow.com/q/76622916/890242
         options.set_capability('browserName', 'chrome')
         options.add_argument('--window-size=1024,768')
-        context.browser = Browser('remote',
-            browser='Chrome',
-            command_executor=selenium_address,
-            options=options)
+        context.browser = Browser('remote', browser='Chrome', command_executor=selenium_address, options=options)
     else:
         # start local browser
         if headless:
@@ -59,6 +56,7 @@ def splinter_browser(context):
 def before_all(context):
     # setup omegaml
     import omegaml as om
+
     use_fixture(splinter_browser, context)
     # set url and admin password
     context.web_url = os.environ.get('OMEGA_URL', 'http://localhost:5000')
@@ -83,6 +81,7 @@ def after_step(context, step):
         # -- ENTER DEBUGGER: Zoom in on failure location.
         # NOTE: Use IPython debugger, same for pdb (basic python debugger).
         import ipdb
+
         ipdb.post_mortem(step.exc_traceback)
     # also copy notebooks for debugging
     for nbname in context.om.jobs.list():
@@ -108,4 +107,5 @@ def after_scenario(context, scenario):
     except:
         if context.debug:
             import ipdb
+
             ipdb.post_mortem()

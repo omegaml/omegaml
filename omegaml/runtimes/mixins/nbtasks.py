@@ -1,5 +1,6 @@
-import pandas as pd
 import logging
+
+import pandas as pd
 
 # code to insert into first and last cell of generated jobs
 init_cell_code = """
@@ -14,6 +15,7 @@ om.runtime.job(_jobdata['task_name'])._mark_status('finished')
 """
 
 logger = logging.getLogger(__name__)
+
 
 class JobTasks:
     """
@@ -239,15 +241,15 @@ class JobTasks:
             if om.jobs.metadata(task_name):
                 om.jobs.drop(task_name, force=True)
             # store setup of omegaml in main.nb
-            job = dict(param=job,
-                       job_id=job_id,
-                       task_group=task_group,
-                       task_name=task_name)
+            job = {
+                'param': job,
+                'job_id': job_id,
+                'task_group': task_group,
+                'task_name': task_name,
+            }
             valid_auth = om.runtime.auth and om.runtime.auth.userid
-            auth = (om.runtime.auth.__dict__
-                    if valid_auth else dict(userid='', apikey=''))
-            code = init_cell_code.format(job=job,
-                                         **auth)
+            auth = om.runtime.auth.__dict__ if valid_auth else {'userid': '', 'apikey': ''}
+            code = init_cell_code.format(job=job, **auth)
             init_cell = nbv4.new_code_cell(source=code)
             done_cell = nbv4.new_code_cell(source=done_cell_code)
             main_nb['cells'].insert(0, init_cell)

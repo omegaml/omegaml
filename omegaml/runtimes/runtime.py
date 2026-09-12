@@ -42,6 +42,7 @@ class CeleryTask(object):
 
     def _apply_auth(self, args, kwargs, celery_kwargs):
         from omegaml.client.auth import AuthenticationEnv
+
         AuthenticationEnv.active().taskauth(args, kwargs, celery_kwargs)
 
     def apply_async(self, args=None, kwargs=None, **celery_kwargs):
@@ -70,8 +71,7 @@ class CeleryTask(object):
         return self.apply_async(args=args, kwargs=kwargs)
 
     def signature(self, args=None, kwargs=None, immutable=False, **celery_kwargs):
-        """ return the task signature with all kwargs and celery_kwargs applied
-        """
+        """return the task signature with all kwargs and celery_kwargs applied"""
         self._apply_kwargs(kwargs, celery_kwargs)
         sig = self.task.signature(args=args, kwargs=kwargs, **celery_kwargs, immutable=immutable)
         return sig
@@ -125,7 +125,7 @@ class OmegaRuntime(object):
         return self.celeryapp.conf['CELERY_ALWAYS_EAGER']
 
     def mode(self, local=None, logging=None):
-        """ specify runtime modes
+        """specify runtime modes
 
         Args:
             local (bool): if True, all execution will run locally, else on
@@ -186,8 +186,8 @@ class OmegaRuntime(object):
 
     def _client_is_pure_python(self):
         try:
-            import pandas as pd
             import numpy as np
+            import pandas as pd
             import sklearn
         except Exception as e:
             logging.getLogger().info(e)
@@ -203,8 +203,7 @@ class OmegaRuntime(object):
             return dict(*value)
         return value
 
-    def require(self, label=None, always=False, routing=None, task=None,
-                logging=None, override=True, **kwargs):
+    def require(self, label=None, always=False, routing=None, task=None, logging=None, override=True, **kwargs):
         """
         specify requirements for the task execution
 
@@ -227,7 +226,7 @@ class OmegaRuntime(object):
 
         See Also:
             - CeleryTask.apply_async
-            - celery.app.task.Task.apply_async, specifically the kwargs= and **options  
+            - celery.app.task.Task.apply_async, specifically the kwargs= and **options
 
         Returns:
             self
@@ -247,10 +246,14 @@ class OmegaRuntime(object):
         if task or routing:
             if not override:
                 # override not allowed, remove previously existing
-                ex_task = dict(**self._task_default_kwargs['task'],
-                               **self._require_kwargs['task'])
-                ex_routing = dict(**self._task_default_kwargs['routing'],
-                                  **self._require_kwargs['routing'])
+                ex_task = dict(
+                    **self._task_default_kwargs['task'],
+                    **self._require_kwargs['task'],
+                )
+                ex_routing = dict(
+                    **self._task_default_kwargs['routing'],
+                    **self._require_kwargs['routing'],
+                )
                 exists_or_none = lambda k, d: k not in d or d.get(k, False) is None
                 task = {k: v for k, v in task.items() if exists_or_none(k, ex_task)}
                 routing = {k: v for k, v in routing.items() if exists_or_none(k, ex_routing)}
@@ -282,6 +285,7 @@ class OmegaRuntime(object):
             OmegaModelProxy
         """
         from omegaml.runtimes.proxies.modelproxy import OmegaModelProxy
+
         self.require(**self._sanitize_require(require)) if require else None
         return OmegaModelProxy(modelname, runtime=self)
 
@@ -318,7 +322,7 @@ class OmegaRuntime(object):
         return OmegaScriptProxy(scriptname, runtime=self)
 
     def experiment(self, experiment, provider=None, implied_run=True, recreate=False, **tracker_kwargs):
-        """ set the tracking backend and experiment
+        """set the tracking backend and experiment
 
         Args:
             experiment (str): the name of the experiment
@@ -332,9 +336,11 @@ class OmegaRuntime(object):
             OmegaTrackingProxy
         """
         from omegaml.runtimes.proxies.trackingproxy import OmegaTrackingProxy
+
         # tracker implied_run means we are using the currently active run, i.e. with block will call exp.start()
-        tracker = OmegaTrackingProxy(experiment, provider=provider, runtime=self, implied_run=implied_run,
-                                     recreate=recreate, **tracker_kwargs)
+        tracker = OmegaTrackingProxy(
+            experiment, provider=provider, runtime=self, implied_run=implied_run, recreate=recreate, **tracker_kwargs
+        )
         return tracker
 
     def task(self, name, **kwargs):
@@ -357,7 +363,7 @@ class OmegaRuntime(object):
 
     @property
     def tasks(self):
-        """ return registered task names
+        """return registered task names
 
         .. versionadded:: NEXT
         """
@@ -365,12 +371,12 @@ class OmegaRuntime(object):
 
     def result(self, task_id, wait=True):
         from celery.result import AsyncResult
+
         promise = AsyncResult(task_id, app=self.celeryapp)
         return promise.get() if wait else promise
 
     def settings(self, require=None):
-        """ return the runtimes's cluster settings
-        """
+        """return the runtimes's cluster settings"""
         self.require(**require) if require else None
         return self.task('omegaml.tasks.omega_settings').delay().get()
 
@@ -395,7 +401,7 @@ class OmegaRuntime(object):
         return promise.get(timeout=timeout) if wait else promise
 
     def enable_hostqueues(self):
-        """ enable a worker-specific queue on every worker host
+        """enable a worker-specific queue on every worker host
 
         Returns:
             list of labels (one entry for each hostname)
@@ -412,7 +418,7 @@ class OmegaRuntime(object):
         return queues
 
     def workers(self):
-        """ list of workers
+        """list of workers
 
         Returns:
             dict of workers => list of active tasks
@@ -420,12 +426,19 @@ class OmegaRuntime(object):
         See Also:
             celery Inspect.active()
         """
-        local_worker = {gethostname(): [{'name': 'local', 'is_local': True}]}
+        local_worker = {
+            gethostname(): [
+                {
+                    'name': 'local',
+                    'is_local': True,
+                }
+            ]
+        }
         celery_workers = self._inspect.active() or {}
         return dict_merge(local_worker, celery_workers)
 
     def queues(self):
-        """ list queues
+        """list queues
 
         Returns:
             dict of workers => list of queues
@@ -438,16 +451,15 @@ class OmegaRuntime(object):
         return dict_merge(local_q, celery_qs)
 
     def labels(self):
-        """ list available labels
+        """list available labels
 
         Returns:
             dict of workers => list of lables
         """
-        return {worker: [q.get('name') for q in queues]
-                for worker, queues in self.queues().items()}
+        return {worker: [q.get('name') for q in queues] for worker, queues in self.queues().items()}
 
     def stats(self):
-        """ worker statistics
+        """worker statistics
 
         Returns:
             dict of workers => dict of stats
@@ -458,7 +470,7 @@ class OmegaRuntime(object):
         return self._inspect.stats()
 
     def status(self):
-        """ current cluster status
+        """current cluster status
 
         This collects key information from .labels(), .stats() and the latest
         worker heartbeat. Note that loadavg is only available if the worker has
@@ -486,7 +498,9 @@ class OmegaRuntime(object):
                 'uptime': stats[worker]['uptime'],
                 'processed': stats[worker]['total'],
                 'queues': labels[worker],
-            } for worker in labels if worker in stats
+            }
+            for worker in labels
+            if worker in stats
         }
         return snapshot
 
@@ -495,7 +509,7 @@ class OmegaRuntime(object):
         return CeleryEventStream(self.celeryapp)
 
     def callback(self, script_name, always=False, **kwargs):
-        """ Add a callback to a registered script
+        """Add a callback to a registered script
 
         The callback will be triggered upon successful or failed
         execution of the runtime tasks. The script syntax is::
@@ -513,16 +527,26 @@ class OmegaRuntime(object):
         Returns:
             self
         """
-        success_sig = (self.script(script_name)
-                       .task(as_callback=True)
-                       .signature(args=['SUCCESS', script_name],
-                                  kwargs=kwargs,
-                                  immutable=False))
-        error_sig = (self.script(script_name)
-                     .task(as_callback=True)
-                     .signature(args=['ERROR', script_name],
-                                kwargs=kwargs,
-                                immutable=False))
+        success_sig = (
+            self
+            .script(script_name)
+            .task(as_callback=True)
+            .signature(
+                args=['SUCCESS', script_name],
+                kwargs=kwargs,
+                immutable=False,
+            )
+        )
+        error_sig = (
+            self
+            .script(script_name)
+            .task(as_callback=True)
+            .signature(
+                args=['ERROR', script_name],
+                kwargs=kwargs,
+                immutable=False,
+            )
+        )
 
         if always:
             self._task_default_kwargs['routing']['link'] = success_sig
@@ -545,7 +569,7 @@ class CeleryEventStream:
     def handle(self, event):
         self.buffer.append(event)
         if len(self.buffer) > self.max_size:
-            self.buffer = self.buffer[-1 * self.max_size:]
+            self.buffer = self.buffer[-1 * self.max_size :]
 
     def listen(self, handlers=None, limit=None, timeout=None):
         # Connect to the broker using Kombu (Celery's underlying messaging system)
@@ -564,8 +588,8 @@ class CeleryEventStream:
 
 
 # apply mixins
-from omegaml.runtimes.mixins.taskcanvas import canvas_chain, canvas_group, canvas_chord
 from omegaml.runtimes.mixins.swagger import SwaggerGenerator
+from omegaml.runtimes.mixins.taskcanvas import canvas_chain, canvas_chord, canvas_group
 
 OmegaRuntime.sequence = canvas_chain
 OmegaRuntime.parallel = canvas_group

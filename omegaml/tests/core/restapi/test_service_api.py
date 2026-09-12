@@ -38,7 +38,7 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         return url
 
     def test_service_run_script(self):
-        """ a service with no specific input and output requirements """
+        """a service with no specific input and output requirements"""
         # essentially just a script, but run with service semantics
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
@@ -47,7 +47,10 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster
-        resp = self.client.post(self.url('service/helloworld', query='text=foo'), json={'foo': 'bar'})
+        resp = self.client.post(
+            self.url('service/helloworld', query='text=foo'),
+            json={'foo': 'bar'},
+        )
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         # note the json payload is not sent back, because it is not passed as **kwargs but as part of *args
@@ -55,7 +58,7 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         self.assertEqual(data, expected)
 
     def test_service_script_signature_valid(self):
-        """ a service with defined data type """
+        """a service with defined data type"""
         # essentially just a script, but run with service semantics
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloservice'))
@@ -73,7 +76,10 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
 
         om.scripts.link_datatype('helloservice', X=MyInputSchema, result=MyResultSchema)
         # can we get documentation that matches the types
-        resp = self.client.get(self.url('helloservice', action='doc', query='text=foo'), json={'factor': 5.0})
+        resp = self.client.get(
+            self.url('helloservice', action='doc', query='text=foo'),
+            json={'factor': 5.0},
+        )
         self.assertHttpOK(resp)
         specs = resp.json
         self.assertIn('paths', specs)
@@ -82,14 +88,17 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         self.assertIn('helloservice_X', specs['definitions'])
         self.assertIn('helloservice_result', specs['definitions'])
         # run the script
-        resp = self.client.post(self.url('helloservice', query='text=foo'), json={'factor': 5.0})
+        resp = self.client.post(
+            self.url('helloservice', query='text=foo'),
+            json={'factor': 5.0},
+        )
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         expected = {'b': [0.0, 5.0, 10.0, 15.0, 20.0], 'a': [0.0, 5.0, 10.0, 15.0, 20.0]}
         self.assertEqual(data, expected)
 
     def test_service_script_signature_invalid(self):
-        """ a service with defined data type """
+        """a service with defined data type"""
         # essentially just a script, but run with service semantics
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloservice'))
@@ -116,18 +125,23 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         self.assertIn('helloservice_X', specs['definitions'])
         self.assertIn('helloservice_result', specs['definitions'])
         # run the script
-        resp = self.client.post(self.url('service/helloservice', query='text=foo'), json={'xfactor': 5.0})
+        resp = self.client.post(
+            self.url('service/helloservice', query='text=foo'),
+            json={'xfactor': 5.0},
+        )
         self.assertEqual(resp.status_code, 400)
-        expected = {'message': "{'script': 'service/helloservice', 'args': ({'xfactor': 5.0},), "
-                               "'kwargs': {'text': 'foo', 'xfactor': 5.0, 'pure_python': False}, "
-                               '\'result\': "ValidationError({\'xfactor\': [\'Unknown '
-                               'field.\']})", \'runtimes\': 0.028303, \'started\': '
-                               "'2022-09-04T12:59:41.180949', 'ended': "
-                               "'2022-09-04T12:59:41.209252'}"}
+        expected = {
+            'message': "{'script': 'service/helloservice', 'args': ({'xfactor': 5.0},), "
+            "'kwargs': {'text': 'foo', 'xfactor': 5.0, 'pure_python': False}, "
+            '\'result\': "ValidationError({\'xfactor\': [\'Unknown '
+            'field.\']},)", \'runtimes\': 0.028303, \'started\': '
+            "'2022-09-04T12:59:41.180949', 'ended': "
+            "'2022-09-04T12:59:41.209252'}"
+        }
         self.assertTrue('ValidationError' in resp.json['message'])
 
     def test_service_model_signature_invalid(self):
-        """ a service with defined data type """
+        """a service with defined data type"""
         # essentially just a script, but run with service semantics
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloservice'))
@@ -154,14 +168,19 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         self.assertIn('helloservice_X', specs['definitions'])
         self.assertIn('helloservice_result', specs['definitions'])
         # run the script
-        resp = self.client.post(self.url('service/helloservice', query='text=foo'), json={'xfactor': 5.0})
+        resp = self.client.post(
+            self.url('service/helloservice', query='text=foo'),
+            json={'xfactor': 5.0},
+        )
         self.assertEqual(resp.status_code, 400)
-        expected = {'message': "{'script': 'service/helloservice', 'args': ({'xfactor': 5.0},), "
-                               "'kwargs': {'text': 'foo', 'xfactor': 5.0, 'pure_python': False}, "
-                               '\'result\': "ValidationError({\'xfactor\': [\'Unknown '
-                               'field.\']})", \'runtimes\': 0.028303, \'started\': '
-                               "'2022-09-04T12:59:41.180949', 'ended': "
-                               "'2022-09-04T12:59:41.209252'}"}
+        expected = {
+            'message': "{'script': 'service/helloservice', 'args': ({'xfactor': 5.0},), "
+            "'kwargs': {'text': 'foo', 'xfactor': 5.0, 'pure_python': False}, "
+            '\'result\': "ValidationError({\'xfactor\': [\'Unknown '
+            'field.\']},)", \'runtimes\': 0.028303, \'started\': '
+            "'2022-09-04T12:59:41.180949', 'ended': "
+            "'2022-09-04T12:59:41.209252'}"
+        }
         self.assertTrue('ValidationError' in resp.json['message'])
 
     def test_service_run_virtualobj_script(self):
@@ -175,7 +194,10 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         # check myscript is actually deserialized by runtime
         myscript = None
         # run the script on the cluster
-        resp = self.client.post(self.url('service/myscript', action='run', query='text=foo'), json={'foo': 'bar'})
+        resp = self.client.post(
+            self.url('service/myscript', action='run', query='text=foo'),
+            json={'foo': 'bar'},
+        )
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         expected = {'data': {'foo': 'bar'}, 'method': 'run'}
@@ -210,33 +232,44 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         mymodel = None
         # run the script on the cluster
         # -- invalid response, expect validation error
-        resp = self.client.post(self.url('service/mymodel', action='predict', query='invalid=1'),
-                                json={'factor': 1.0})
+        resp = self.client.post(
+            self.url('service/mymodel', action='predict', query='invalid=1'),
+            json={'factor': 1.0},
+        )
         self.assertEqual(resp.status_code, 400)
         data = self.deserialize(resp)
         self.assertIn('ValidationError', str(data))
         # -- expected error (from exception)
-        resp = self.client.post(self.url('service/mymodel', action='predict', query='exception=1'),
-                                    json={'factor': 1.0})
+        resp = self.client.post(
+            self.url('service/mymodel', action='predict', query='exception=1'), json={'factor': 1.0}
+        )
         self.assertEqual(resp.status_code, 404)
         data = self.deserialize(resp)
         expected = {'message': 'error message'}
         self.assertEqual(data, expected)
         # -- expected error (from return value)
-        resp = self.client.post(self.url('service/mymodel', action='predict', query='error=1'),
-                                    json={'factor': 1.0})
+        resp = self.client.post(
+            self.url('service/mymodel', action='predict', query='error=1'),
+            json={'factor': 1.0},
+        )
         self.assertEqual(resp.status_code, 404)
         data = self.deserialize(resp)
         expected = {'message': 'error message'}
         self.assertEqual(data, expected)
         # -- valid response, expect response data
-        resp = self.client.post(self.url('service/mymodel', action='predict', query='text=foo'), json={'factor': 1.0})
+        resp = self.client.post(
+            self.url('service/mymodel', action='predict', query='text=foo'),
+            json={'factor': 1.0},
+        )
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         expected = {'a': [1.0], 'b': [2.0]}
         self.assertEqual(data, expected)
         # run again with invalid signature
-        resp = self.client.post(self.url('service/mymodel', action='predict', query='text=foo'), json={'xfactor': 1.0})
+        resp = self.client.post(
+            self.url('service/mymodel', action='predict', query='text=foo'),
+            json={'xfactor': 1.0},
+        )
         self.assertEqual(resp.status_code, 400)
         self.assertTrue('ValidationError' in resp.json['message'])
 
@@ -265,18 +298,27 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         mymodel = None
         # run the model on the cluster
         # -- invalid response, expect validation error
-        resp = self.client.post(self.url('service/mymodel', query='invalid=1'), json={'factor': 1.0})
+        resp = self.client.post(
+            self.url('service/mymodel', query='invalid=1'),
+            json={'factor': 1.0},
+        )
         self.assertEqual(resp.status_code, 400)
         data = self.deserialize(resp)
         self.assertIn('ValidationError', str(data))
         # -- valid response, expect response data
-        resp = self.client.post(self.url('service/mymodel'), json={'factor': 1.0})
+        resp = self.client.post(
+            self.url('service/mymodel'),
+            json={'factor': 1.0},
+        )
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         expected = {'a': 1, 'b': 2}
         self.assertEqual(data, expected)
         # run again with invalid signature
-        resp = self.client.post(self.url('service/mymodel', query='text=foo'), json={'xfactor': 1.0})
+        resp = self.client.post(
+            self.url('service/mymodel', query='text=foo'),
+            json={'xfactor': 1.0},
+        )
         self.assertEqual(resp.status_code, 400)
         self.assertTrue('ValidationError' in resp.json['message'])
 
@@ -305,7 +347,10 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         mymodel = None
         # run the model on the cluster
         # -- invalid input, expect validation error
-        resp = self.client.post(self.url('service/mymodel', query='invalid=1'), json={'factor': 1.0})
+        resp = self.client.post(
+            self.url('service/mymodel', query='invalid=1'),
+            json={'factor': 1.0},
+        )
         self.assertEqual(resp.status_code, 400)
         data = self.deserialize(resp)
         self.assertIn('ValidationError', str(data))
@@ -339,7 +384,10 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         # check mymodel is actually deserialized by runtime
         mymodel = None
         # run the script on the cluster
-        resp = self.client.post(self.url('service/mymodel', action='predict', query='text=foo'), json={'foo': 'bar'})
+        resp = self.client.post(
+            self.url('service/mymodel', action='predict', query='text=foo'),
+            json={'foo': 'bar'},
+        )
         self.assertHttpOK(resp)
         data = self.deserialize(resp)
         expected = {'data': [{'foo': 'bar'}], 'method': 'predict'}
@@ -353,8 +401,9 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster
-        resp = self.client.post(self.url('service/helloworld', action='run', query='text=foo'),
-                                headers=self._async_headers, json={})
+        resp = self.client.post(
+            self.url('service/helloworld', action='run', query='text=foo'), headers=self._async_headers, json={}
+        )
         resp = self._check_async(resp)
         self.assertHttpOK(resp)
         data = self.deserialize(resp)['response']
@@ -376,10 +425,9 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         # check mymodel is actually deserialized by runtime
         mymodel = None
         for status in (404, 401, 406):
-            resp = self.client.post(self.url('service/mymodel',
-                                             action='predict',
-                                             query=f'error=yes&status={status}'),
-                                    json={'foo': 'bar'})
+            resp = self.client.post(
+                self.url('service/mymodel', action='predict', query=f'error=yes&status={status}'), json={'foo': 'bar'}
+            )
             self.assertEqual(resp.status_code, status)
             data = self.deserialize(resp)
             expected = {'message': f'exception {status} raised'}
@@ -407,16 +455,19 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
 
         # single errors
         om.models.put(mymodel, 'mymodel')
-        om.models.link_datatype('mymodel', errors={
-            ErrorSchema401: 401,
-            ErrorSchema404: 404,
-            ErrorSchema406: 406,
-        })
+        om.models.link_datatype(
+            'mymodel',
+            errors={
+                ErrorSchema401: 401,
+                ErrorSchema404: 404,
+                ErrorSchema406: 406,
+            },
+        )
         for status in (404, 401, 406):
-            resp = self.client.post(self.url('service/mymodel',
-                                             action='predict',
-                                             query=f'error=yes&status={status}'),
-                                    json={'foo': 'bar'})
+            resp = self.client.post(
+                self.url('service/mymodel', action='predict', query=f'error=yes&status={status}'),
+                json={'foo': 'bar'},
+            )
             self.assertEqual(resp.status_code, status)
             data = self.deserialize(resp)
             expected = {'message': f'exception {status} raised'}
@@ -424,16 +475,19 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
 
         # multiple errors
         om.models.put(mymodel, 'mymodel')
-        om.models.link_datatype('mymodel', errors=[
-            ([ErrorSchema401], 401),
-            ([ErrorSchema404], 404),
-            ([ErrorSchema406], 406),
-        ])
+        om.models.link_datatype(
+            'mymodel',
+            errors=[
+                ([ErrorSchema401], 401),
+                ([ErrorSchema404], 404),
+                ([ErrorSchema406], 406),
+            ],
+        )
         for status in (404, 401, 406):
-            resp = self.client.post(self.url('service/mymodel',
-                                             action='predict',
-                                             query=f'error=yes&status={status}&many=1'),
-                                    json={'foo': 'bar'})
+            resp = self.client.post(
+                self.url('service/mymodel', action='predict', query=f'error=yes&status={status}&many=1'),
+                json={'foo': 'bar'},
+            )
             self.assertEqual(resp.status_code, status)
             data = self.deserialize(resp)
             expected = [{'message': f'exception {status} raised'}]

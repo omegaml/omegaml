@@ -6,7 +6,7 @@ nop = lambda *args, **kwargs: None
 
 
 class RequestCache:
-    """ provides caching for metadata during requests
+    """provides caching for metadata during requests
 
     While processing user requests, metadata are often queried several times for
     different attributes. To avoid repeatedly hitting the database, RequestCache

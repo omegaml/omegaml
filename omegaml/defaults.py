@@ -13,7 +13,7 @@ from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_pytest_runner.py', '_jb_unittest_runner.py'}
 cmd_args = (basename(v) for v in sys.argv)
-truefalse = lambda v: (v if isinstance(v, bool) else any(str(v).lower().startswith(c) for c in ('y', 't', '1')))
+truefalse = lambda v: v if isinstance(v, bool) else any(str(v).lower().startswith(c) for c in ('y', 't', '1'))
 is_cli_run = os.path.basename(sys.argv[0]) == 'om'
 is_test_run = truefalse(os.environ.get('OMEGA_TEST_MODE'))
 is_test_run |= len(set(test_runners) & set(cmd_args)) and 'omegaml-ce' in str(Path().cwd())
@@ -27,9 +27,9 @@ OMEGA_CONFIG_FILE = os.environ.get('OMEGA_CONFIG_FILE') or 'config.yml'
 OMEGA_TMP = os.environ.get('OMEGA_TMP', '/tmp')
 #: the fully qualified mongodb database URL, including the database name
 OMEGA_MONGO_URL = (
-        os.environ.get('OMEGA_MONGO_URL')  # default URL
-        or os.environ.get('MONGO_URL')  # typical mongo URL in paas denvironments
-        or 'mongodb://admin:foobar@localhost:27017/omega'  # fallback default
+    os.environ.get('OMEGA_MONGO_URL')  # default URL
+    or os.environ.get('MONGO_URL')  # typical mongo URL in paas denvironments
+    or 'mongodb://admin:foobar@localhost:27017/omega'  # fallback default
 )
 #: the collection name in the mongodb used by omegaml storage
 OMEGA_MONGO_COLLECTION = 'omegaml'
@@ -54,9 +54,9 @@ OMEGA_MONGO_SSL_KWARGS = {
 OMEGA_LOCAL_RUNTIME = truefalse(os.environ.get('OMEGA_LOCAL_RUNTIME', False))
 #: the celery broker name or URL
 OMEGA_BROKER = (
-        os.environ.get('OMEGA_BROKER')  # omega broker url
-        or os.environ.get('RABBITMQ_URL')  # typical rabbitmq url in paas
-        or 'amqp://admin:foobar@localhost:5672//'  # default fallback url
+    os.environ.get('OMEGA_BROKER')  # omega broker url
+    or os.environ.get('RABBITMQ_URL')  # typical rabbitmq url in paas
+    or 'amqp://admin:foobar@localhost:5672//'  # default fallback url
 )
 #: is the worker considered inside the same cluster as the client
 OMEGA_SERVICES_INCLUSTER = truefalse(os.environ.get('OMEGA_SERVICES_INCLUSTER', False))
@@ -206,10 +206,7 @@ OMEGA_STORE_HASHEDNAMES = truefalse(os.environ.get('OMEGA_STORE_HASHEDNAMES', Tr
 #: enable request caching for metadata
 OMEGA_STORE_CACHE = truefalse(os.environ.get('OMEGA_STORE_CACHE', False))
 #: runtimes mixins
-OMEGA_RUNTIME_MIXINS = [
-    'omegaml.runtimes.mixins.ModelMixin',
-    'omegaml.runtimes.mixins.GridSearchMixin',
-]
+OMEGA_RUNTIME_MIXINS = ['omegaml.runtimes.mixins.ModelMixin', 'omegaml.runtimes.mixins.GridSearchMixin']
 #: mdataframe mixins
 OMEGA_MDF_MIXINS = [
     ('omegaml.mixins.mdf.ApplyMixin', 'MDataFrame,MSeries'),
@@ -353,8 +350,8 @@ def update_from_obj(obj, vars=globals(), attrs=None):
     has_k = lambda o, k: hasattr(o, k) if as_attrs(o) else k in o
     get_k = lambda o, k: getattr(o, k) if as_attrs(o) else o[k]
     set_k = lambda o, k, v: setattr(o, k, v) if as_attrs(o) else o.__setitem__(k, v)
-    set_default = (
-        lambda o, k, d: setattr(o, k, getattr(o, k, d) or d) if as_attrs(o) else o.__setitem__(k, o.get(k) or d)
+    set_default = lambda o, k, d: (
+        setattr(o, k, getattr(o, k, d) or d) if as_attrs(o) else o.__setitem__(k, o.get(k) or d)
     )
     # update any
     target = attrs or vars
@@ -467,8 +464,9 @@ def load_user_extensions(vars=globals()):
         except:
             omvar_type = type(omvar)
             k_type = type(v)
-            msg = ('user extensions error: cannot apply {k} to {omvar}, '
-                   'expected type {omvar_type} got {k_type}').format(**locals())
+            msg = (
+                'user extensions error: cannot apply {k} to {omvar}, expected type {omvar_type} got {k_type}'
+            ).format(**locals())
             raise ValueError(msg)
 
 
@@ -490,8 +488,10 @@ def load_framework_support(vars=globals()):
         os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', "3")
         os.environ.setdefault('TF_ENABLE_ONEDNN_OPTS', "0")
         if module_available('keras') and not os.environ.get("TF_USE_LEGACY_KERAS") == "1":
-            warnings.warn('transformers requires keras < 3. Set env variable TF_USE_LEGACY_KERAS=1. See'
-                          ' https://github.com/huggingface/transformers/issues/34761 for details')
+            warnings.warn(
+                'transformers requires keras < 3. Set env variable TF_USE_LEGACY_KERAS=1. See'
+                ' https://github.com/huggingface/transformers/issues/34761 for details'
+            )
     if tensorflow_available(max='2.15', py_max='3.11'):
         #: tensorflow backend
         # https://stackoverflow.com/a/38645250

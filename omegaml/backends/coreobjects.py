@@ -7,15 +7,27 @@ from mongoengine import GridFSProxy
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.documents import MDREGISTRY
-from omegaml.store import MongoQueryOps, Filter
-from omegaml.store.fastinsert import fast_insert, default_chunksize
+from omegaml.store import Filter, MongoQueryOps
+from omegaml.store.fastinsert import default_chunksize, fast_insert
 from omegaml.store.queryops import sanitize_filter
-from omegaml.util import is_dataframe, is_series, is_ndarray, ensure_index, unravel_index, jsonescape, \
-    cursor_to_dataframe, convert_dtypes, restore_index, signature, make_tuple, mongo_compatible
+from omegaml.util import (
+    convert_dtypes,
+    cursor_to_dataframe,
+    ensure_index,
+    is_dataframe,
+    is_ndarray,
+    is_series,
+    jsonescape,
+    make_tuple,
+    mongo_compatible,
+    restore_index,
+    signature,
+    unravel_index,
+)
 
 
 class CoreObjectsBackend(BaseDataBackend):
-    """ Provides Python and pandas basic types storage
+    """Provides Python and pandas basic types storage
 
     Notes:
         * to stay backwards compatible, the backend uses KIND="core.object", however the actual
@@ -25,11 +37,17 @@ class CoreObjectsBackend(BaseDataBackend):
     .. versionadded:: 0.18.0
         refactored from omegaml.store.base.OmegaStore
     """
+
     KIND = "core.object"
     # additional kinds registered in store.defaults.OMEGA_STORE_BACKENDS
     # -- see OmegaStore.register_backend()
-    KIND_EXT = (MDREGISTRY.PANDAS_DFROWS, MDREGISTRY.PANDAS_SEROWS, MDREGISTRY.PANDAS_DFGROUP,
-                MDREGISTRY.PYTHON_DATA, MDREGISTRY.PANDAS_HDF)
+    KIND_EXT = (
+        MDREGISTRY.PANDAS_DFROWS,
+        MDREGISTRY.PANDAS_SEROWS,
+        MDREGISTRY.PANDAS_DFGROUP,
+        MDREGISTRY.PYTHON_DATA,
+        MDREGISTRY.PANDAS_HDF,
+    )
 
     @classmethod
     def supports(self, obj, name, **kwargs):
@@ -55,35 +73,36 @@ class CoreObjectsBackend(BaseDataBackend):
             groupby = kwargs.get('groupby')
             if obj.empty:
                 from warnings import warn
-                warn(
-                    'Provided dataframe is empty, ignoring it, doing nothing here!')
+
+                warn('Provided dataframe is empty, ignoring it, doing nothing here!')
                 return None
             if kwargs.pop('as_hdf', False):
-                return self.put_dataframe_as_hdf(
-                    obj, name, attributes, **kwargs)
+                return self.put_dataframe_as_hdf(obj, name, attributes, **kwargs)
             elif groupby:
-                return self.put_dataframe_as_dfgroup(
-                    obj, name, groupby, attributes)
+                return self.put_dataframe_as_dfgroup(obj, name, groupby, attributes)
             append = kwargs.pop('append', None)
             timestamp = kwargs.pop('timestamp', None)
             index = kwargs.pop('index', None)
             chunksize = kwargs.pop('chunksize', default_chunksize)
             return self.put_dataframe_as_documents(
-                obj, name, append=append, attributes=attributes, index=index,
-                timestamp=timestamp, chunksize=chunksize, **kwargs)
+                obj,
+                name,
+                append=append,
+                attributes=attributes,
+                index=index,
+                timestamp=timestamp,
+                chunksize=chunksize,
+                **kwargs,
+            )
         elif is_ndarray(obj):
             if kwargs.pop('as_pydata', False):
-                return self.put_pyobj_as_document(obj.tolist(), name,
-                                                  attributes=attributes, **kwargs)
-            return self.put_ndarray_as_hdf(obj, name, attributes=attributes,
-                                           **kwargs)
+                return self.put_pyobj_as_document(obj.tolist(), name, attributes=attributes, **kwargs)
+            return self.put_ndarray_as_hdf(obj, name, attributes=attributes, **kwargs)
         elif isinstance(obj, (dict, list, tuple)):
             kwargs.pop('as_pydata', None)
             if kwargs.pop('as_hdf', False):
-                return self.put_pyobj_as_hdf(obj, name,
-                                             attributes=attributes, **kwargs)
-            return self.put_pyobj_as_document(obj, name,
-                                              attributes=attributes, **kwargs)
+                return self.put_pyobj_as_hdf(obj, name, attributes=attributes, **kwargs)
+            return self.put_pyobj_as_document(obj, name, attributes=attributes, **kwargs)
         raise TypeError('type %s not supported' % type(obj))
 
     @property
@@ -94,11 +113,19 @@ class CoreObjectsBackend(BaseDataBackend):
     def store(self):
         return self.data_store
 
-    def put_dataframe_as_documents(self, obj, name, append=None,
-                                   attributes=None, index=None,
-                                   timestamp=None, chunksize=None,
-                                   ensure_compat=True, _fast_insert=fast_insert,
-                                   **kwargs):
+    def put_dataframe_as_documents(
+        self,
+        obj,
+        name,
+        append=None,
+        attributes=None,
+        index=None,
+        timestamp=None,
+        chunksize=None,
+        ensure_compat=True,
+        _fast_insert=fast_insert,
+        **kwargs,
+    ):
         """
         store a dataframe as a row-wise collection of documents
 
@@ -121,9 +148,11 @@ class CoreObjectsBackend(BaseDataBackend):
         :return: the Metadata object created
         """
         import pandas as pd
+
         collection = self.collection(name)
         if is_series(obj):
             import pandas as pd
+
             obj = pd.DataFrame(obj, index=obj.index, columns=[str(obj.name)])
             store_series = True
         else:
@@ -132,6 +161,7 @@ class CoreObjectsBackend(BaseDataBackend):
             self.drop(name, force=True)
         elif append is None and collection.count_documents({}, limit=1):
             from warnings import warn
+
             warn('%s already exists, will append rows' % name)
         if index:
             # get index keys
@@ -166,14 +196,11 @@ class CoreObjectsBackend(BaseDataBackend):
         stored_columns = [jsonescape(col) for col in obj.columns]
         column_map = list(zip(obj.columns, stored_columns))
         d_column_map = dict(column_map)
-        dtypes = {
-            d_column_map.get(k): v.name
-            for k, v in obj.dtypes.items()
-        }
+        dtypes = {d_column_map.get(k): v.name for k, v in obj.dtypes.items()}
         kind_meta = {
             'columns': column_map,
             'dtypes': dtypes,
-            'idx_meta': idx_meta
+            'idx_meta': idx_meta,
         }
         # ensure column names to be strings
         obj.columns = stored_columns
@@ -195,16 +222,16 @@ class CoreObjectsBackend(BaseDataBackend):
                     obj[col].fillna('', inplace=True)
         obj = obj.astype('O', errors='ignore')
         _fast_insert(obj, self, name, chunksize=chunksize)
-        kind = (MDREGISTRY.PANDAS_SEROWS
-                if store_series
-                else MDREGISTRY.PANDAS_DFROWS)
-        meta = self.store._make_metadata(name=name,
-                                         prefix=self.store.prefix,
-                                         bucket=self.store.bucket,
-                                         kind=kind,
-                                         kind_meta=kind_meta,
-                                         attributes=attributes,
-                                         collection=collection.name)
+        kind = MDREGISTRY.PANDAS_SEROWS if store_series else MDREGISTRY.PANDAS_DFROWS
+        meta = self.store._make_metadata(
+            name=name,
+            prefix=self.store.prefix,
+            bucket=self.store.bucket,
+            kind=kind,
+            kind_meta=kind_meta,
+            attributes=attributes,
+            collection=collection.name,
+        )
         return meta.save()
 
     def put_dataframe_as_dfgroup(self, obj, name, groupby, attributes=None):
@@ -238,33 +265,37 @@ class CoreObjectsBackend(BaseDataBackend):
         datastore = self.collection(name)
         datastore.drop()
         datastore.insert_many(row_to_doc(obj))
-        return self.store._make_metadata(name=name,
-                                         prefix=self.store.prefix,
-                                         bucket=self.store.bucket,
-                                         kind=MDREGISTRY.PANDAS_DFGROUP,
-                                         attributes=attributes,
-                                         collection=datastore.name).save()
+        return self.store._make_metadata(
+            name=name,
+            prefix=self.store.prefix,
+            bucket=self.store.bucket,
+            kind=MDREGISTRY.PANDAS_DFGROUP,
+            attributes=attributes,
+            collection=datastore.name,
+        ).save()
 
     def put_dataframe_as_hdf(self, obj, name, attributes=None, **kwargs):
         filename = self.store.object_store_key(name, '.hdf')
         hdffname = self._package_dataframe2hdf(obj, filename)
         with open(hdffname, 'rb') as fhdf:
             fileid = self.store.fs.put(fhdf, filename=filename)
-        return self.store._make_metadata(name=name,
-                                         prefix=self.store.prefix,
-                                         bucket=self.store.bucket,
-                                         kind=MDREGISTRY.PANDAS_HDF,
-                                         attributes=attributes,
-                                         gridfile=GridFSProxy(db_alias=self.store._dbalias,
-                                                              grid_id=fileid)).save()
+        return self.store._make_metadata(
+            name=name,
+            prefix=self.store.prefix,
+            bucket=self.store.bucket,
+            kind=MDREGISTRY.PANDAS_HDF,
+            attributes=attributes,
+            gridfile=GridFSProxy(db_alias=self.store._dbalias, grid_id=fileid),
+        ).save()
 
     def put_ndarray_as_hdf(self, obj, name, attributes=None, **kwargs):
-        """ store numpy array as hdf
+        """store numpy array as hdf
 
         this is hack, converting the array to a dataframe then storing
         it
         """
         import pandas as pd
+
         df = pd.DataFrame(obj)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
@@ -276,6 +307,7 @@ class CoreObjectsBackend(BaseDataBackend):
         a dataframe
         """
         import pandas as pd
+
         df = pd.DataFrame(obj)
         return self.put_dataframe_as_hdf(df, name, attributes=attributes)
 
@@ -292,10 +324,12 @@ class CoreObjectsBackend(BaseDataBackend):
             collection.drop()
         elif append is None and collection.esimated_document_count(limit=1):
             from warnings import warn
+
             warn('%s already exists, will append rows' % name)
         if index:
             # create index with appropriate options
             from omegaml.store import MongoQueryOps
+
             if isinstance(index, dict):
                 idx_kwargs = index
                 index = index.pop('columns')
@@ -315,18 +349,29 @@ class CoreObjectsBackend(BaseDataBackend):
             result = collection.insert_one(mongo_compatible({'data': obj}))
             objid = result.inserted_id
 
-        return self.store._make_metadata(name=name,
-                                         prefix=self.store.prefix,
-                                         bucket=self.store.bucket,
-                                         kind=MDREGISTRY.PYTHON_DATA,
-                                         collection=collection.name,
-                                         attributes=attributes,
-                                         objid=objid).save()
+        return self.store._make_metadata(
+            name=name,
+            prefix=self.store.prefix,
+            bucket=self.store.bucket,
+            kind=MDREGISTRY.PYTHON_DATA,
+            collection=collection.name,
+            attributes=attributes,
+            objid=objid,
+        ).save()
 
-    def get_dataframe_documents(self, name, columns=None, lazy=False,
-                                filter=None, version=-1, is_series=False,
-                                chunksize=None, sanitize=True, trusted=None,
-                                **kwargs):
+    def get_dataframe_documents(
+        self,
+        name,
+        columns=None,
+        lazy=False,
+        filter=None,
+        version=-1,
+        is_series=False,
+        chunksize=None,
+        sanitize=True,
+        trusted=None,
+        **kwargs,
+    ):
         """
         Internal method to return DataFrame from documents
 
@@ -345,8 +390,8 @@ class CoreObjectsBackend(BaseDataBackend):
         :return: the retrieved object (DataFrame, Series or MDataFrame)
 
         """
-        from omegaml.store.queryops import sanitize_filter
         from omegaml.store.filtered import FilteredCollection
+        from omegaml.store.queryops import sanitize_filter
 
         collection = self.collection(name)
         meta = self.store.metadata(name)
@@ -354,9 +399,8 @@ class CoreObjectsBackend(BaseDataBackend):
         filter = sanitize_filter(filter, no_ops=sanitize, trusted=trusted)
         if lazy or chunksize:
             from ..mdataframe import MDataFrame
-            df = MDataFrame(collection,
-                            metadata=meta.kind_meta,
-                            columns=columns).query(**filter)
+
+            df = MDataFrame(collection, metadata=meta.kind_meta, columns=columns).query(**filter)
             if is_series:
                 df = df[0]
             if chunksize is not None and chunksize > 0:
@@ -382,8 +426,7 @@ class CoreObjectsBackend(BaseDataBackend):
                 if columns:
                     # get only projected columns
                     # meta_columns is {origin_column: stored_column}
-                    orig_columns = dict({k: v for k, v in meta_columns.items()
-                                         if k in columns or v in columns})
+                    orig_columns = dict({k: v for k, v in meta_columns.items() if k in columns or v in columns})
                 else:
                     # restore columns to original name
                     orig_columns = meta_columns
@@ -440,8 +483,9 @@ class CoreObjectsBackend(BaseDataBackend):
 
         """
         import pandas as pd
-        from omegaml.store.queryops import sanitize_filter
+
         from omegaml.store.filtered import FilteredCollection
+        from omegaml.store.queryops import sanitize_filter
 
         def convert_doc_to_row(cursor):
             for doc in cursor:
@@ -476,9 +520,7 @@ class CoreObjectsBackend(BaseDataBackend):
             df = self._extract_dataframe_hdf(filename, version=version)
             return df
         else:
-            raise gridfs.errors.NoFile(
-                "{0} does not exist in mongo collection '{1}'".format(
-                    name, self.store.bucket))
+            raise gridfs.errors.NoFile("{0} does not exist in mongo collection '{1}'".format(name, self.store.bucket))
 
     def get_python_data(self, name, filter=None, version=-1, lazy=False, trusted=False, **kwargs):
         """
@@ -544,6 +586,7 @@ class CoreObjectsBackend(BaseDataBackend):
         :return: Pandas dataframe
         """
         import pandas as pd
+
         hdffname = os.path.join(self.store.tmppath, filename)
         dirname = os.path.dirname(hdffname)
         if not os.path.exists(dirname):

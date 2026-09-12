@@ -16,7 +16,7 @@ class FlaskView:
         self.segment = segment
 
     def create_routes(self, bp):
-        """ add routes to an app or blueprint"""
+        """add routes to an app or blueprint"""
         for route, view, options in self.routes:
             self._add_route(bp, route, view, options)
 
@@ -40,7 +40,7 @@ class FlaskView:
 
     @property
     def routes(self):
-        """ return the list of route tuples (route, view, kwargs) """
+        """return the list of route tuples (route, view, kwargs)"""
         for m in dir(self.__class__):
             if hasattr(getattr(self.__class__, m), '_fv_routes'):
                 for route, view, options in getattr(self.__class__, m)._fv_routes:

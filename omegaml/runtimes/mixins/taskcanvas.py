@@ -46,11 +46,12 @@ class CanvasTask:
     def _easy_collect(self, result):
         # traverse graph of results and return a single list
         # see https://docs.celeryproject.org/en/stable/userguide/canvas.html
-        collect = lambda r: set({r} | collect(r.parent) if r.parent else {r})
+        collect = lambda r: set(
+            {r} | collect(r.parent) if r.parent else {r},
+        )
         flatten = lambda l: l[0] if isinstance(l[0], list) else l
         result.collect = lambda: collect(result)
         result.getall = lambda: flatten([r.get() for r in collect(result)])
-
 
 
 def make_canvased(canvasfn):

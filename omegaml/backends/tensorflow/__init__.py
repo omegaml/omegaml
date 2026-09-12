@@ -24,6 +24,5 @@ else:
             FN_MAP['numpy_input_fn'] = getattr(tf.compat.v1.estimator.inputs, 'numpy_input_fn')
             FN_MAP['convert_to_tensor'] = getattr(tf, 'convert_to_tensor')
 
-
         def _tffn(name):
             return FN_MAP[name]

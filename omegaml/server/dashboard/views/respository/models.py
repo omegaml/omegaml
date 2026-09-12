@@ -11,7 +11,7 @@ class ModelsRepositoryView(RepositoryBaseView):
     def members(self):
         excludes = (
             lambda m: m.name.startswith('_'),
-            lambda m: m.name.startswith('experiments/')
+            lambda m: m.name.startswith('experiments/'),
         )
         items = [m for m in self.store.list(raw=True) if not any(e(m) for e in excludes)]
         return items
