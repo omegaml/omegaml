@@ -144,9 +144,10 @@ class CliTestScenarios:
             Metadata of the model
         """
         om = self.om
+        name = name or 'reg'
         # add a model, see that we get it back
         reg = LinearRegression()
-        return om.models.put(reg, 'reg')
+        return om.models.put(reg, name)
 
     def make_dataset_from_dataframe(self, name, N=100, m=2, b=0):
         """
