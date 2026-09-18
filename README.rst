@@ -1,5 +1,5 @@
-omega|ml - MLOps for humans
-===========================
+omega-ml: MLOps for humans
+==========================
 
 with just a single line of code you can
 
@@ -7,16 +7,16 @@ with just a single line of code you can
 - implement data pipelines quickly, without memory limitation, all from a Pandas-like API
 - serve models and data from an easy to use REST API
 
-Further, omega|ml is the fastest way to
+Further, omega-ml removes all the hazzle from MLOPs
 
-- scale model training on the included scalable pure-Python compute cluster, on Spark or any other cloud
-- collaborate on data science projects easily, sharing Jupyter Notebooks
-- deploy beautiful dashboards right from your Jupyter Notebook, using dashserve
+- scale model training on the included scalable pure-Python compute cluster, remote or locally
+- collaborate on data science, ML & AI projects easily, sharing all code easily
+- deploy applications and dashboards right from your code base and the command line
 
 Quick start
 -----------
 
-Start the omega|ml server right from your laptop or virtual machine
+Start the omega-ml server right from your laptop or virtual machine
 
 .. code::
 
@@ -24,11 +24,11 @@ Start the omega|ml server right from your laptop or virtual machine
     $ docker-compose up -d
 
 Jupyter Notebook is immediately available at http://localhost:8899 (`omegamlisfun` to login).
-Any notebook you create will automatically be stored in the integrated omega|ml database, making collaboration a breeze.
+Any notebook you create will automatically be stored in the integrated omega-ml database, making collaboration a breeze.
 The REST API is available at http://localhost:5000.
 
 Already have a Python environment (e.g. Jupyter Notebook)?
-Leverage the power of omega|ml by installing as follows:
+Leverage the power of omega-ml by installing as follows:
 
 .. code::
 
@@ -55,7 +55,7 @@ Examples
     om.models.put(clf, 'forecast')
     clf = om.models.get('forecast')
 
-    # run and scale models directly on the integrated Python or Spark compute cluster
+    # run and scale models directly on the integrated Python compute cluster
     om.runtime.model('forecast').fit('stats[^sales]', 'stats[sales]')
     om.runtime.model('forecast').predict('stats')
     om.runtime.model('forecast').gridsearch(X, Y)
@@ -69,7 +69,7 @@ Examples
 Use Cases
 =========
 
-omega|ml currently supports scikit-learn, Keras and Tensorflow out of the box.
+omega-ml currently supports scikit-learn, Keras and Tensorflow out of the box.
 Need to deploy a model from another framework? Open an issue at
 https://github.com/omegaml/omegaml/issues or drop us a line at support@omegaml.io
 
@@ -90,7 +90,7 @@ Data Science Collaboration
 Centralized Data & Compute cluster
 ----------------------------------
 
-- perform out-of-core computations on a pure-python or Apache Spark compute cluster
+- perform out-of-core computations on a pure-python compute cluster
 - have a shared NoSQL database (MongoDB), out of the box, working like a Pandas dataframe
 - use a compute cluster to train your models with no additional setup
 
@@ -100,16 +100,16 @@ Scalability and Extensibility
 - scale your data science work from your laptop to team to production with no code changes
 - integrate any machine learning framework or third party data science platform with a common API
 
-Towards Data Science recently published an article on omega|ml:
+Towards Data Science recently published an article on omega-ml:
 https://medium.com/data-science/omega-ml-deploying-data-machine-learning-pipelines-the-easy-way-a3d281569666
 
-In addition omega|ml provides an easy-to-use extensions API to support any kind of models,
+In addition omega-ml provides an easy-to-use extensions API to support any kind of models,
 compute cluster, database and data source.
 
 *Commercial Edition & Support*
 
 https://omegaml.io
 
-omega|ml Commercial Edition provides security on every level and is ready made for Kubernetes
+omega-ml Commercial Edition provides security on every level and is ready made for Kubernetes
 deployment. It is licensed separately for on-premise, private or hybrid cloud.
 Sign up at https://omegaml.io
