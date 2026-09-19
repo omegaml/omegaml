@@ -3,6 +3,7 @@ import os
 import re
 from collections import namedtuple
 from getpass import getuser
+from inspect import isclass
 from urllib.parse import parse_qs, urlsplit
 
 from omegaml.backends.genai import GenAIBaseBackend, GenAIModel
@@ -13,9 +14,10 @@ from omegaml.backends.genai.strategy.completions import CompletionsMixin
 from omegaml.backends.genai.strategy.embeddings import EmbeddingsMixin
 from omegaml.backends.genai.strategy.toolcalling import ToolCallingMixin
 from omegaml.backends.genai.strategy.tracing import TracingMixin
+from omegaml.backends.guardrails import GuardrailPolicy
 from omegaml.backends.tracking import NoTrackTracker, OmegaSimpleTracker
 from omegaml.store import OmegaStore
-from omegaml.util import KeepMissing, raise_
+from omegaml.util import KeepMissing, raise_, ensure_list
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +85,7 @@ class ConversationModelBackend(GenAIBaseBackend):
         pipeline=None,
         provider=None,
         tools=None,
+        guardrails=None,
         documents=None,
         strategy=None,
         apikey=None,
@@ -102,9 +105,10 @@ class ConversationModelBackend(GenAIBaseBackend):
             pipeline (str): optional, the name of a @virtualobj function stored in om.models
             provider (str): optional, the client to access the <server:port> provider API, defaults to 'openai' (see
                omegaml.genai.providers.PROVIDERS)
-            tools (list): optional, the list of tool names stored in om.models
+            tools (list): optional, the list of tool names stored in om.models, as 'tools/<name>'
+            guardrails (list): optional, the list of guardrail names stored in om.models, as 'policy/<name>'
             documents (str): optional, the name of a document store stored in om.datasets
-            strategy (dict): optional, kwargs to various parts of the pipeline ('retrieve', 'complete', 'agentic')
+            strategy (dict): optional, kwargs to various parts of the pipeline ('retrieve', 'complete', 'agentic', 'guardrails')
             apikey (str): optional, the api key to use, if <credentials> is not part of the URL
             **kwargs:
 
@@ -114,6 +118,22 @@ class ConversationModelBackend(GenAIBaseBackend):
         .. versionchanged:: NEXT
             strategy=dict(agentic=True) causes model.complete() to recursively resolve tool calls until no
             further tools are called by the model. See model.complete() for details
+
+        .. versionchanged:: NEXT
+            during prompt augmentation, the pipeline is now called as fn(method='retrieve', docs=[...]) for all
+            documents retrieved from the documents db, or an empty list. Return the list of documents to retrain
+            as a list[str|dict], where each dict is {'text': '...'}, or each string is the text, one per document.
+            Use this to modify or limit the documents.
+
+        .. versionchanged:: NEXT
+            the guardrails= parameter provides a list of guardrail functions stored in om.models('policy/*').
+            guardrail functions are called in the sequence specified as fn(messages, **kwargs), where messages
+            is the list of messages in the conversation, including any responses by the model. The kwargs include
+            the step=:str and model=:ConversationModel parameters. The step parameters identifies the progress of response
+            generation, one of ['prompt', 'input', 'response', 'action', 'output'], indicating prompt parsing,
+            input to the model, response by the model, tool calls by the model, and before final output response.
+            guardrails can also be specified as instances of GuardrailPolicy, providing a state machine across these
+            steps. Refer to the GuardrailPolicy for details.
         """
         self.model_store: OmegaStore
         parsed = self._parse_url(obj)
@@ -146,7 +166,8 @@ class ConversationModelBackend(GenAIBaseBackend):
             'prompt': prompt or query.get('prompt'),
             'template': template or query.get('template'),
             'pipeline': pipeline or None,
-            'tools': tools or [],
+            'tools': ensure_list(tools or []),
+            'guardrails': ensure_list(guardrails or []),
             'documents': documents or [],
             'strategy': strategy or {},
         }
@@ -162,6 +183,7 @@ class ConversationModelBackend(GenAIBaseBackend):
         data_store=None,
         pipeline=None,
         tools=None,
+        guardrails=None,
         documents=None,
         strategy=None,
         tracking=None,
@@ -178,6 +200,7 @@ class ConversationModelBackend(GenAIBaseBackend):
             pipeline (str): optional, the name of the @virtualobj pipeline stored in om.models, defaults to
                metadata.attributes.pipeline
             tools (list): optional, the list of tool names stored in om.models
+            guardrails (list): optional, the list of policy names stored in om.models
             documents (str): optional, the list of document stores in om.datasets, if specified requires passing
                of data_store=, defaults to metadata.attributes.tools
             strategy (dict): optional, see .put()
@@ -202,7 +225,8 @@ class ConversationModelBackend(GenAIBaseBackend):
         # setup from attributes
         model = meta.attributes.get('model') or model
         pipeline = pipeline or meta.attributes.get('pipeline')
-        tools = tools or meta.attributes.get('tools') or []
+        tools = ensure_list(tools or meta.attributes.get('tools') or [])
+        guardrails = ensure_list(guardrails or meta.attributes.get('guardrails') or [])
         documents = documents or meta.attributes.get('documents')
         template = template or query.get('template') or meta.attributes.get('template')
         prompt = prompt or query.get('prompt') or meta.attributes.get('prompt')
@@ -211,7 +235,8 @@ class ConversationModelBackend(GenAIBaseBackend):
         data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
         pipeline = self._load_pipeline(pipeline)
         documents = self._load_documents(documents)
-        tools = self._load_tools(tools)
+        tools = self._load_tools(tools, 'tools')
+        guardrails = self._load_guardrails(guardrails, 'policy', instance=True)
         base_url = self._resolve_placeholders(base_url, secrets)
         creds = self._resolve_placeholders(creds, secrets)
         self.tracking = tracking or self.tracking or self._ensure_tracking(meta)
@@ -227,6 +252,7 @@ class ConversationModelBackend(GenAIBaseBackend):
                         data_store=data_store,
                         pipeline=pipeline,
                         tools=tools,
+                        guardrails=guardrails,
                         documents=documents,
                         strategy=strategy,
                         tracking=self.tracking,
@@ -247,6 +273,7 @@ class ConversationModelBackend(GenAIBaseBackend):
                         data_store=data_store,
                         pipeline=pipeline,
                         tools=tools,
+                        guardrails=guardrails,
                         tracking=self.tracking,
                         provider=provider,
                         documents=documents,
@@ -262,12 +289,25 @@ class ConversationModelBackend(GenAIBaseBackend):
         data_store = data_store or (self.data_store if self.data_store is not self.model_store else None)
         return self.model_store._drop(name, force=force, **kwargs)
 
-    def _load_tools(self, tools):
-        barename = lambda v: 'tools/{v}'.format(v=str(v).replace('tools/', ''))  # works with or without tools/ prefix
-        verify = lambda t, fn: callable(fn) or raise_(ValueError(f'tool >{t}< is not a callable, got {fn}'))
-        tool_fns = [tool if callable(tool) else self.model_store.get(f'{barename(tool)}') for tool in tools]
-        tool_fns = [fn for tool, fn in zip(tools, tool_fns) if verify(tool, fn)]
-        return tool_fns
+    def _load_tools(self, tools, kind, instance=False):
+        # works with or without prefix
+        barename = lambda v: '{kind}/{v}'.format(kind=kind, v=str(v).replace(f'{kind}/', ''))
+        verify = lambda t, fn: callable(fn) or raise_(ValueError(f'{t} is not a callable, got {fn}'))
+        tool_fns = (tool if callable(tool) else self.model_store.get(f'{barename(tool)}') for tool in tools)
+        tool_fns = (fn for tool, fn in zip(tools, tool_fns) if verify(tool, fn))
+        tool_fns = (fn(self) if isclass(fn) and instance else fn for fn in tool_fns)
+        return list(tool_fns)
+
+    def _load_guardrails(self, tools, kind, instance=False):
+        # load guardrails from policy, and load scanners to any GuardrailPolicy instances
+        rails_fns = self._load_tools(tools, kind, instance=instance)
+        for rails in rails_fns:
+            # autoload scanners
+            if isinstance(rails, GuardrailPolicy) and not rails.scanners:
+                path = f'{kind}/scanners'
+                scanners = self.model_store.list(path + '/*')
+                rails.scanners = self._load_tools(scanners, path, instance=False)
+        return rails_fns
 
     def _load_documents(self, documents):
         documents = (
@@ -383,6 +423,23 @@ class ConversationModel(
         the ./openai/messages dataset has been replaced by standard experiment tracking
         (use om.datasets to access prior conversations)
 
+    .. versionchanged:: NEXT
+        Specify guardrails=list[str] as the name of guardrail functions or GuardrailPolicy objects stored
+        in om.models as 'policy/<name>'. Guardrails are evaluated for steps 'prompt', 'input', 'output', 'action',
+        'response' and output steps. See GuardrailPolicy for details. Guardrails are evaluated after pipeline hooks
+        have completed.
+
+    .. versionchanged:: NEXT
+        pipeline functions are now consistently called for all phases of either chat() or complete(), including
+        method='retrieve' for document retrieval.
+
+    .. versionchanged:: NEXT
+        tool calls are now executed at the end of the core loop, enabling basic agentic behavior,
+        see ConversationModel.complete() for details.
+
+    .. versionchanged:: NEXT
+        all logged events are equivalent for .chat() and .complete(). Previously only .chat() logged all conversations.
+
     """
 
     def __init__(
@@ -397,6 +454,7 @@ class ConversationModel(
         pipeline=None,
         provider='openai',
         tools=None,
+        guardrails=None,
         documents=None,
         strategy=None,
         trace=None,
@@ -416,17 +474,22 @@ class ConversationModel(
         )
         self.pipeline_fn = pipeline or (lambda *args, **kwargs: None)
         self.trace_fn = trace
-        self.tools = tools or []
+        self.tools = ensure_list(tools or [])
+        self.guardrails = ensure_list(guardrails or [])
         self.documents = documents
         self.strategy = {
             # defaults
             **{
                 # kwargs to pass to DocumentIndex.retrieve()
                 'retrieve': {'top': 1},
-                # system role
+                # system role: 'system|developer'
                 'system_role': 'developer',
-                # agentic behavior
+                # agentic behavior: if True, will continue in a loop until no more tool calls
                 'agentic': False,
+                # guardrails applicability (all is the only supported value)
+                'guardrails': 'all',
+                # choice of tools
+                'tool_choice': 'auto',
             },
             # override by user provided
             **(strategy or {}),

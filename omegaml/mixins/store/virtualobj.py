@@ -19,7 +19,7 @@ class VirtualObjectMixin(object):
         return self._vobj_meta is not None and self._vobj_meta.kind == VirtualObjectBackend.KIND
 
     def _istool(self, name):
-        return name.startswith('tools/')
+        return VirtualObjectBackend._is_tool_virtualobj(lambda: None, name)
 
     def _getvirtualobjfn(self, name, **kwargs):
         virtualobjfn = super(VirtualObjectMixin, self).get(name, **kwargs)
@@ -48,7 +48,7 @@ class VirtualObjectMixin(object):
         raw = kwargs.get('raw')
         should_version = self._model_version_applies(name)
         raw = raw if raw is not None else should_version
-        is_tool = name.startswith('tools/')
+        is_tool = VirtualObjectBackend._is_tool_virtualobj(lambda: None, name)
         name, kwargs = self._resolve_realname(name, kwargs)
         if not raw and self._isvirtual(name) and not is_tool:
             handler = self._getvirtualobjfn(name)
@@ -77,7 +77,7 @@ class VirtualObjectMixin(object):
             try:
                 handler = self._getvirtualobjfn(name)
                 result = handler(method='drop', meta=self._vobj_meta, store=self, force=force)
-            except Exception as e:
+            except Exception:
                 if not force:
                     raise
             else:

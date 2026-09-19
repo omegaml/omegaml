@@ -20,7 +20,7 @@ class GenAIBaseBackend(VirtualObjectBackend):
     @classmethod
     def supports(self, obj, name, **kwargs):
         is_aimodel = isinstance(obj, GenAIModel) or hasattr(obj, '_omega_virtual_genai')
-        is_tool = isinstance(obj, FunctionType) and name.startswith('tools/')
+        is_tool = isinstance(obj, FunctionType) and any(name.startswith(v) for v in self.TOOLS_PATHS)
         return is_aimodel or is_tool
 
     def _ensure_handler_instance(self, obj):

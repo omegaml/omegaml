@@ -107,28 +107,34 @@ class CompletionsMixin:
         def generate_response_loop(prompt, messages, use_tools):
             turn_prompt = prompt
             intermediate_results = None
+            turn_count = 0
             while True:
                 response = None
                 tool_calls = None
+                turn_count += 1
                 # the stream may contain multiple partial toolcall messages
                 # -- first, generate the full stream until it stops
                 # -- then, check for tool calls across the consolidate stream
-                for response in generate_response_stream_once(turn_prompt, messages, use_tools=True):
-                    try:
+                # -- use_tools=True triggers tool choices, actual decision to run below
+                try:
+                    for response in generate_response_stream_once(turn_prompt, messages, use_tools=True):
                         if not raw and intermediate_results:
                             # FIXME move to conversation state
                             response.setdefault('intermediate_results', []).append(intermediate_results)
                             intermediate_results = None
                         yield response
-                        tool_calls = self._has_tool_calls(response)
-                    except Exception as e:
-                        logger.warning(f'could not process response due to {e} in {conversation_id=}', exc_info=True)
+                        tool_calls = self._has_tool_calls(response, implicit=not raw)
+                except Exception as e:
+                    logger.warning(f'could not process response due to {e} in {conversation_id=}', exc_info=True)
+                    response = {"error": {"message": f"could not process response in {conversation_id=}"}}
+                    yield response
+                    break
                 if response and tool_calls and (agentic or use_tools):
                     intermediate_results, tool_prompts = self._handle_toolcalls(response, tool_calls, conversation_id)
                     turn_prompt = tool_prompts
                     continue
-                else:
-                    break
+                # abort if no more tool calls, or not agentic
+                break
 
         response_gen = generate_response_loop(prompt, messages, use_tools)
         return response_gen if stream else [response for response in response_gen][-1]
@@ -142,7 +148,7 @@ class CompletionsMixin:
         kwargs.update(stream=stream)
         # prepare tools
         if self.tools:
-            kwargs.update(tools=self.tools_specs(self.tools), tool_choice='auto')
+            kwargs.update(tools=self.tools_specs(self.tools), tool_choice=self.strategy.get('tool_choice', 'auto'))
         # prepare template
         _template = self._prepare_template(self.template, data=data)
         template = (
@@ -156,6 +162,7 @@ class CompletionsMixin:
             )
             or _template
         )
+        self.eval_guardrails(messages, 'prompt', conversation_id=conversation_id)
         if prompt and isinstance(prompt, str):
             # support direct text input
             prompt_message = {"role": "user", "content": prompt, "conversation_id": conversation_id}
@@ -199,6 +206,7 @@ class CompletionsMixin:
             or _default_messages
         )
         # produce a response by calling the pipeline or the model
+        self.eval_guardrails(messages, 'input', conversation_id=conversation_id)
         response = self.pipeline(
             method='complete',
             prompt_message=prompt_message,
@@ -210,6 +218,7 @@ class CompletionsMixin:
         # finally call the model provider, if needed
         self._log_events('conversation', conversation_id, prompt_message)
         response = response or self.provider.complete(messages=messages, model=self.model, **kwargs)
+        self.eval_guardrails(messages, 'response', conversation_id=conversation_id)
 
         def capture_tool_calls(
             response, prompt_message, response_message, use_tools=False, as_delta=False, chunks=None
@@ -224,7 +233,7 @@ class CompletionsMixin:
                 - https://www.perplexity.ai/search/718b5969-fce4-4ad6-bd4b-e1fe66de9d8e
             """
             tool_message = self._get_response_message(response_message)
-            should_call = response['choices'][0].get('finish_reason') == 'tool_calls'
+            should_call = self._get_finish_reason(response) == 'tool_calls'
             if should_call and self.tools:
                 if chunks:
                     # consolidate previous chunks, if any
@@ -257,6 +266,7 @@ class CompletionsMixin:
                         or tool_calls
                     )
                     response_message['tool_calls'] = tool_calls
+                    self.eval_guardrails(messages + [response_message], 'action', conversation_id=conversation_id)
             return response, prompt_message, response_message
 
         def resolve_response(response, prompt_message, use_tools=False):
@@ -380,10 +390,18 @@ class CompletionsMixin:
                         self._log_events(
                             'error', conversation_id, f'could not process stream chunk due to {e} {chunk=}'
                         )
-                        response_message = {'error': f'could not process stream chunk for {conversation_id=}'}
+                        response_message = {
+                            'error': {'message': f'could not process stream chunk for {conversation_id=}'}
+                        }
                         consolidated_response.update(response_message)
+                        self.eval_guardrails(
+                            messages + [consolidated_response], 'output', conversation_id=conversation_id
+                        )
                         yield response, prompt_message, response_message, response_message
                     else:
+                        self.eval_guardrails(
+                            messages + [consolidated_response], 'output', conversation_id=conversation_id
+                        )
                         yield resolved
             finally:
                 # log consolidated response only
@@ -392,10 +410,17 @@ class CompletionsMixin:
         else:
             try:
                 self._track_usage(response, conversation_id)
-                yield resolve_response(response, prompt_message, use_tools=use_tools)
+                resolved = resolve_response(response, prompt_message, use_tools=use_tools)
             except Exception as e:
                 logger.warning(f"Could not process chunk {response.get('id')} due to {e}")
                 self._log_events('error', conversation_id, [response])
+                response_message = {'error': {"message": f'could not process chunk for {conversation_id=}'}}
+                self.eval_guardrails(messages + [response_message], 'output', conversation_id=conversation_id)
+                yield response, prompt_message, response_message, response_message
+            else:
+                response_message = resolved[2]
+                self.eval_guardrails(messages + [response_message], 'output', conversation_id=conversation_id)
+                yield resolved
             finally:
                 self._log_events('conversation', conversation_id, self._get_response_message(response))
 
@@ -408,7 +433,7 @@ class CompletionsMixin:
 
     def _get_response_message(self, response):
         # return the current response message or chunk
-        if 'role' in response:
+        if 'role' in response or 'error' in response:
             # that's already a message
             return response
         if 'delta' in response['choices'][0]:
@@ -417,6 +442,11 @@ class CompletionsMixin:
             message = response['choices'][0]['message']
         return message
 
-    def _has_tool_calls(self, response):
+    def _get_finish_reason(self, response):
+        return response.get('choices', [{}])[-1].get('finish_reason')
+
+    def _has_tool_calls(self, response, implicit=False):
         message = self._get_response_message(response)
-        return message.get('tool_calls') or []
+        finish_reason = self._get_finish_reason(response)
+        tool_calls = message.get('tool_calls', [])
+        return tool_calls if (finish_reason == 'tool_calls' or implicit) else False
