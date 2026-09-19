@@ -44,6 +44,7 @@ class AssistantFormView extends BaseView {
       "change #documentSelect": "onFieldChange",
       "change #pipelineSelect": "onFieldChange",
       "change #toolSelect": "onFieldChange",
+      "change #railsSelect": "onFieldChange",
     });
     super(options);
     this.fieldMap = {
@@ -54,12 +55,20 @@ class AssistantFormView extends BaseView {
       documentSelect: "documents",
       pipelineSelect: "pipeline",
       toolSelect: "tools",
+      railsSelect: "guardrails",
     };
   }
   render(context) {
     super.render(context).then(() => {
       // Initialize Choices.js for select elements
-      const choices = new window.Choices($("#toolSelect")[0], {
+      const toolChoices = new window.Choices($("#toolSelect")[0], {
+        searchEnabled: true,
+        searchChoices: true,
+        removeItems: true,
+        removeItemButton: true,
+      });
+      // Initialize Choices.js for select elements
+      const railsChoices = new window.Choices($("#railsSelect")[0], {
         searchEnabled: true,
         searchChoices: true,
         removeItems: true,
