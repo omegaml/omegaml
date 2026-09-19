@@ -18,6 +18,7 @@ from werkzeug.exceptions import NotFound
 
 from omegaml import _base_config
 from omegaml.backends.restapi.asyncrest import AsyncResponseMixin, AsyncTaskResourceMixin, resolve
+from omegaml.server.restapi import transcriptions, speech
 from omegaml.server.restapi.util import AnyObject, OmegaResourceMixin, strict
 from omegaml.util import isTrue
 
@@ -143,6 +144,8 @@ def create_app(url_prefix=None):
     if omega_api.remote_specs_url is None:
         # only add api endpoints if we are serving the api
         add_api_endpoints(api)
+        transcriptions.create_api(api)
+        speech.create_api(api)
 
     return omega_bp
 
@@ -250,7 +253,7 @@ def add_api_endpoints(api):
             return description, getattr(e, 'code', 400)
         if isinstance(description, list):
             # flask error handler will extract as body
-            setattr(e, 'data', description)
+            e.data = description
             return {}, getattr(e, 'code', 400)
         return {'message': description}, getattr(e, 'code', 400)
 
@@ -285,7 +288,7 @@ def add_api_endpoints(api):
                     resource_pk = kwargs_map.get('pk')
                     meth = self._get_resource_method(resource_name, method_name)
                     return meth, dict(resource_name=res_kwargs.get(resource_pk))
-            raise NotFound('unknown resource {}'.format(resourceUri))
+            raise NotFound(f'unknown resource {resourceUri}')
 
     @api.route('/api/v1/model/<path:model_id>/<string:action>', methods=['GET', 'PUT'])
     @api.route('/api/v1/model/<path:model_id>/', defaults={'action': 'metadata'}, methods=['GET'])
@@ -476,13 +479,11 @@ def add_api_endpoints(api):
 
         @api.marshal_with(ServiceOutput)
         def put(self, model_id, action=None):
-            api.payload.update(raw=True)  # force OpenAI-like response
-            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
+            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id, raw=True)
 
         @api.marshal_with(ServiceOutput)
         def post(self, model_id, action=None):
-            api.payload.update(raw=True)  # force OpenAI native response
-            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
+            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id, raw=True)
 
 
 omega_bp = create_app()

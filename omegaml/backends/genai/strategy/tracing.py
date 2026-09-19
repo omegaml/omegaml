@@ -2,10 +2,11 @@ from pprint import pformat
 
 import pandas as pd
 
+from omegaml.backends.genai.strategy.mixinbase import ConversationModelMixinBase
 from omegaml.util import ensure_dict, ensure_list
 
 
-class TracingMixin:
+class TracingMixin(ConversationModelMixinBase):
     def trace(self, fn=None, methods=None):
         """trace pipeline calls
 

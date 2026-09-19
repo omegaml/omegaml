@@ -8,10 +8,12 @@ from urllib.parse import parse_qs, urlsplit
 
 from omegaml.backends.genai import GenAIBaseBackend, GenAIModel
 from omegaml.backends.genai.providers import PROVIDERS
+from omegaml.backends.genai.strategy.audio import AudioMixin
 from omegaml.backends.genai.strategy.augment import AugmentationMixin
 from omegaml.backends.genai.strategy.chat import ChatMixin
 from omegaml.backends.genai.strategy.completions import CompletionsMixin
 from omegaml.backends.genai.strategy.embeddings import EmbeddingsMixin
+from omegaml.backends.genai.strategy.provider import ProviderMixin
 from omegaml.backends.genai.strategy.toolcalling import ToolCallingMixin
 from omegaml.backends.genai.strategy.tracing import TracingMixin
 from omegaml.backends.guardrails import GuardrailPolicy
@@ -354,7 +356,15 @@ class ConversationModelBackend(GenAIBaseBackend):
 
 
 class ConversationModel(
-    TracingMixin, ToolCallingMixin, AugmentationMixin, EmbeddingsMixin, ChatMixin, CompletionsMixin, GenAIModel
+    TracingMixin,
+    ToolCallingMixin,
+    AugmentationMixin,
+    AudioMixin,
+    EmbeddingsMixin,
+    ProviderMixin,
+    ChatMixin,
+    CompletionsMixin,
+    GenAIModel,
 ):
     """OpenAI model
 
@@ -469,9 +479,7 @@ class ConversationModel(
         self.prompt = prompt or 'You are a helpful assistant.'
         self.data_store = data_store
         self.tracking = tracking
-        self.provider = PROVIDERS[provider](
-            api_key=self.api_key, base_url=self.base_url, model=self.model, tracking=self.tracking
-        )
+        self.provider = provider
         self.pipeline_fn = pipeline or (lambda *args, **kwargs: None)
         self.trace_fn = trace
         self.tools = ensure_list(tools or [])

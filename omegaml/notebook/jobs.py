@@ -491,7 +491,7 @@ class NotebookMixin:
             run_at (str|dict|JobSchedule): the schedule specified in a format
                suitable for JobSchedule. If not specified, this value is
                extracted from the first cell of the notebook
-            last_run (datetime): the last time this job was run, use this to
+            last_run (datetime|None): the last time this job was run, use this to
                reschedule the job for the next run. Defaults to the last
                timestamp listed in ``attributes['job_runs']``, or datetime.utcnow()
                if no previous run exists.

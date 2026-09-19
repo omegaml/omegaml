@@ -1,8 +1,12 @@
+from base64 import b64encode
+from http import HTTPStatus
+
 import flask
-from flask_restx import Model, fields
+from flask import make_response
+from flask_restx import Model, abort, fields
 from werkzeug.exceptions import BadRequest, HTTPException
 
-from omegaml.util import MongoEncoder, tryOr
+from omegaml.util import MongoEncoder, isTrue, load_class
 
 
 class StrictModel(Model):
@@ -12,7 +16,7 @@ class StrictModel(Model):
     # See: https://github.com/noirbizarre/flask-restplus/issues/241
     @property
     def _schema(self):
-        old = super(StrictModel, self)._schema
+        old = super()._schema
         old['additionalProperties'] = False
         return old
 
@@ -22,7 +26,7 @@ class AnyObject(fields.Wildcard):
         super().__init__(fields.Raw, **kwargs)
 
 
-class strict(object):
+class strict:
     # a poor man's stand-in for api.model
     def __init__(self, api):
         self.api = api
@@ -35,7 +39,7 @@ class strict(object):
         return smodel
 
 
-class OmegaResourceMixin(object):
+class OmegaResourceMixin:
     """
     helper mixin to resolve the request to a configured Omega instance
     """
@@ -44,6 +48,7 @@ class OmegaResourceMixin(object):
 
     def __init__(self, *args, **kwargs):
         self._omega_instance = None
+        self.is_async = kwargs.pop('is_async', False)
         super().__init__(*args, **kwargs)
 
     def dispatch_request(self, *args, **kwargs):
@@ -67,12 +72,37 @@ class OmegaResourceMixin(object):
                 om.defaults.OMEGA_USERID = getpass.getuser()
         return self._omega_instance
 
-    def get_query_payload(self):
+    def get_query_payload(self, raw=False, stream=False, streamer=False, is_async=False, **payload_defaults):
+        """get query and payload arguments
+
+        Returns the (query, payload, format) tuple as dictionaries to contain a request's parsed query and
+        body. The format specifies raw, async, streamer
+
+        """
         from omegaml.server.restapi.resources import omega_api
 
-        query = flask.request.args.to_dict()
-        payload = tryOr(lambda: omega_api.payload, None) or {}
-        return query, payload
+        query, payload = flask.request.args.to_dict(), None
+        if flask.request.is_json:
+            payload = omega_api.payload
+        elif flask.request.mimetype == 'multipart/form-data':
+            payload = {
+                **flask.request.form,
+                'files': {name: b64encode(f.read()) for name, f in flask.request.files.items()},
+            }
+        else:
+            abort(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+        # update for defaults
+        # -- eg raw=True
+        for k, v in payload_defaults.items():
+            payload.setdefault(k, v)
+        # format
+        format = {
+            'raw': raw or payload.get('raw', False),
+            'stream': isTrue(stream or payload.get('stream') or query.get('stream')),
+            'streamer': streamer or query.get('streamer') or payload.get('streamer'),
+            'is_async': isTrue(is_async or query.get('async') or payload.get('async')),
+        }
+        return query, payload, format
 
     def check_object_authorization(self, pattern):
         from omegaml.server.restapi import resource_filter
@@ -90,7 +120,7 @@ class OmegaResourceMixin(object):
     def create_response_from_resource(
         self, generic_resource, resource_method, resource_name, resource_pk, *args, **kwargs
     ):
-        query, payload = self.get_query_payload()
+        query, payload, format_kwargs = self.get_query_payload(**kwargs)
         async_body = {
             resource_name: resource_pk,
             'result': 'pending',
@@ -99,12 +129,33 @@ class OmegaResourceMixin(object):
         if not self.check_object_authorization(pattern):
             raise BadRequest(f'{pattern} is not available')
         try:
-            meth = self._get_resource_method(generic_resource, resource_method)
-            result = meth(resource_pk, query, payload)
-            resp = self.create_maybe_async_response(result, async_body=async_body, **kwargs)
+            resource_method = self._get_resource_method(generic_resource, resource_method, **format_kwargs)
+            result = resource_method(resource_pk, query, payload)
+            resp = self.create_maybe_async_response(result, async_body=async_body, **format_kwargs)
         except Exception as e:
             raise self._build_http_exception(e)
         return resp
+
+    def response(self, body, status, headers, cookies, request=None):
+        # request may be required in subclasses of AsyncResponseMixin, e.g. Django tastypie Resource.create_response
+        if not cookies:
+            return body, status, headers
+        resp = make_response((body, status, headers))
+        for k, v in (cookies or {}).items():
+            resp.set_cookie(k, str(v))
+        return resp
+
+    def create_sync_response(self, result, status=None, headers=None, cookies=None, request=None):
+        if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
+            body, status = result
+            headers = headers or {}
+        elif isinstance(result, tuple) and len(result) == 3 and isinstance(result[1], int):
+            body, status, headers = result
+        elif isinstance(result, tuple) and len(result) == 4 and isinstance(result[1], int):
+            body, status, headers, cookies = result
+        else:
+            body, status, headers = result, status or HTTPStatus.OK, {}
+        return self.response(body, int(status), headers, cookies, request=request)
 
     def _build_http_exception(self, e):
         # build a valid HTTPException from an exception
@@ -127,39 +178,22 @@ class OmegaResourceMixin(object):
             error_id = str(uuid.uuid4())
             tb = traceback.format_exc()
             logging.error(f"Error ID: {error_id}\n{tb}")
-            message, status_code = f"{repr(e)} [Error ID: {error_id}]", BadRequest.code
+            message, status_code = f"{e!r} [Error ID: {error_id}]", BadRequest.code
         exc = HTTPException(message)
         exc.code = status_code
         return exc
 
-    def _get_resource_method(self, resource_name, method_name):
-        resource = getattr(self, resource_name)
+    def _get_resource_method(self, resource_name, method_name, **kwargs):
+        RESOURCE_REGISTRY = {
+            '_generic_model_resource': 'omegaml.backends.restapi.model.GenericModelResource',
+            '_generic_script_resource': 'omegaml.backends.restapi.model.GenericScriptResource',
+            '_generic_service_resource': 'omegaml.backends.restapi.model.GenericServiceResource',
+            '_generic_job_resource': 'omegaml.backends.restapi.model.GenericJobResource',
+        }
+        resource_cls = load_class(RESOURCE_REGISTRY[resource_name])
+        resource = resource_cls(self._omega, **kwargs)
         meth = getattr(resource, method_name)
         return meth
-
-    @property
-    def _generic_model_resource(self):
-        from omegaml.backends.restapi.model import GenericModelResource
-
-        return GenericModelResource(self._omega, is_async=self.is_async)
-
-    @property
-    def _generic_script_resource(self):
-        from omegaml.backends.restapi.script import GenericScriptResource
-
-        return GenericScriptResource(self._omega, is_async=self.is_async)
-
-    @property
-    def _generic_service_resource(self):
-        from omegaml.backends.restapi.service import GenericServiceResource
-
-        return GenericServiceResource(self._omega, is_async=self.is_async)
-
-    @property
-    def _generic_job_resource(self):
-        from omegaml.backends.restapi.job import GenericJobResource
-
-        return GenericJobResource(self._omega, is_async=self.is_async)
 
     @property
     def celeryapp(self):

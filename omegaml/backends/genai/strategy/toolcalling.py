@@ -1,7 +1,9 @@
 import json
 
+from omegaml.backends.genai.strategy.mixinbase import ConversationModelMixinBase
 
-class ToolCallingMixin:
+
+class ToolCallingMixin(ConversationModelMixinBase):
     def tools_specs(self, tools):
         return [self._get_function_spec(tool) for tool in tools]
 

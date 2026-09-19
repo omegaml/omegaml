@@ -113,6 +113,18 @@ class GenAIBaseBackend(VirtualObjectBackend):
             dimensions = data.get('dimensions', None)
         return model.embed(documents, dimensions=dimensions)
 
+    def transcribe(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+        model = self.get(modelname)
+        model.load()
+        data = self._resolve_input_data('transcribe', Xname, **kwargs)
+        return model.transcribe(data, **kwargs)
+
+    def speech(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
+        model = self.get(modelname)
+        model.load()
+        data = self._resolve_input_data('speech', Xname, **kwargs)
+        return model.speech(data, **kwargs)
+
     def predict(self, *args, **kwargs):
         raise NotImplementedError('A GenAIModel does not support prediction, use complete or generate')
 
@@ -188,6 +200,7 @@ class GenAIModelHandler(GenAIModel, VirtualObjectHandler):
         'toolresult',
         'process',
         'retrieve',
+        'transcribe',
     ]
 
     def __init__(self, *args, fn=None, **kwargs):
@@ -253,5 +266,5 @@ def virtual_genai(fn):
 
     .. versionadded:: 0.17.0
     """
-    setattr(fn, '_omega_virtual_genai', True)
+    fn._omega_virtual_genai = True
     return fn

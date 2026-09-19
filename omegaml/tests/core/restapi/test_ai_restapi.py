@@ -1,10 +1,13 @@
 import json
 import unittest
+from pathlib import Path
 
+import omegaml
 from omegaml import Omega
 from omegaml.backends.genai import GenAIBaseBackend, GenAIModelHandler
 from omegaml.backends.genai.models.conversation import ConversationModelBackend
 from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.client.util import subdict
 from omegaml.server import restapi
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
@@ -64,9 +67,7 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
         # we get SSE-formated responses
         # -- data: { ... } # every streamed response is a json object
         # -- https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
-        data = list(
-            map(lambda d: json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d, resp.iter_encoded())
-        )
+        data = [json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d for d in resp.iter_encoded()]
         self.assertEqual(len(data), len('hello'))
         # FIXME the 'result' should really be 'content' (for consistency with OpenAI?)
         self.assertEqual(
@@ -167,17 +168,92 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers['Content-Type'], 'text/event-stream')
-        data = list(
-            map(lambda d: json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d, resp.iter_encoded())
-        )
+        data = [json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d for d in resp.iter_encoded()]
         self.assertEqual(len(data[-1]['content']), len('hello'))
         self.assertEqual(
-            data[-1],
+            subdict(data[-1], ['content', 'delta']),
             {
-                'model': 'mymodel',
                 'content': 'hello',
                 'delta': 'o',
-                'resource_uri': 'mymodel',
+            },
+        )
+
+    def test_openai_audio_transcribe(self):
+        self._setup_voice_model()
+        wav_file_path = Path(omegaml.__file__).parent / 'example/demo/multimodal/resources/sample.wav'
+        self.client.is_json = False
+        # TODO: use an actual model to test end to end (whisper-1 does not exist)
+        resp = self.client.post(
+            '/api/openai/v1/audio/transcriptions',
+            data={
+                'file': (wav_file_path, 'test.wav'),
+                'model': 'voicemodel',
+            },
+            content_type='multipart/form-data',
+            auth=self.auth,
+            headers=self._headers,
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(
+            resp.json,
+            {
+                'model': 'voicemodel',
+                'text': 'hello world',
+                'resource_uri': 'voicemodel',
+            },
+        )
+
+    def test_openai_audio_transcribe_stream(self):
+        self._setup_voice_model()
+        wav_file_path = Path(omegaml.__file__).parent / 'example/demo/multimodal/resources/sample.wav'
+        self.client.is_json = False
+        resp = self.client.post(
+            '/api/openai/v1/audio/transcriptions',
+            data={
+                'file': (wav_file_path, 'test.wav'),
+                'model': 'voicemodel',
+                'stream': True,
+            },
+            content_type='multipart/form-data',
+            auth=self.auth,
+            headers=self._headers,
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers['Content-Type'], 'text/event-stream')
+        data = [json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d for d in resp.iter_encoded()]
+        self.assertEqual(''.join(d['delta'] for d in data), 'hello world')
+        for d, c in zip(data, 'hello world'):
+            self.assertEqual(
+                subdict(d, ['delta', 'type']),
+                {
+                    'delta': c,
+                    'type': 'transcript.text.delta',
+                },
+            )
+
+    def test_openai_audio_speech(self):
+        self._setup_voice_model()
+        wav_file_path = Path(omegaml.__file__).parent / 'example/demo/multimodal/resources/sample.wav'
+        self.client.is_json = False
+        # TODO: use an actual model to test end to end (whisper-1 does not exist)
+        resp = self.client.post(
+            '/api/openai/v1/audio/speech',
+            json={
+                'model': 'voicemodel',
+                'input': 'hello world',
+            },
+            auth=self.auth,
+            headers=self._headers,
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(
+            resp.json,
+            {
+                'model': 'voicemodel',
+                'dataset': './audio/speech',
+                'resource_uri': 'voicemodel',
             },
         )
 
@@ -207,6 +283,32 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
                 }
 
         self.om.models.put(MyModel, 'mymodel', replace=True)
+
+    def _setup_voice_model(self):
+        # test save and restore
+        class VoiceModel(GenAIModelHandler):
+            def transcribe(self, audio, response_format='json', stream=False, **kwargs):
+                resp = None
+                if response_format == 'json':
+                    resp = {'text': 'hello world'}
+                    if stream:
+
+                        def stream_result(content):
+                            for c in content:
+                                yield {
+                                    'type': 'transcript.text.delta',
+                                    'delta': c,
+                                }
+
+                        resp = stream_result(resp['text'])
+                return resp
+
+            def speech(self, text, **kwargs):
+                return {
+                    'dataset': './audio/speech',
+                }
+
+        self.om.models.put(VoiceModel, 'voicemodel', replace=True)
 
 
 if __name__ == '__main__':
