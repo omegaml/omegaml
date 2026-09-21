@@ -1178,7 +1178,7 @@ class IterableJsonDump(list):
         return buffer.getvalue()
 
 
-isTrue = lambda v: v if isinstance(v, bool) else (v.lower() in ['yes', 'y', 't', 'true', '1'])
+isTrue = lambda v: v if isinstance(v, bool) else (str(v).lower() in ['yes', 'y', 't', 'true', '1'])
 
 
 class SystemPosixPath(type(Path()), Path):
@@ -1413,7 +1413,7 @@ def failsafe_yaspin(mock=False):
     """
 
     def is_piped():
-        return not sys.stdout.isatty()
+        return not getattr(sys.stdout, 'isatty', lambda: False)()
 
     def is_running_in_jupyter():
         try:

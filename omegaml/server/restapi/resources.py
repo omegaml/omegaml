@@ -18,7 +18,7 @@ from werkzeug.exceptions import NotFound
 
 from omegaml import _base_config
 from omegaml.backends.restapi.asyncrest import AsyncResponseMixin, AsyncTaskResourceMixin, resolve
-from omegaml.server.restapi.util import AnyObject, OmegaResourceMixin, strict
+from omegaml.server.restapi.util import AnyObject, OmegaFlaskResourceMixin, strict
 from omegaml.util import isTrue
 
 logger = logging.getLogger(__name__)
@@ -261,7 +261,7 @@ def add_api_endpoints(api):
             return {'ping': dt.isoformat()}
 
     @api.route('/api/v1/task/<string:taskid>/<string:action>')
-    class TaskResource(OmegaResourceMixin, AsyncTaskResourceMixin, Resource):
+    class TaskResource(OmegaFlaskResourceMixin, AsyncTaskResourceMixin, Resource):
         @api.expect(TaskInput, validate=False)
         @api.marshal_with(TaskOutput)
         def get(self, taskid, action):
@@ -289,7 +289,7 @@ def add_api_endpoints(api):
 
     @api.route('/api/v1/model/<path:model_id>/<string:action>', methods=['GET', 'PUT'])
     @api.route('/api/v1/model/<path:model_id>/', defaults={'action': 'metadata'}, methods=['GET'])
-    class ModelResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
+    class ModelResource(OmegaFlaskResourceMixin, AsyncResponseMixin, Resource):
         result_uri = '/api/v1/task/{id}/result'
 
         @api.expect(PredictInput, validate=False)
@@ -303,7 +303,7 @@ def add_api_endpoints(api):
             return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
 
     @api.route('/api/v1/script/<path:script_id>/run', methods=['POST'])
-    class ScriptResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
+    class ScriptResource(OmegaFlaskResourceMixin, AsyncResponseMixin, Resource):
         result_uri = '/api/v1/task/{id}/result'
 
         @api.expect(ScriptInput, validate=False)
@@ -322,7 +322,7 @@ def add_api_endpoints(api):
     # we expose service resources as /api/v1/service and /api/service
     # rationale: this is user-defined, and /v1/ does not make sense in this case
     # however in light of consistency, we also provide /v1/
-    class ServiceResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
+    class ServiceResource(OmegaFlaskResourceMixin, AsyncResponseMixin, Resource):
         result_uri = '/api/v1/task/{id}/result'
 
         @api.expect(ServiceInput, validate=False)
@@ -352,7 +352,7 @@ def add_api_endpoints(api):
     @api.route('/api/v1/job/<path:job_id>/run', methods=['POST'])
     @api.route('/api/v1/job/<path:job_id>/', methods=['GET'])
     @api.route('/api/v1/job/', methods=['GET'], defaults={'job_id': None})
-    class JobResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
+    class JobResource(OmegaFlaskResourceMixin, AsyncResponseMixin, Resource):
         result_uri = '/api/v1/task/{id}/result'
 
         @api.expect(JobInput, validate=False)
@@ -367,7 +367,7 @@ def add_api_endpoints(api):
             return self.create_response_from_resource('_generic_job_resource', 'run', 'job', job_id)
 
     @api.route('/api/v1/dataset/<path:dataset_id>')
-    class DatasetResource(OmegaResourceMixin, Resource):
+    class DatasetResource(OmegaFlaskResourceMixin, Resource):
         # TODO shall implement as a GenericResource, like all other resources
         def _restore_filter(self, om, fltparams, name):
             """
@@ -467,7 +467,7 @@ def add_api_endpoints(api):
         methods=['GET'],
         endpoint='openai_models',
     )
-    class GenerativeAIResource(OmegaResourceMixin, AsyncResponseMixin, Resource):
+    class GenerativeAIResource(OmegaFlaskResourceMixin, AsyncResponseMixin, Resource):
         result_uri = '/api/v1/task/{id}/result'
 
         @api.marshal_with(ServiceOutput)
@@ -476,13 +476,11 @@ def add_api_endpoints(api):
 
         @api.marshal_with(ServiceOutput)
         def put(self, model_id, action=None):
-            api.payload.update(raw=True)  # force OpenAI-like response
-            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
+            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id, raw=True)
 
         @api.marshal_with(ServiceOutput)
         def post(self, model_id, action=None):
-            api.payload.update(raw=True)  # force OpenAI native response
-            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id)
+            return self.create_response_from_resource('_generic_model_resource', action, 'model', model_id, raw=True)
 
 
 omega_bp = create_app()

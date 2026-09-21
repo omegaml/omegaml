@@ -1,8 +1,7 @@
-class GenericJobResource:
-    def __init__(self, om, is_async=False):
-        self.om = om
-        self.is_async = is_async
+from omegaml.backends.restapi.resource import GenericResourceMixin
 
+
+class GenericJobResource(GenericResourceMixin):
     def is_eager(self):
         return getattr(self.om.runtime.celeryapp.conf, 'CELERY_ALWAYS_EAGER', False)
 

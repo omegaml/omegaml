@@ -10,7 +10,7 @@ from http import HTTPStatus
 import celery
 import flask
 from celery.result import AsyncResult, EagerResult
-from flask import make_response, request
+from flask import request
 from werkzeug.exceptions import NotFound
 
 EAGER_RESULTS = {}
@@ -120,7 +120,11 @@ class AsyncResponseMixin:
                 'task_id': result.id,
             })
             status = status or HTTPStatus.ACCEPTED
-        elif isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
+            return self.response(body, int(status), headers, cookies, request=request)
+        return self.create_sync_response(result, status=status, headers=headers, cookies=cookies, request=request)
+
+    def create_sync_response(self, result, status=None, headers=None, cookies=None, request=None):
+        if isinstance(result, tuple) and len(result) == 2 and isinstance(result[1], int):
             body, status = result
             headers = headers or {}
         elif isinstance(result, tuple) and len(result) == 3 and isinstance(result[1], int):
@@ -130,15 +134,6 @@ class AsyncResponseMixin:
         else:
             body, status, headers = result, status or HTTPStatus.OK, {}
         return self.response(body, int(status), headers, cookies, request=request)
-
-    def response(self, body, status, headers, cookies, request=None):
-        # request may be required in subclasses of AsyncResponseMixin, e.g. Django tastypie Resource.create_response
-        if not cookies:
-            return body, status, headers
-        resp = make_response((body, status, headers))
-        for k, v in (cookies or {}).items():
-            resp.set_cookie(k, str(v))
-        return resp
 
 
 class AsyncTaskResourceMixin:
