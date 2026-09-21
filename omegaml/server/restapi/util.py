@@ -186,9 +186,9 @@ class OmegaResourceMixin:
     def _get_resource_method(self, resource_name, method_name, **kwargs):
         RESOURCE_REGISTRY = {
             '_generic_model_resource': 'omegaml.backends.restapi.model.GenericModelResource',
-            '_generic_script_resource': 'omegaml.backends.restapi.model.GenericScriptResource',
-            '_generic_service_resource': 'omegaml.backends.restapi.model.GenericServiceResource',
-            '_generic_job_resource': 'omegaml.backends.restapi.model.GenericJobResource',
+            '_generic_script_resource': 'omegaml.backends.restapi.script.GenericScriptResource',
+            '_generic_service_resource': 'omegaml.backends.restapi.service.GenericServiceResource',
+            '_generic_job_resource': 'omegaml.backends.restapi.job.GenericJobResource',
         }
         resource_cls = load_class(RESOURCE_REGISTRY[resource_name])
         resource = resource_cls(self._omega, **kwargs)

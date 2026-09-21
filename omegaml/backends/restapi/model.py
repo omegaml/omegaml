@@ -3,20 +3,14 @@ import logging
 import numpy as np
 import pandas as pd
 
+from omegaml.backends.restapi.resource import GenericResourceMixin
 from omegaml.backends.restapi.streamable import StreamableResourceMixin
 from omegaml.util import ensure_json_serializable, isTrue
 
 logger = logging.getLogger(__name__)
 
 
-class GenericModelResource(StreamableResourceMixin):
-    def __init__(self, om, raw=False, stream=None, streamer=None, is_async=False, **kwargs):
-        self.om = om
-        self.is_async = is_async
-        self.stream = stream
-        self.raw = raw
-        super().__init__(**kwargs)
-
+class GenericModelResource(GenericResourceMixin, StreamableResourceMixin):
     def is_eager(self):
         return getattr(self.om.runtime.celeryapp.conf, 'CELERY_ALWAYS_EAGER', False)
 
