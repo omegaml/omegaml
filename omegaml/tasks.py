@@ -27,39 +27,6 @@ def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=
 
 
 @shared_task(base=OmegamlTask, bind=True)
-def omega_transcribe(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
-    default_kwargs = {
-        'as_dict': True,
-    }
-    result = self.get_delegate(modelname).perform(
-        'transcribe',
-        *self.delegate_args,
-        **{
-            **default_kwargs,
-            **self.delegate_kwargs,
-        },
-    )
-    return sanitized(self.maybe_stream(result, stream=stream))
-
-
-@shared_task(base=OmegamlTask, bind=True)
-def omega_speech(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
-    default_kwargs = {
-        'dataset': f'.audio/speech/{self.request.id}',
-        'as_dict': True,
-    }
-    result = self.get_delegate(modelname).perform(
-        'speech',
-        *self.delegate_args,
-        **{
-            **default_kwargs,
-            **self.delegate_kwargs,
-        },
-    )
-    return sanitized(self.maybe_stream(result, stream=stream))
-
-
-@shared_task(base=OmegamlTask, bind=True)
 def omega_embed(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
     result = self.get_delegate(modelname).perform('embed', *self.delegate_args, **self.delegate_kwargs)
     return sanitized(result)
@@ -215,6 +182,7 @@ def omega_ping(task, *args, exception=False, **kwargs):
 @shared_task(base=OmegamlTask, bind=True)
 def omega_preload(task, *args, items=None, **kwargs):
     """preload models, datasets and other items into worker process"""
+    pass
 
 
 @worker_process_init.connect

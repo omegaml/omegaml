@@ -18,7 +18,6 @@ from werkzeug.exceptions import NotFound
 
 from omegaml import _base_config
 from omegaml.backends.restapi.asyncrest import AsyncResponseMixin, AsyncTaskResourceMixin, resolve
-from omegaml.server.restapi import transcriptions, speech
 from omegaml.server.restapi.util import AnyObject, OmegaResourceMixin, strict
 from omegaml.util import isTrue
 
@@ -144,8 +143,6 @@ def create_app(url_prefix=None):
     if omega_api.remote_specs_url is None:
         # only add api endpoints if we are serving the api
         add_api_endpoints(api)
-        transcriptions.create_api(api)
-        speech.create_api(api)
 
     return omega_bp
 

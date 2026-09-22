@@ -8,7 +8,6 @@ from urllib.parse import parse_qs, urlsplit
 
 from omegaml.backends.genai import GenAIBaseBackend, GenAIModel
 from omegaml.backends.genai.providers import PROVIDERS
-from omegaml.backends.genai.strategy.audio import AudioMixin
 from omegaml.backends.genai.strategy.augment import AugmentationMixin
 from omegaml.backends.genai.strategy.chat import ChatMixin
 from omegaml.backends.genai.strategy.completions import CompletionsMixin
@@ -19,7 +18,7 @@ from omegaml.backends.genai.strategy.tracing import TracingMixin
 from omegaml.backends.guardrails import GuardrailPolicy
 from omegaml.backends.tracking import NoTrackTracker, OmegaSimpleTracker
 from omegaml.store import OmegaStore
-from omegaml.util import KeepMissing, raise_, ensure_list
+from omegaml.util import KeepMissing, ensure_list, raise_
 
 logger = logging.getLogger(__name__)
 
@@ -359,7 +358,6 @@ class ConversationModel(
     TracingMixin,
     ToolCallingMixin,
     AugmentationMixin,
-    AudioMixin,
     EmbeddingsMixin,
     ProviderMixin,
     ChatMixin,
@@ -487,18 +485,16 @@ class ConversationModel(
         self.documents = documents
         self.strategy = {
             # defaults
-            **{
-                # kwargs to pass to DocumentIndex.retrieve()
-                'retrieve': {'top': 1},
-                # system role: 'system|developer'
-                'system_role': 'developer',
-                # agentic behavior: if True, will continue in a loop until no more tool calls
-                'agentic': False,
-                # guardrails applicability (all is the only supported value)
-                'guardrails': 'all',
-                # choice of tools
-                'tool_choice': 'auto',
-            },
+            # kwargs to pass to DocumentIndex.retrieve()
+            'retrieve': {'top': 1},
+            # system role: 'system|developer'
+            'system_role': 'developer',
+            # agentic behavior: if True, will continue in a loop until no more tool calls
+            'agentic': False,
+            # guardrails applicability (all is the only supported value)
+            'guardrails': 'all',
+            # choice of tools
+            'tool_choice': 'auto',
             # override by user provided
             **(strategy or {}),
         }
