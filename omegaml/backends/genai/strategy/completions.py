@@ -332,12 +332,16 @@ class CompletionsMixin(ConversationModelMixinBase):
             content = ''.join(
                 c['choices'][0]['delta'].get('content') or ''  # fmt:asis
                 for c in chunks
-            ) + str(chunk['choices'][0]['delta'].get('content') or '')
+                if c['choices']
+            )
             reasoning = ''.join(
                 c['choices'][0]['delta'].get('reasoning') or ''  # fmt:asis
                 for c in chunks
-            ) + str(chunk['choices'][0]['delta'].get('reasoning') or '')
+                if c['choices']
+            )
             if chunk['choices']:
+                content += str(chunk['choices'][0]['delta'].get('content') or '')
+                reasoning += str(chunk['choices'][0]['delta'].get('reasoning') or '')
                 if raw:
                     response_message = chunk['choices'][0]['delta']
                 else:
@@ -368,7 +372,7 @@ class CompletionsMixin(ConversationModelMixinBase):
                     or response_message
                 )
             else:
-                content = ''
+                response_message = {}
             # consolidate response
             consolidated_response.update({'content': content, 'reasoning': reasoning})
             consolidated_response.update(response_message)
@@ -437,10 +441,13 @@ class CompletionsMixin(ConversationModelMixinBase):
         if 'role' in response or 'error' in response:
             # that's already a message
             return response
-        if 'delta' in response['choices'][0]:
-            message = response['choices'][0]['delta']
+        if response.get('choices'):
+            if 'delta' in response['choices'][0]:
+                message = response['choices'][0]['delta']
+            else:
+                message = response['choices'][0]['message']
         else:
-            message = response['choices'][0]['message']
+            message = {}
         return message
 
     def _get_finish_reason(self, response):

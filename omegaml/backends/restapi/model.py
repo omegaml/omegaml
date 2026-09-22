@@ -35,7 +35,6 @@ class GenericModelResource(GenericResourceMixin, StreamableResourceMixin):
         return {
             'raw': isTrue(self.raw or payload.get('raw', False) or query.get('raw')),
             'stream': isTrue(self.stream or payload.get('stream', False) or query.get('stream')),
-            'streamer': self.streamer or payload.get('streamer', False) or query.get('streamer'),
         }
 
     def predict(self, model_id, query, payload):
