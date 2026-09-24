@@ -7,7 +7,7 @@ import pandas as pd
 import pymongo
 from numpy.testing import assert_almost_equal
 from sklearn.datasets import load_iris
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from omegaml import Omega
 from omegaml.backends.tracking.experiment import ExperimentBackend
@@ -30,7 +30,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         coll = om.datasets.collection(exp._data_name)
         # SON(..., 'keys': { key: order, ...},) => ['key', ...]
         idxs = [son.to_dict()['key'] for son in coll.list_indexes()]
-        idxs_keys = [list(sorted(d.keys())) for d in idxs]
+        idxs_keys = [sorted(d.keys()) for d in idxs]
         self.assertTrue(any(set(keys) & {'data.event', 'data.key', 'data.run'} for keys in idxs_keys))
         self.assertTrue(any(set(keys) & {'data.event', 'data.key', 'data.dt'} for keys in idxs_keys))
 
@@ -534,7 +534,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
     def test_since_filter(self):
         om = self.om
         dt_start = dt = datetime.datetime.utcnow()
-        for i in range(0, 10):
+        for i in range(10):
             with om.runtime.experiment('myexp') as exp:
                 exp.log_metric('acc', 0, dt=dt)
                 dt = dt + datetime.timedelta(hours=1)
@@ -561,7 +561,7 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
     def test_since_delta_filter(self):
         om = self.om
         dt_start = dt = datetime.datetime.utcnow()
-        for i in range(0, 10):
+        for i in range(10):
             with om.runtime.experiment('myexp') as exp:
                 exp.log_metric('acc', 0, dt=dt)
                 dt = dt + datetime.timedelta(hours=1)
@@ -621,12 +621,12 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
     def test_daterange_filter(self):
         om = self.om
         dt_start = dt = datetime.datetime.utcnow()
-        for i in range(0, 10):
+        for i in range(10):
             with om.runtime.experiment('myexp') as exp:
                 exp.log_metric('acc', 0, dt=dt)
                 dt = dt + datetime.timedelta(hours=1)
         # try datetime range since start
-        for i in range(0, 10):
+        for i in range(10):
             data = exp.data(event='metric', key='acc', since=dt_start, end=dt_start + datetime.timedelta(hours=i))
             self.assertEqual(len(data), i + 1)
         # try datetime for arbitrary ranges
@@ -644,14 +644,25 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         exp: OmegaSimpleTracker
         with om.runtime.experiment('myexp') as exp:
             df = pd.DataFrame(
-                {'x': range(0, 10)},
+                {'x': range(10)},
             )
             exp.log_data('Y', df['x'])
         with om.runtime.experiment('myexp') as exp:
-            ds = pd.Series(range(0, 10)).values
+            ds = pd.Series(range(10)).values
             exp.log_data('Y', ds)
         dfx = exp.restore_data('Y', run='*')
         self.assertEqual(len(dfx), 20)
+
+    def test_logged_event_data_is_dict(self):
+        om = self.om
+        exp: OmegaSimpleTracker
+        with om.runtime.experiment('myexp') as exp:
+            data = {'x': 42}
+            exp.log_event('event', 'key', data)
+        data = exp.data(event='event', key='key')
+        value = data.iloc[-1]['value']
+        self.assertEqual(value, {'x': 42})
+        self.assertTrue(type(value) is dict, f"expected value to be of {dict} got {type(value)}")
 
 
 if __name__ == '__main__':

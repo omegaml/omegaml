@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 
 from omegaml import settings as settings
+from omegaml.backends.guardrails import GuardrailPolicy
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.tests.util import clear_om as clear_om
 
@@ -52,7 +53,16 @@ def create_testdata(om):
 
 
 def create_ai_testdata(om):
-    om.models.put('openai+http://localhost:11434/v1;model=tinyllama:latest', 'llms/mymodel')
+    om.models.put('openai+http://localhost:11434/v1;model=tinyllama:latest', 'llms/tinyllama')
+    om.models.put('openai+http://localhost:11434/v1;model=qwen2.5:latest', 'llms/qwen2.5')
+
+    rails = GuardrailPolicy()
+    rails.add_guardrail('converse', 'all', 'filter_email')
+
+    def filter_email(*args, **kwargs):
+        return True
+
+    om.models.put(filter_email, 'policy/scanners/filter_email', replace=True)
 
 
 def create_all_testdata():

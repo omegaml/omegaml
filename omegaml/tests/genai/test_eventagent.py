@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from omegaml.backends.genai.eventagent import EventAgent
+from omegaml.backends.genai.eventagent import EventAgent, EventAgentBackend
 from omegaml.backends.genai.models import ConversationModel
 from omegaml.backends.genai.replay import ConversationReplay
 from omegaml.backends.genai.tools import as_tool_call
@@ -10,6 +10,7 @@ from omegaml.tests.util import OmegaTestMixin
 class EvenAgentTests(OmegaTestMixin, TestCase):
     def setUp(self):
         super().setUp()
+        self.om.models.register_backend(EventAgentBackend.KIND, EventAgentBackend)
 
     def test_basic_agent_flow(self):
         """test basic response handling"""
@@ -17,17 +18,20 @@ class EvenAgentTests(OmegaTestMixin, TestCase):
         meta = om.models.put('openai+http://localhost;model=mymodel', 'mymodel', replace=True)
         # prepare an agent
         # -- we fake TextModel.complete() responses, i.e. TextModel.complete() is _not_ called
-        agent = EventAgent(model='mymodel')
+        agent = EventAgent(model='mymodel', load=True)
         replay = ConversationReplay(target=agent)
         replay.add('hello', 'Hello! How can I help you?')
         # check we're getting expected responses
         resp = agent.invoke('hello')
         self.assertEqual(resp['content'], 'Hello! How can I help you?')
         self.assertIsNotNone(agent.sessionid)
-        # check conversation id persists across sessions
+        # check conversation data persists across instances with the same name and session id
         sessionid = agent.sessionid
-        agent.invoke('hello')
+        agent = EventAgent(name=agent.name, model=agent.model, sessionid=sessionid, load=True)
+        replay = ConversationReplay(target=agent)
         self.assertEqual(agent.sessionid, sessionid)
+        self.assertTrue(agent.context['history'][-1]['input'].endswith('hello'))  # input includes the system prompt
+        self.assertEqual(agent.context['history'][-1]['response']['content'], 'Hello! How can I help you?')
 
     def test_basic_model_flow(self):
         """test basic response handling"""
@@ -35,7 +39,7 @@ class EvenAgentTests(OmegaTestMixin, TestCase):
         meta = om.models.put('openai+http://localhost;model=mymodel', 'mymodel', replace=True)
         # prepare an agent
         # -- we fake provider responses, i.e. TextModel.complete() is called
-        agent = EventAgent(model='mymodel')
+        agent = EventAgent(model='mymodel', load=True)
         replay = ConversationReplay(target=agent._model)
         replay.add('hello', 'Hello! How can I help you?')
         # check we're getting expected responses
@@ -54,7 +58,7 @@ class EvenAgentTests(OmegaTestMixin, TestCase):
 
         # prepare agent and tool reply
         # -- we fake provider responses, i.e. TextModel.complete() is called
-        agent = EventAgent(model='mymodel')
+        agent = EventAgent(model='mymodel', load=True)
         replay = ConversationReplay(target=agent._model)
         replay.add('calculate 4 * 5', tool_calls=[as_tool_call(multiply, 4, 5)])
         replay.add('20', 'The final result is 20')
@@ -91,7 +95,7 @@ class EvenAgentTests(OmegaTestMixin, TestCase):
         meta = om.models.put('openai+http://localhost;model=mymodel', 'mymodel', replace=True)
         # prepare agent and tool reply
         # -- we fake provider responses, i.e. TextModel.complete() is called
-        agent = EventAgent(model='mymodel')
+        agent = EventAgent(model='mymodel', load=True)
         replay = ConversationReplay(target=agent._model)
         replay.add(
             'calculate 5*2 and ask a human to review',
@@ -134,9 +138,12 @@ class EvenAgentTests(OmegaTestMixin, TestCase):
         agent = EventAgent(model='mymodel')
         meta = om.models.put(agent, 'agents/myagent')
         reloaded = om.models.get('agents/myagent')
+        self.assertEqual(reloaded.name, agent.name)
+        self.assertEqual(reloaded.model, agent.model)
         self.assertEqual(reloaded.context, agent.context)
         self.assertIsInstance(reloaded._model, ConversationModel)
         self.assertEqual(reloaded._model.base_url, 'http://localhost:80')
+        agent = reloaded
         replay = ConversationReplay(target=agent._model)
         replay.add(
             'calculate 5*2 and ask a human to review',
@@ -147,7 +154,7 @@ class EvenAgentTests(OmegaTestMixin, TestCase):
         agent.invoke('calculate 5*2 and ask a human to review')
         data = agent.tracking.data(run='*')
         # verify we can get sessions back as EventAgent instances
-        agent_sessions = agent.sessions()
+        agent_sessions = agent.sessions(raw=False, load=True)
         self.assertEqual(len(agent_sessions), 1)
         self.assertIsInstance(agent_sessions[-1], EventAgent)
         self.assertIsInstance(agent_sessions[-1]._model, ConversationModel)
@@ -156,3 +163,14 @@ class EvenAgentTests(OmegaTestMixin, TestCase):
         # verify we can get sessions back as dicts of contexts
         agent_sessions = agent.sessions(raw=True)
         self.assertIsInstance(agent_sessions, list)
+
+    def test_runtime_invoke(self):
+        om = self.om
+        meta = om.models.put('openai+http://localhost;model=mymodel', 'mymodel', replace=True)
+        # prepare agent and tool reply
+        # -- we fake provider responses, i.e. TextModel.complete() is called
+        agent = EventAgent(model='mymodel')
+        meta = om.models.put(agent, 'agents/myagent')
+        om.datasets.put({'input': 'hello world'}, 'sample', replace=True)
+        resp = om.runtime.model('agents/myagent').predict('sample')
+        print(resp.get())

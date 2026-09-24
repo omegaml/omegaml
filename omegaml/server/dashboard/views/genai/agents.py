@@ -8,10 +8,10 @@ class AIRepositoryView(RepositoryBaseView):
 
 
 class AIAgentsView(AIPromptsView):
-    list_prefix = 'agents'
+    item_filter = 'agents/*'
+    item_prefix = 'agents/'
 
 
 def create_view(bp):
     view = AIAgentsView('agents', store='models')
     view.create_routes(bp)
-    return

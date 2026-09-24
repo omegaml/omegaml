@@ -2,13 +2,12 @@ import logging
 from itertools import chain
 from uuid import uuid4
 
-from omegaml.backends.genai.strategy.mixinbase import ConversationModelMixinBase
 from omegaml.util import dict_merge, safeformat
 
 logger = logging.getLogger(__name__)
 
 
-class CompletionsMixin(ConversationModelMixinBase):
+class CompletionsMixin:
     def complete(
         self,
         prompt,

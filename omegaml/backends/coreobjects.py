@@ -68,7 +68,7 @@ class CoreObjectsBackend(BaseDataBackend):
             return self.get_dataframe_hdf(name, version=version)
         return self.get_object_as_python(meta, version=version)
 
-    def put(self, obj, name, attributes=None, **kwargs):
+    def put(self, obj, name, attributes=None, replace=False, **kwargs):
         if is_dataframe(obj) or is_series(obj):
             groupby = kwargs.get('groupby')
             if obj.empty:
@@ -520,7 +520,7 @@ class CoreObjectsBackend(BaseDataBackend):
             df = self._extract_dataframe_hdf(filename, version=version)
             return df
         else:
-            raise gridfs.errors.NoFile("{0} does not exist in mongo collection '{1}'".format(name, self.store.bucket))
+            raise gridfs.errors.NoFile(f"{name} does not exist in mongo collection '{self.store.bucket}'")
 
     def get_python_data(self, name, filter=None, version=-1, lazy=False, trusted=False, **kwargs):
         """

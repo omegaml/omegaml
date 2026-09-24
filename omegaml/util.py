@@ -1411,7 +1411,7 @@ def failsafe_yaspin(mock=False):
     """
 
     def is_piped():
-        return not sys.stdout.isatty()
+        return not getattr(sys.stdout, 'isatty', lambda: False)()
 
     def is_running_in_jupyter():
         try:
