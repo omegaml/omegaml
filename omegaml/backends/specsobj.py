@@ -1,5 +1,5 @@
 from omegaml.backends.virtualobj import VirtualObjectBackend
-from omegaml.client.util import subdict
+from omegaml.client.util import subdict, subdict_except
 
 
 class SpecsMixin:
@@ -13,7 +13,7 @@ class SpecsMixin:
         loading.
     """
 
-    def __init__(self, specs=None, load=False, **kwargs):
+    def __init__(self, specs: object = None, load: object = False, **kwargs: object) -> None:
         kwargs = {**(specs if isinstance(specs, dict) else {}), **kwargs}
         specs = list(specs.keys()) if isinstance(specs, dict) else specs
         self._specs = specs or list(kwargs.keys())
@@ -54,8 +54,12 @@ class SpecsBackend(VirtualObjectBackend):
         meta = super().put(obj, name, **kwargs)
         return meta.save()
 
-    def get(self, name, load=True, **kwargs):
+    def get(self, name, load=True, tracking=None, **kwargs):
         meta = self.model_store.metadata(name)
         obj = super().get(name, **kwargs)
-        obj.initialize(load=load, tracking=self.tracking, **{**subdict(meta.attributes, obj.specs.keys()), **kwargs})
+        obj.initialize(
+            load=load,
+            tracking=tracking or self.tracking,
+            **{**subdict_except(subdict(meta.attributes, obj.specs.keys()), ['tracking']), **kwargs},
+        )
         return obj

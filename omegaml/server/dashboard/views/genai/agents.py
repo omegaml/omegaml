@@ -1,3 +1,4 @@
+from omegaml.backends.genai.eventagent import EventAgent
 from omegaml.server.dashboard.views.genai.prompts import AIPromptsView
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
 
@@ -10,6 +11,7 @@ class AIRepositoryView(RepositoryBaseView):
 class AIAgentsView(AIPromptsView):
     item_filter = 'agents/*'
     item_prefix = 'agents/'
+    item_class = EventAgent
 
 
 def create_view(bp):

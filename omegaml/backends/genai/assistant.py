@@ -1,9 +1,10 @@
+from omegaml.backends.genai import ConversationModelBackendMixin
 from omegaml.backends.genai.models import ConversationModel
 from omegaml.backends.specsobj import SpecsBackend, SpecsMixin
-from omegaml.client.util import subdict
+from omegaml.client.util import subdict_except
 
 
-class AssistantBackend(SpecsBackend):
+class AssistantBackend(ConversationModelBackendMixin, SpecsBackend):
     KIND = 'genai.assistant'
 
 
@@ -25,10 +26,16 @@ class Assistant(SpecsMixin):
     def load(self):
         import omegaml as om
 
-        subdict_except = lambda d, keys: subdict(d, (k for k in d if k not in keys))
-        self._model = self._model or om.models.get(self.model, **subdict_except(self.specs, ['model']))
+        self._model = self._model or om.models.get(
+            self.model,
+            data_store=om.datasets,
+            tracking=self.tracking,
+            **subdict_except(self.specs, ['model', 'tracking']),
+        )
 
-    def complete(self, prompt, messages=None, conversation_id=None, stream=None, use_tools=True, agentic=False):
+    def complete(
+        self, prompt, messages=None, conversation_id=None, stream=None, use_tools=True, agentic=False, **kwargs
+    ):
         self.initialize(load=True)
         return self._model.complete(
             prompt,

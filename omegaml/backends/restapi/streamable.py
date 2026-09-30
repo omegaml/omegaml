@@ -11,6 +11,7 @@ from minibatch.tests.util import LocalExecutor
 from omegaml.util import tryOr, utcnow
 
 logger = logging.getLogger(__name__)
+logger.setLevel('DEBUG')
 
 
 class StreamableResourceMixin:

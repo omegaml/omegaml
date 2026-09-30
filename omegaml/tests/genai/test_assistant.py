@@ -17,7 +17,6 @@ class AssistantTests(OmegaTestMixin, TestCase):
 
         self.om.models.put(weather, 'tools/weather')
         self.om.models.put('openai+http://localhost/mymodel', 'llms/mymodel')
-
         obj = Assistant(model='llms/mymodel', tools=['weather'])
         meta = om.models.put(obj, 'assistants/test')
         self.assertEqual(meta.kind, AssistantBackend.KIND)

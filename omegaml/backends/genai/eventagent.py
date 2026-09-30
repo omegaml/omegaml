@@ -76,6 +76,9 @@ class EventAgent(SpecsMixin):
     def __repr__(self):
         return f'EventAgent({self.sessionid})'
 
+    def conversation(self, conversation_id=None, raw=False, **filter):
+        return self._model.conversation(conversation_id=conversation_id, raw=raw, **filter)
+
     def sessions(self, raw=False, load=False):
         load = False if raw else load
         data = self.tracking.data(event='agent:session', run='*')

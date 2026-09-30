@@ -1,5 +1,6 @@
 from flask import render_template
 
+from omegaml.backends.genai.assistant import Assistant
 from omegaml.backends.genai.models import ConversationModelBackend
 from omegaml.server import flaskview as fv
 from omegaml.server.dashboard.views.repobase import RepositoryBaseView
@@ -11,9 +12,9 @@ class AIRepositoryView(RepositoryBaseView):
 
 
 class AIPromptsView(AIRepositoryView):
-    item_filter = 'prompts/*'
-    item_new = lambda self: self._make_name()
-    item_prefix = 'agents/'
+    item_filter = 'assistant/*'
+    item_prefix = 'assistant/'
+    item_class = Assistant
 
     def detail_data(self, name, data=None, meta=None):
         # ensure we always have a tracking attribute
@@ -23,13 +24,13 @@ class AIPromptsView(AIRepositoryView):
         # -- fieldMap links selection field to list
         data.update({
             'name': meta.name,
-            'model': meta.attributes.get('model', ''),
-            'template': meta.attributes.get('template', ''),
-            'prompt': meta.attributes.get('prompt', ''),
-            'pipeline': meta.attributes.get('pipeline', ''),
-            'tools': meta.attributes.get('tools', []),
-            'guardrails': meta.attributes.get('guardrails', []),
-            'documents': meta.attributes.get('documents', []),
+            'model': meta.attributes.get('model') or '',
+            'template': meta.attributes.get('template') or '',
+            'prompt': meta.attributes.get('prompt') or '',
+            'pipeline': meta.attributes.get('pipeline') or '',
+            'tools': meta.attributes.get('tools') or [],
+            'guardrails': meta.attributes.get('guardrails') or [],
+            'documents': meta.attributes.get('documents') or [],
         })
         return data
 
@@ -57,8 +58,9 @@ class AIPromptsView(AIRepositoryView):
     def new(self):
         """Create a new prompt"""
         template = self.detail_template.format(self=self)
-        name = self.item_prefix + self.item_new()
-        meta = self.store._make_metadata(name=name, kind='genai.text')
+        name = self.item_prefix + self._make_name()
+        obj = self.item_class()
+        meta = self.store.put(obj, name=name)
         meta.attributes['docs'] = meta.attributes.get('docs', '').strip() or self._default_markdown(meta)
         data = self._default_detail_data(name, meta=meta)
         data.update(self.detail_data(name, data=data, meta=meta))
@@ -78,7 +80,7 @@ class AIPromptsView(AIRepositoryView):
         om = self.om
         data = self.request.json
         model = data['model']
-        name = f'prompts/{name}' if not name.startswith('prompts/') else name
+        name = f'{self.item_prefix}{name}' if not name.startswith(self.item_prefix) else name
         meta = om.models.metadata(name)
         if meta is None:
             # create a new instance
