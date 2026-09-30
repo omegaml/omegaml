@@ -22,7 +22,7 @@ from omegaml.server.restapi.util import AnyObject, OmegaResourceMixin, strict
 from omegaml.util import isTrue
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel('DEBUG')
 # required to get payload from request
 # -- see OmegaResourceMixin.get_query_payload
 omega_api = None
@@ -55,11 +55,15 @@ class marshal_with_streaming:
                     logger.debug('sse streaming response')
                     try:
                         for chunk in data:
+                            logger.debug(f'sse streaming chunk {chunk}')
                             if isinstance(chunk, Exception):
                                 yield 'event: error\n'
                                 yield 'data: ' + json.dumps({'error': str(chunk)}) + '\n\n'
                                 break
-                            yield 'data: ' + json.dumps(marshal_one(chunk)) + '\n\n'
+                            breakpoint()
+                            data_event = 'data: ' + json.dumps(marshal_one(chunk)) + '\n\n'
+                            logger.debug(f'sse streaming event: {data_event}')
+                            yield data_event
                     except Exception as e:
                         logger.debug('error %s during SSE streaming', e)
                         yield 'event: error\n'
