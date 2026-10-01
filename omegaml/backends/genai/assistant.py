@@ -44,7 +44,9 @@ class Assistant(SpecsMixin):
             stream=stream,
             use_tools=use_tools,
             agentic=agentic,
+            **kwargs,
         )
 
     def conversation(self, conversation_id=None, raw=False, **filter):
+        self.initialize(load=True)
         return self._model.conversation(conversation_id=conversation_id, raw=raw, **filter)
