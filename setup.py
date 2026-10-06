@@ -55,7 +55,7 @@ ai_inf_deps = [
     'openai',
     'markitdown[pdf]',
     'pgvector',
-    'psycopg2-binary',  # required for pgvector
+    'psycopg[binary]',  # required for pgvector
     'gunicorn[gevent]',  # required for async sse event server in scripts/ssechat
 ]
 ai_dev_deps = [
