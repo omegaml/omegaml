@@ -66,9 +66,7 @@ class TensorflowKerasBackend(KerasBackend):
                 logger.warning('Error in _fit_tpu, reverting to fit on CPU')
             else:
                 return result
-        result = super().fit(
-            modelname, Xname, Yname=Yname, pure_python=pure_python, **kwargs
-        )
+        result = super().fit(modelname, Xname, Yname=Yname, pure_python=pure_python, **kwargs)
         return result
 
     def _fit_tpu(self, modelname, Xname, Yname=None, tpu_specs=None, **kwargs):

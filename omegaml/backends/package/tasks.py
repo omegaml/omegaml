@@ -2,7 +2,6 @@
 omega runtime script tasks
 """
 
-
 import datetime
 
 from celery import shared_task

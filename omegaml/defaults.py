@@ -1,4 +1,3 @@
-
 import logging
 import os
 import shutil
@@ -144,12 +143,8 @@ OMEGA_STORE_BACKENDS_TENSORFLOW = {
     'tf.savedmodel': 'omegaml.backends.tensorflow.TensorflowSavedModelBackend',
     'tfestimator.model': 'omegaml.backends.tensorflow.TFEstimatorModelBackend',
 }
-OMEGA_STORE_BACKENDS_KERAS = {
-    'keras.h5': 'omegaml.backends.keras.KerasBackend'
-}
-OMEGA_STORE_BACKENDS_SQL = {
-    'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend'
-}
+OMEGA_STORE_BACKENDS_KERAS = {'keras.h5': 'omegaml.backends.keras.KerasBackend'}
+OMEGA_STORE_BACKENDS_SQL = {'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend'}
 OMEGA_STORE_BACKENDS_MLFLOW = {
     'mlflow.model': 'omegaml.backends.mlflow.models.MLFlowModelBackend',
     'mlflow.project': 'omegaml.backends.mlflow.localprojects.MLFlowProjectBackend',
@@ -167,9 +162,7 @@ OMEGA_STORE_BACKENDS_OPENAI = {
     'pgvector.conx': 'omegaml.backends.genai.retrieval.PGVectorBackend',
     'vector.conx': 'omegaml.backends.genai.retrieval.MongoDBVectorStore',
 }
-OMEGA_STORE_BACKENDS_OPTIONAL = {
-    'pytorch': {'pytorch.pth', 'omegaml.backends.pytorch.PytorchModelBackend'}
-}
+OMEGA_STORE_BACKENDS_OPTIONAL = {'pytorch': {'pytorch.pth', 'omegaml.backends.pytorch.PytorchModelBackend'}}
 #: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
 OMEGA_FRAMEWORKS = os.environ.get('OMEGA_FRAMEWORKS', 'scikit-learn').split(',')
 if is_test_run:
@@ -223,9 +216,7 @@ OMEGA_MDF_APPLY_MIXINS = [
     ('omegaml.mixins.mdf.ApplyAccumulators', 'MDataFrame,MSeries'),
 ]
 #: jobs mixins
-OMEGA_JOBPROXY_MIXINS = [
-    'omegaml.runtimes.mixins.nbtasks.JobTasks'
-]
+OMEGA_JOBPROXY_MIXINS = ['omegaml.runtimes.mixins.nbtasks.JobTasks']
 #: user extensions
 OMEGA_USER_EXTENSIONS = os.environ.get('OMEGA_USER_EXTENSIONS') or None
 #: logging handler for om.logger

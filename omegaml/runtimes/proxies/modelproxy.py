@@ -1,4 +1,3 @@
-
 import logging
 
 from omegaml.runtimes.proxies.baseproxy import RuntimeProxyBase

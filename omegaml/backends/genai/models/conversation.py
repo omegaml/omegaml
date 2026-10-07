@@ -479,18 +479,16 @@ class ConversationModel(
         self.documents = documents
         self.strategy = {
             # defaults
-            
-                # kwargs to pass to DocumentIndex.retrieve()
-                'retrieve': {'top': 1},
-                # system role: 'system|developer'
-                'system_role': 'developer',
-                # agentic behavior: if True, will continue in a loop until no more tool calls
-                'agentic': False,
-                # guardrails applicability (all is the only supported value)
-                'guardrails': 'all',
-                # choice of tools
-                'tool_choice': 'auto'
-            ,
+            # kwargs to pass to DocumentIndex.retrieve()
+            'retrieve': {'top': 1},
+            # system role: 'system|developer'
+            'system_role': 'developer',
+            # agentic behavior: if True, will continue in a loop until no more tool calls
+            'agentic': False,
+            # guardrails applicability (all is the only supported value)
+            'guardrails': 'all',
+            # choice of tools
+            'tool_choice': 'auto',
             # override by user provided
             **(strategy or {}),
         }

@@ -105,10 +105,8 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
 
     except (RuntimeError, AssertionError) as e:
         logger.warning(
-            
-                f"could not add {url_prefix}/static endpoint=static due to {e} "
-                f"- make sure that url_for('static') renders to {url_prefix} or use url_for('omega-server.static')"
-            
+            f"could not add {url_prefix}/static endpoint=static due to {e} "
+            f"- make sure that url_for('static') renders to {url_prefix} or use url_for('omega-server.static')"
         )
 
     @app.context_processor

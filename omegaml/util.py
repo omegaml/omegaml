@@ -1,4 +1,3 @@
-
 import importlib
 import json
 import logging
@@ -677,10 +676,8 @@ def module_available(modname, min=None, max=None, load=True, py_min=None, py_max
             py_max = py_max or 'any'
             if any(bool(v) is False for v in (min_ok, max_ok, py_min_ok, py_max_ok)):
                 logger.warning(
-                    
-                        f'require {modname}>={min},<={max}, have {modname}=={mod_version} Python=={py_version}.'
-                        f'Use a model helper for {modname} models.'
-                    
+                    f'require {modname}>={min},<={max}, have {modname}=={mod_version} Python=={py_version}.'
+                    f'Use a model helper for {modname} models.'
                 )
             return all(v for v in (min_ok, max_ok, py_min_ok, py_max_ok))
     return True

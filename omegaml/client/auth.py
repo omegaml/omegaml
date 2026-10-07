@@ -36,7 +36,7 @@ class OmegaRestApiAuth(AuthBase):
         return r
 
     def __repr__(self):
-        return (f'OmegaRestApiAuth(username={self.username}, apikey="*****",qualifier={self.qualifier})')
+        return f'OmegaRestApiAuth(username={self.username}, apikey="*****",qualifier={self.qualifier})'
 
     @property
     def kind(self):
@@ -60,7 +60,7 @@ class OmegaRuntimeAuthentication:
         return self.userid, self.apikey, self.qualifier
 
     def __repr__(self):
-        return (f'OmegaRuntimeAuthentication(userid={self.userid}, apikey="*****", qualifier={self.qualifier})')
+        return f'OmegaRuntimeAuthentication(userid={self.userid}, apikey="*****", qualifier={self.qualifier})'
 
 
 class AuthenticationEnv:

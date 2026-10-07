@@ -15,7 +15,6 @@ from omegaml.backends.basedata import BaseDataBackend
 from omegaml.util import KeepMissing, ProcessLocal, signature, tqdm_if_interactive
 
 try:
-
     sql_logger = logging.getLogger('snowflake')
     sql_logger.setLevel('CRITICAL')
 except:

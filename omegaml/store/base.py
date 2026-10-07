@@ -71,7 +71,6 @@ as follows:
     a plugin system will enable extension to other types.
 """
 
-
 import logging
 import os
 import shutil
@@ -761,12 +760,7 @@ class OmegaStore:
     def _get_obj_store_key(self, name, ext, prefix=None, bucket=None):
         # backwards compatilibity implementation of object_store_key()
         name = '%s.%s' % (name, ext) if not name.endswith(ext) else name
-        filename = (
-            f'{bucket or self.bucket}.{prefix or self.prefix}.{name}'
-            
-            .replace('/', '_')
-            .replace('..', '.')
-        )
+        filename = f'{bucket or self.bucket}.{prefix or self.prefix}.{name}'.replace('/', '_').replace('..', '.')
         return filename
 
     def _ensure_fs_collection(self):
