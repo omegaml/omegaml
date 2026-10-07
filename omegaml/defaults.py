@@ -519,6 +519,17 @@ def load_framework_support(vars=globals()):
             vars['OMEGA_STORE_BACKENDS'].update(backends)
 
 
+def load_eedefaults():
+    # ensure eedefaults are loaded prior to any other processing
+    # -- fixes load order issue in Python 3.14 causing eedfaults to be applied too late
+    try:
+        from omegaee import eedefaults
+    except:
+        return
+    else:
+        update_from_obj(eedefaults)
+
+
 @inprogress(text='loading configuration...')
 def load_config_file(vars=globals(), config_file=OMEGA_CONFIG_FILE):
     config_file = locate_config_file(config_file)
@@ -572,6 +583,8 @@ if not is_cli_run and is_test_run:
     OMEGA_RESTAPI_URL = 'local'
     OMEGA_LOGLEVEL = 'INFO'
 else:
+    # load commerical defaults
+    load_eedefaults()
     # overrides in actual operations
     load_config_file()
 

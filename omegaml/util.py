@@ -1246,9 +1246,11 @@ class KeepMissing(dict):
 
 
 def sec_validate_url(url):
-    assert validators.url(url, skip_ipv4_addr=True, skip_ipv6_addr=True), (
-        f"expected a http:// or https:// url, got {url}"
+    simple_host = url.startswith('http://localhost')
+    valid_url = validators.url(
+        url, skip_ipv4_addr=True, skip_ipv6_addr=True, may_have_port=True, simple_host=simple_host
     )
+    assert valid_url, f"expected a http:// or https:// url, got {url}"
     assert url.startswith('http'), f"expected http:// or https:// url, got {url}"
     return True
 
