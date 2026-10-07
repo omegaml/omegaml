@@ -1,4 +1,3 @@
-
 from typing import TypeVar
 
 import flask

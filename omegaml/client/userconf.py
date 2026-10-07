@@ -66,7 +66,6 @@ def _get_userconfig_from_api(api_auth, api_url=None, requested_userid=None, qual
         server_kwargs = dict(authentication=api_auth.get_credentials())
         deserialize = lambda resp: json.loads(resp.content.decode('utf-8'))
     elif api_url.startswith('http'):
-
         server = session_backoff()
         server_kwargs = dict(auth=api_auth)
         deserialize = lambda resp: resp.json()

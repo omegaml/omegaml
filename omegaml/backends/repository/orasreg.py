@@ -105,10 +105,8 @@ class OrasOciRegistry(ArtifactRepository):
         if not exists:
             self._validate('repo', **x(locals()))
             self._oras(
-                
-                    f'push {self.ociurl(self.url)}/{repo} '
-                    f'--config /dev/null:application/vnd.oci.image.config.v1+json --format json'
-                
+                f'push {self.ociurl(self.url)}/{repo} '
+                f'--config /dev/null:application/vnd.oci.image.config.v1+json --format json'
             )
         return self.manifest(repo)
 

@@ -1,4 +1,3 @@
-
 '''
 make sure Celery is correctly configured
 see http://chriskief.com/2013/11/15/celery-3-1-with-django-django-celery-rabbitmq-and-macports/

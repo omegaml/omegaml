@@ -172,7 +172,20 @@ class JobSchedule:
         return v
 
     def _has_month(self, v):
-        months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
+        months = [
+            'january',
+            'february',
+            'march',
+            'april',
+            'may',
+            'june',
+            'july',
+            'august',
+            'september',
+            'october',
+            'november',
+            'december',
+        ]
         long = any(m in v for m in months)
         short = any(m[0:3] in v for m in months)
         return long or short
@@ -184,7 +197,20 @@ class JobSchedule:
         return long or short
 
     def _convert_months(self, v):
-        months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
+        months = [
+            'january',
+            'february',
+            'march',
+            'april',
+            'may',
+            'june',
+            'july',
+            'august',
+            'september',
+            'october',
+            'november',
+            'december',
+        ]
         if not self._has_month(v):
             return v
         v = v.lower()

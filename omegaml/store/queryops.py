@@ -1,4 +1,3 @@
-
 import json
 import sys
 import warnings
@@ -97,7 +96,22 @@ class MongoQueryOps:
     result = coll.aggregate([query, groupby])
     """
 
-    UNARY = ['IN', 'LT', 'LTE', 'GT', 'GTE', 'NE', 'WHERE', 'GEOWITHIN', 'ALL', 'ELEMWITHIN', 'NINEXISTS', 'TYPE', 'REGEX', 'EQ']
+    UNARY = [
+        'IN',
+        'LT',
+        'LTE',
+        'GT',
+        'GTE',
+        'NE',
+        'WHERE',
+        'GEOWITHIN',
+        'ALL',
+        'ELEMWITHIN',
+        'NINEXISTS',
+        'TYPE',
+        'REGEX',
+        'EQ',
+    ]
 
     def __getattr__(self, k):
         if k.upper().replace('_', '') in MongoQueryOps.UNARY:

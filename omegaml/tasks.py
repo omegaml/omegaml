@@ -2,7 +2,6 @@
 omega runtime model tasks
 """
 
-
 import datetime
 import inspect
 import os

@@ -47,9 +47,7 @@ class ChatMixin:
         empty = lambda d: d.empty if isinstance(d, pd.DataFrame) else not d
         if empty(messages) or system_message_missing:
             # no message history, insert the system message to start off the conversation)
-            messages = [self._system_message(self.prompt, conversation_id=conversation_id)] + (
-                messages or []
-            )
+            messages = [self._system_message(self.prompt, conversation_id=conversation_id)] + (messages or [])
             self._log_events('conversation', conversation_id, messages)
         responses = self._do_complete(
             prompt,
