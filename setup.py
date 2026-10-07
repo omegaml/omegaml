@@ -55,7 +55,8 @@ ai_inf_deps = [
     'openai',
     'markitdown[pdf]',
     'pgvector',
-    'psycopg[binary]',  # required for pgvector
+    'psycopg[binary]',  # recommended pgsql driver for sqlalchemy>=2.1, required for pgvector
+    'psycopg2-binary',  # recommended pgsql driver for sqlalchemy<2.1, required for pgvector
     'gunicorn[gevent]',  # required for async sse event server in scripts/ssechat
 ]
 ai_dev_deps = [
@@ -111,7 +112,7 @@ install_deps = [
     'cachetools>=5.0.0',  # required for session caching
     'apispec>=5.2.2',  # required for openapi generation
     'marshmallow>=3.17.0',  # required for openapi generation
-    'sqlalchemy',  # due to https://github.com/pandas-dev/pandas/issues/57049
+    'sqlalchemy',
     'minibatch[omegaml]>=0.6',  # required for streaming sse chat responses
     'validators',  # required for sec validations
     'build',  # required to build packages
