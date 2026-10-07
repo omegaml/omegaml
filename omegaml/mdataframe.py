@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 from uuid import uuid4
 
@@ -13,21 +12,21 @@ from omegaml.store.filtered import FilteredCollection
 from omegaml.store.query import Filter, MongoQ
 from omegaml.store.queryops import MongoQueryOps
 from omegaml.util import (
-    make_tuple,
-    make_list,
-    restore_index,
-    cursor_to_dataframe,
-    restore_index_columns_order,
     PickableCollection,
+    cursor_to_dataframe,
+    ensure_index,
     extend_instance,
     json_normalize,
-    ensure_index,
+    make_list,
+    make_tuple,
+    restore_index,
+    restore_index_columns_order,
 )
 
 INSPECT_CACHE = []
 
 
-class MGrouper(object):
+class MGrouper:
     """
     a Grouper for MDataFrames
     """
@@ -46,7 +45,7 @@ class MGrouper(object):
 
         def statfunc():
             columns = self.columns or self._non_group_columns()
-            return self.agg({col: attr for col in columns})
+            return self.agg(dict.fromkeys(columns, attr))
 
         return statfunc
 
@@ -147,7 +146,7 @@ class MGrouper(object):
             yield keys, data
 
 
-class MLocIndexer(object):
+class MLocIndexer:
     """
     implements the LocIndexer for MDataFrames
     """
@@ -211,7 +210,7 @@ class MLocIndexer(object):
                 flt_kwargs[idx_cols[0]] = specs[0]
                 projection = self._get_projection(specs[1])
             else:
-                flt_kwargs['{}__in'.format(idx_cols[0])] = specs
+                flt_kwargs[f'{idx_cols[0]}__in'] = specs
                 self._from_range = True
         elif isinstance(specs, (int, str)):
             flt_kwargs[idx_cols[0]] = specs
@@ -225,18 +224,18 @@ class MLocIndexer(object):
                         self._from_range = True
                         start, stop = spec.start, spec.stop
                         if start is not None:
-                            flt_kwargs['{}__gte'.format(col)] = start
+                            flt_kwargs[f'{col}__gte'] = start
                         if stop is not None:
                             if isinstance(stop, int):
                                 stop -= int(self.positional)
-                            flt_kwargs['{}__lte'.format(col)] = stop
+                            flt_kwargs[f'{col}__lte'] = stop
                     elif isinstance(spec, enumerable_types) and isscalar(spec[0]):
                         self._from_range = True
                         # single column index with list of scalar values
                         # -- convert to list for PyMongo serialization
                         if isinstance(spec, np.ndarray):
                             spec = spec.tolist()
-                        flt_kwargs['{}__in'.format(col)] = spec
+                        flt_kwargs[f'{col}__in'] = spec
                     elif isscalar(col):
                         flt_kwargs[col] = spec
                 else:
@@ -285,7 +284,7 @@ class MPosIndexer(MLocIndexer):
     """
 
     def __init__(self, mdataframe):
-        super(MPosIndexer, self).__init__(mdataframe, positional=True)
+        super().__init__(mdataframe, positional=True)
 
     def _get_projection(self, spec):
         columns = self.mdataframe.columns
@@ -317,14 +316,14 @@ class MSeriesGroupby(MGrouper):
         """
         # MGrouper will insert a _count column, see _count(). we remove
         # that column again and return a series named as the group column
-        resultdf = super(MSeriesGroupby, self).count()
+        resultdf = super().count()
         count_column = [col for col in resultdf.columns if col.endswith('_count')][0]
         new_column = count_column.replace('_count', '')
         resultdf = resultdf.rename(columns={count_column: new_column})
         return resultdf[new_column]
 
 
-class MDataFrame(object):
+class MDataFrame:
     """
     A DataFrame for mongodb
 
@@ -380,7 +379,7 @@ class MDataFrame(object):
             elif isinstance(self.filter_criteria, Filter):
                 self.query_inplace(self.filter_criteria)
             else:
-                raise ValueError('Invalid query specification of type {}'.format(type(self.filter_criteria)))
+                raise ValueError(f'Invalid query specification of type {type(self.filter_criteria)}')
         # if immediate_loc is True, .loc and .iloc always evaluate
         self.immediate_loc = immediate_loc
         # __array__ will return this value if it is set, set it otherwise
@@ -597,7 +596,7 @@ class MDataFrame(object):
         projected number of rows when resolving
         """
         nrows = len(self)
-        counts = pd.Series({col: nrows for col in self.columns}, index=self.columns)
+        counts = pd.Series(dict.fromkeys(self.columns, nrows), index=self.columns)
         return counts
 
     def __len__(self):
@@ -856,7 +855,7 @@ class MDataFrame(object):
     def append(self, other):
         if isinstance(other, Collection):
             other = MDataFrame(other)
-        assert isinstance(other, MDataFrame), "both must be MDataFrames, got other={}".format(type(other))
+        assert isinstance(other, MDataFrame), f"both must be MDataFrames, got other={type(other)}"
         outname = self.collection.name
         mrout = {'merge': outname, 'nonAtomic': True}
         mapfn = Code(
@@ -1055,8 +1054,8 @@ class MDataFrame(object):
         return self.iloc[slice(start, end)].iterchunks(chunksize)
 
     def __repr__(self):
-        kwargs = ', '.join('{}={}'.format(k, v) for k, v in self._getcopy_kwargs().items())
-        return "MDataFrame(collection={collection.name}, {kwargs})".format(collection=self.collection, kwargs=kwargs)
+        kwargs = ', '.join(f'{k}={v}' for k, v in self._getcopy_kwargs().items())
+        return f"MDataFrame(collection={self.collection.name}, {kwargs})"
 
 
 class MSeries(MDataFrame):
@@ -1067,7 +1066,7 @@ class MSeries(MDataFrame):
     """
 
     def __init__(self, *args, **kwargs):
-        super(MSeries, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # true if only unique values apply
         self.is_unique = False
         # apply mixins
@@ -1077,7 +1076,7 @@ class MSeries(MDataFrame):
     def __getitem__(self, cols_or_slice):
         if isinstance(cols_or_slice, Filter):
             return MSeries(self.collection, columns=self.columns, query=cols_or_slice.query)
-        return super(MSeries, self).__getitem__(cols_or_slice)
+        return super().__getitem__(cols_or_slice)
 
     @property
     def name(self):
@@ -1097,7 +1096,7 @@ class MSeries(MDataFrame):
             # this way indexes get applied
             cursor = self.collection.distinct(make_tuple(self.columns)[0])
         else:
-            cursor = super(MSeries, self)._get_cursor()
+            cursor = super()._get_cursor()
         return cursor
 
     @property
@@ -1130,8 +1129,8 @@ class MSeries(MDataFrame):
         return val
 
     def __repr__(self):
-        kwargs = ', '.join('{}={}'.format(k, v) for k, v in self._getcopy_kwargs().items())
-        return "MSeries(collection={collection.name}, {kwargs})".format(collection=self.collection, kwargs=kwargs)
+        kwargs = ', '.join(f'{k}={v}' for k, v in self._getcopy_kwargs().items())
+        return f"MSeries(collection={self.collection.name}, {kwargs})"
 
     @property
     def shape(self):

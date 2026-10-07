@@ -1,1 +1,1 @@
-from .store.projected import ProjectedMixin
+from .store.projected import ProjectedMixin as ProjectedMixin

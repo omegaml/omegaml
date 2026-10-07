@@ -18,6 +18,7 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
     def _build_model(self):
         # build a dummy model for testing. does not need to make sense
         import tensorflow as tf
+
         from omegaml.backends.tensorflow import _tffn
 
         keras = tf.keras
@@ -55,10 +56,10 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
 
     @skipIf(module_available('tensorflow') and tf_in_eager_execution(), "cannot run in eager mode")
     def test_save_load_tf_example(self):
-        from omegaml.backends.tensorflow.tfsavedmodel import TensorflowSavedModelPredictor
-
-        import tensorflow as tf
         import numpy as np
+        import tensorflow as tf
+
+        from omegaml.backends.tensorflow.tfsavedmodel import TensorflowSavedModelPredictor
 
         om = self.om
         model = self._build_model()
@@ -96,8 +97,9 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
 
     @skipIf(module_available('tensorflow') and tf_in_eager_execution(), "cannot run in eager mode")
     def test_save_load_native(self):
-        import tensorflow as tf
         import numpy as np
+        import tensorflow as tf
+
         from omegaml.backends.tensorflow.tfsavedmodel import TensorflowSavedModelPredictor
 
         om = self.om
@@ -128,8 +130,8 @@ class TensorflowSavedModelBackendTests(OmegaTestMixin, TestCase):
             self.assertTrue(np.allclose(yhat_, yhat[i][model_.output_names[0]]))
 
     def test_prediction_restapi(self):
-        import tensorflow as tf
         import numpy as np
+        import tensorflow as tf
 
         om = self.om
         model = self._build_model()

@@ -4,7 +4,7 @@ import logging
 import os
 import tempfile
 from inspect import isfunction
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import dill
 
@@ -15,7 +15,7 @@ ok = lambda v, vtype: isinstance(v, vtype)
 logger = logging.getLogger(__name__)
 
 
-class TFEstimatorModel(object):
+class TFEstimatorModel:
     """
     A serializable/deserizable wrapper for a TF Estimator
 
@@ -93,8 +93,8 @@ class TFEstimatorModel(object):
             If none of these options work, create your own input_fn and pass it
             to the .fit/.predict methods using the input_fn= kwarg
         """
-        import pandas as pd
         import numpy as np
+        import pandas as pd
 
         if self.v1_compat:
             # https://www.tensorflow.org/guide/migrate

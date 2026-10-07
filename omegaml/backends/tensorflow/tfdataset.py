@@ -6,7 +6,6 @@ class TFDatasetBackend(BaseDataBackend):
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        import tensorflow as tf
 
         return isinstance(obj)
 

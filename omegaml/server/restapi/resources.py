@@ -250,7 +250,7 @@ def add_api_endpoints(api):
             return description, getattr(e, 'code', 400)
         if isinstance(description, list):
             # flask error handler will extract as body
-            setattr(e, 'data', description)
+            e.data = description
             return {}, getattr(e, 'code', 400)
         return {'message': description}, getattr(e, 'code', 400)
 
@@ -285,7 +285,7 @@ def add_api_endpoints(api):
                     resource_pk = kwargs_map.get('pk')
                     meth = self._get_resource_method(resource_name, method_name)
                     return meth, dict(resource_name=res_kwargs.get(resource_pk))
-            raise NotFound('unknown resource {}'.format(resourceUri))
+            raise NotFound(f'unknown resource {resourceUri}')
 
     @api.route('/api/v1/model/<path:model_id>/<string:action>', methods=['GET', 'PUT'])
     @api.route('/api/v1/model/<path:model_id>/', defaults={'action': 'metadata'}, methods=['GET'])

@@ -42,7 +42,7 @@ else:
             """
             Test batch windows of fixed sizes work ok
             """
-            from minibatch import streaming, stream
+            from minibatch import stream, streaming
 
             def consumer(q, url):
                 # note the stream decorator blocks the consumer and runs the decorated

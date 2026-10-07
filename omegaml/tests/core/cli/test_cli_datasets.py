@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import pandas as pd
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
@@ -7,8 +8,6 @@ from omegaml import Omega
 from omegaml.tests.core.cli.scenarios import CliTestScenarios
 from omegaml.tests.util import OmegaTestMixin
 from omegaml.util import temp_filename
-
-import pandas as pd
 
 
 class CliDatasetsTests(CliTestScenarios, OmegaTestMixin, TestCase):

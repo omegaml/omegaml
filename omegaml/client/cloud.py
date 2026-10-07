@@ -1,4 +1,5 @@
 import os
+
 import yaml
 
 from omegaml.client.auth import AuthenticationEnv
@@ -27,7 +28,7 @@ class OmegaCloud(CoreOmega):
         Initialize the client API
         """
         self.auth = auth
-        super(OmegaCloud, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _make_runtime(self, celeryconf):
         return OmegaCloudRuntime(self, bucket=self.bucket, defaults=self.defaults, celeryconf=celeryconf)
@@ -50,7 +51,7 @@ class OmegaCloudRuntime(OmegaRuntime):
         self._auth_kwarg = protected('auth')
 
     def __repr__(self):
-        return 'OmegaCloudRuntime(auth={})'.format(repr(self.omega.auth))
+        return f'OmegaCloudRuntime(auth={self.omega.auth!r})'
 
     @property
     def _common_kwargs(self):
@@ -123,6 +124,6 @@ def setup_from_config(config_file=None, fallback=None):
                 # if alternative loading was provided, use that
                 omega = fallback()
             else:
-                raise SystemError('No cloud cloud userid/apikey found in config file {}.'.format(config_file))
+                raise SystemError(f'No cloud cloud userid/apikey found in config file {config_file}.')
             return omega
-    raise SystemError('Config file {} does not exist'.format(config_file))
+    raise SystemError(f'Config file {config_file} does not exist')

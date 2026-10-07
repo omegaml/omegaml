@@ -2,10 +2,11 @@ import unittest
 
 import pandas as pd
 from mongoengine import ValidationError
-from omegaml import Omega
-from omegaml.mixins.store.passthrough import PassthroughMixin, PassthroughDataset
-from omegaml.tests.util import OmegaTestMixin
 from sklearn.linear_model import LinearRegression
+
+from omegaml import Omega
+from omegaml.mixins.store.passthrough import PassthroughDataset, PassthroughMixin
+from omegaml.tests.util import OmegaTestMixin
 
 
 class PassthroughMixinTests(OmegaTestMixin, unittest.TestCase):

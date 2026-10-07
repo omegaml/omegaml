@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from pymongo import MongoClient as RealMongoClient
 from pymongo.errors import AutoReconnect, ConnectionFailure
 
-from omegaml.util import find_instances, ProcessLocal
+from omegaml.util import ProcessLocal, find_instances
 
 
 def MongoClient(*args, **kwargs):
@@ -39,10 +39,9 @@ def patch_mongoengine():
     # -- the implemented solution simply ensures MongoClients get recreated
     #    whenever needed
     if not isinstance(connection._connection_settings, ProcessLocal):
-        setattr(connection, '_connection_settings', ProcessLocal(connection._connection_settings))
-        setattr(connection, '_connections', ProcessLocal(connection._connections))
-        setattr(connection, '_dbs', ProcessLocal(connection._dbs))
-    return
+        connection._connection_settings = ProcessLocal(connection._connection_settings)
+        connection._connections = ProcessLocal(connection._connections)
+        connection._dbs = ProcessLocal(connection._dbs)
 
 
 def close_all_clients():
@@ -108,7 +107,6 @@ def waitForConnection(client):
     for i in range(10):
         try:
             # The ping command is cheap and does not require auth.
-            import pymongo
 
             client.admin.command('ping')
         except (ConnectionFailure, AutoReconnect, AssertionError) as e:

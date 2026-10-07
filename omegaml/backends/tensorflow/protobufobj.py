@@ -24,9 +24,7 @@ class ProtobufDataBackend(BaseDataBackend):
         storekey = self.model_store.object_store_key(name, '.pbf', hashed=True)
         gridfile = self._store_to_file(self.model_store, data, storekey)
         kind_meta = {
-            'protobuf_type': '{module}.{name}'.format(
-                module=obj.DESCRIPTOR._concrete_class.__module__, name=obj.DESCRIPTOR._concrete_class.__name__
-            )
+            'protobuf_type': f'{obj.DESCRIPTOR._concrete_class.__module__}.{obj.DESCRIPTOR._concrete_class.__name__}'
         }
         return self.model_store._make_metadata(
             name=name,

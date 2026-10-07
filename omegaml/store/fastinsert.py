@@ -1,7 +1,8 @@
 import math
 import os
 from itertools import repeat
-from joblib import delayed, Parallel
+
+from joblib import Parallel, delayed
 
 from omegaml.runtimes.loky import OmegaRuntimeBackend
 from omegaml.util import PickableCollection
@@ -80,6 +81,6 @@ def fast_insert(df, omstore, name, chunksize=default_chunksize):
 
 
 # ensure loky backend is registered
-from omegaml.runtimes.loky import OmegaRuntimeBackend  # noqa
+from omegaml.runtimes.loky import OmegaRuntimeBackend
 
 OmegaRuntimeBackend = OmegaRuntimeBackend  # noqa

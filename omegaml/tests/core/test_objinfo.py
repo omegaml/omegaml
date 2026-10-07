@@ -1,10 +1,11 @@
+from pprint import pprint
 from unittest import TestCase
 
 import pandas as pd
+
 from omegaml import Omega
 from omegaml.mixins.store.objinfo import ObjectInformationMixin
 from omegaml.tests.util import OmegaTestMixin
-from pprint import pprint
 
 
 class ObjectInformationMixinTests(OmegaTestMixin, TestCase):

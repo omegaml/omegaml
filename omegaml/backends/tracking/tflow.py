@@ -13,7 +13,6 @@ class TensorflowCallbackBase:
         * https://www.tensorflow.org/guide/keras/custom_callback
     """
 
-    #
     def __new__(cls, *args, **kwargs):
         # generate methods as per specs
         for action, phase in product(['train', 'test', 'predict'], ['begin', 'end']):
@@ -59,7 +58,7 @@ class TensorflowCallbackBase:
 
 try:
     from tensorflow import keras
-except Exception as e:
+except Exception:
 
     class TensorflowCallback(TensorflowCallbackBase):
         def __init__(self, *args, **kwargs):

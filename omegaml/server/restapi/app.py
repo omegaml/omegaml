@@ -31,8 +31,9 @@ def create_app(*args, **kwargs):
 
 
 def serve_objects():
-    from omegaml.server.restapi import resource_filter
     import re
+
+    from omegaml.server.restapi import resource_filter
 
     specs = os.environ.get('OMEGA_RESTAPI_FILTER')
     if specs:

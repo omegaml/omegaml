@@ -1,8 +1,6 @@
-import re
-
-from uuid import uuid4
-
 import getpass
+import re
+from uuid import uuid4
 
 
 class SessionizeMixin:

@@ -156,7 +156,7 @@ class VectorStoreBackend(VectorStore, BaseDataBackend):
                 chunker=chunker,
             )
         else:
-            raise ValueError('type {} is not supported by {}'.format(type(obj), self.KIND))
+            raise ValueError(f'type {type(obj)} is not supported by {self.KIND}')
         meta.attributes.update(attributes) if attributes else None
         return meta.save()
 

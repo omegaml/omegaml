@@ -1,8 +1,7 @@
-from os.path import basename, dirname
-
 import base64
 import json
 import os
+from os.path import basename, dirname
 from shutil import make_archive, unpack_archive
 from subprocess import run
 
@@ -80,7 +79,7 @@ class RPackageData(RunnablePackageMixin, BaseDataBackend):
         """
         pkgname = basename(name)
         dstdir = localpath or self.data_store.tmppath
-        packagefname = '{}.tar.gz'.format(os.path.join(localpath or self.packages_path, pkgname))
+        packagefname = f'{os.path.join(localpath or self.packages_path, pkgname)}.tar.gz'
         os.makedirs(dirname(packagefname), exist_ok=True)
         meta = self.data_store.metadata(name)
         outf = meta.gridfile

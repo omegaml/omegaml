@@ -3,6 +3,7 @@ import traceback
 from uuid import uuid4
 
 from omegaml.util import inprogress
+
 from ._version import version
 from .mixins.store.requests import CombinedStoreRequestCache
 from .store.combined import CombinedOmegaStoreMixin
@@ -79,7 +80,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         )
 
     def _make_dbalias(self):
-        return 'omega-{}'.format(uuid4().hex)
+        return f'omega-{uuid4().hex}'
 
     def _make_streams(self, prefix):
         from omegaml.store.streams import StreamsProxy
@@ -88,6 +89,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
 
     def _make_monitor(self):
         import weakref
+
         from omegaml.client.lunamon import LunaMonitor, OmegaMonitors
 
         status_logger = self.runtime.experiment('.system')
@@ -166,7 +168,7 @@ class Omega(CombinedStoreRequestCache, CombinedOmegaStoreMixin):
         return self._clone(bucket=bucket)
 
 
-class OmegaDeferredInstance(object):
+class OmegaDeferredInstance:
     """
     A deferred instance of Omega() that is only instantiated on access
 

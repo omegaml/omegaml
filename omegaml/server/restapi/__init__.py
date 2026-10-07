@@ -1,5 +1,7 @@
-from omegaml.server.restapi.util import strict, AnyObject
-from .app import create_app
+from omegaml.server.restapi.util import AnyObject as AnyObject
+from omegaml.server.restapi.util import strict as strict
+
+from .app import create_app as create_app
 
 # list of regex to filter available resources in format
 #   resource/name/action

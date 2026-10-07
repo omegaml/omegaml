@@ -1,7 +1,7 @@
 import base64
+import json
 from unittest import TestCase
 
-import json
 from nbformat import NotebookNode
 from tornado.web import HTTPError
 
@@ -274,7 +274,7 @@ class OmegaContentsManagerTests(OmegaTestMixin, TestCase):
 
     def test_save_file_base64(self):
         model = self.mgr._base_model('textfile.txt', kind='file')
-        model['content'] = base64.encodebytes('hello world'.encode('utf8')).decode('ascii')
+        model['content'] = base64.encodebytes(b'hello world').decode('ascii')
         model['format'] = 'base64'
         self.mgr.save(model, 'textfile.txt')
         model = self.mgr.get('textfile.txt', type='file')

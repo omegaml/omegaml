@@ -6,12 +6,13 @@ TODO: check all CDN dependencies, e.g. toastui
 
 import logging
 import os
-import requests
 import warnings
+
+import requests
 from flask import Flask, redirect
-from flask_session import Session
 from matplotlib import pyplot as plt
 
+from flask_session import Session
 from omegaml.client.userconf import ensure_api_url
 from omegaml.server.config import CONFIG_MAP
 from omegaml.server.logutil import configure_logging, logutil_flask
@@ -24,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
+    from omegaml.server.dashboard.app import omega_ai_bp, omega_bp
     from omegaml.server.restapi.resources import create_app as create_restapi_app
-    from omegaml.server.dashboard.app import omega_bp, omega_ai_bp
 
     url_prefix = url_prefix[:-1] if url_prefix and url_prefix.endswith('/') else url_prefix or ''
     # local configuration
@@ -104,10 +105,10 @@ def create_app(server=None, url_prefix=None, configure=False, *args, **kwargs):
 
     except (RuntimeError, AssertionError) as e:
         logger.warning(
-            (
+            
                 f"could not add {url_prefix}/static endpoint=static due to {e} "
                 f"- make sure that url_for('static') renders to {url_prefix} or use url_for('omega-server.static')"
-            )
+            
         )
 
     @app.context_processor
@@ -146,8 +147,9 @@ def setup_omega(**kwargs):
 
 
 def serve_objects():
-    from omegaml.server.restapi import resource_filter
     import re
+
+    from omegaml.server.restapi import resource_filter
 
     specs = os.environ.get('OMEGA_RESTAPI_FILTER')
     if specs:

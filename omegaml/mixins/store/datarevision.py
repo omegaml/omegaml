@@ -224,14 +224,14 @@ class DataRevisionMixin:
                 base.drop(columns=revcols, inplace=True)
             # apply row deletions
             if not trace_revisions:
-                flt_delete = base['_delete_'] == True  # noqa
+                flt_delete = base['_delete_'] == True
                 base = base[~flt_delete]
         return base
 
     def _make_upsert_fn(self, name, delete=False):
         collection = self.collection(name)
 
-        def upsert(obj, store, name, chunksize=1):  # noqa
+        def upsert(obj, store, name, chunksize=1):
             from pymongo import DeleteOne, UpdateOne
 
             ops_updates = []

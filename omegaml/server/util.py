@@ -155,7 +155,6 @@ def TestableMock(fn, args, kwargs):
             # check mock.call_args
             call_args, call_kwargs = mock.call_args
     """
-    pass
 
 
 _BareTestableMock = TestableMock  # capture identiy of the original TestableMock

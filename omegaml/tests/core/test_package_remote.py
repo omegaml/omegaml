@@ -1,10 +1,9 @@
-from unittest import TestCase
-
 from shutil import rmtree
+from unittest import TestCase
 
 from omegaml import Omega
 from omegaml.backends.package import PythonPipSourcedPackageData
-from omegaml.util import settings, delete_database, mkdirs
+from omegaml.util import delete_database, mkdirs, settings
 
 
 class PythonRemotePackageDataTests(TestCase):

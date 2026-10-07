@@ -2,12 +2,13 @@
 import json
 import logging
 import threading
-from datetime import timedelta, datetime
-from flask import Response, request, abort, Blueprint, current_app
+from datetime import datetime, timedelta
 from hashlib import pbkdf2_hmac
-from jose import jwe
 from time import sleep
 from uuid import uuid4
+
+from flask import Blueprint, Response, abort, current_app, request
+from jose import jwe
 
 from omegaml.backends.restapi.streamable import StreamableResourceMixin
 from omegaml.util import utcnow

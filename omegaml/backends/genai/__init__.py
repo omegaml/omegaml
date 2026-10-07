@@ -253,5 +253,5 @@ def virtual_genai(fn):
 
     .. versionadded:: 0.17.0
     """
-    setattr(fn, '_omega_virtual_genai', True)
+    fn._omega_virtual_genai = True
     return fn

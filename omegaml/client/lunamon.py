@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import atexit
 import logging
@@ -394,7 +393,7 @@ class LunaMonitor:
         def _w(*args, **kwargs):
             try:
                 return fn(*args, **kwargs)
-            except TypeError as e:
+            except TypeError:
                 return fn()
 
         return _w

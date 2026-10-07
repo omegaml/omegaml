@@ -7,4 +7,3 @@ def create_view(bp):
 
     view = ScriptsRepositoryView('scripts')
     view.create_routes(bp)
-    return

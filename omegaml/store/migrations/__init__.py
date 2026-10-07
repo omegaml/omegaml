@@ -1,6 +1,5 @@
 import re
 from importlib import import_module
-
 from pathlib import Path
 
 
@@ -12,4 +11,4 @@ def migrate(om):
         print(f"running migration {modname}")
         migration = import_module('.' + modname, package=__package__)
         migration.forward(om)
-    print(f"Migrations complete.")
+    print("Migrations complete.")

@@ -6,7 +6,7 @@ from hashlib import sha1
 _u8 = lambda t: t.encode('UTF-8', 'replace') if isinstance(t, str) else t
 
 
-class ModelVersionMixin(object):
+class ModelVersionMixin:
     """
     Versioning support for models
 
@@ -198,7 +198,7 @@ class ModelVersionMixin(object):
         return hasher.hexdigest()
 
     def _model_version_store_key(self, name, version_hash):
-        return '_versions/{}/{}'.format(name, version_hash)
+        return f'_versions/{name}/{version_hash}'
 
     def _model_version_applies(self, name):
         from omegaml.backends.virtualobj import VirtualObjectBackend  # fmt:off
@@ -255,7 +255,6 @@ class ModelVersionMixin(object):
         actual_save = meta.save
 
         def _versioned_save(*args, version=False, tag=None, commit=None, **kwargs):
-            #
             meta.save = actual_save
             # -- start using actual Metadata.save()
             if bool(version or tag or commit):

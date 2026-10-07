@@ -1,11 +1,11 @@
-from os.path import basename, dirname
-from pathlib import Path
-
 import io
 import logging
 import os
-import smart_open
 import zipfile
+from os.path import basename, dirname
+from pathlib import Path
+
+import smart_open
 
 from omegaml.backends.basedata import BaseDataBackend
 from omegaml.util import tryOr

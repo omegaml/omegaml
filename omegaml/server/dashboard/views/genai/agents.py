@@ -14,4 +14,3 @@ class AIAgentsView(AIPromptsView):
 def create_view(bp):
     view = AIAgentsView('agents', store='models')
     view.create_routes(bp)
-    return

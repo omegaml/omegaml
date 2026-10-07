@@ -9,9 +9,7 @@ import pandas as pd
 from numpy.testing import assert_array_almost_equal
 from sklearn.datasets import make_classification
 from sklearn.exceptions import NotFittedError
-from sklearn.linear_model import LinearRegression
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import SGDRegressor
+from sklearn.linear_model import LinearRegression, LogisticRegression, SGDRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
@@ -35,7 +33,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_predict(self):
         # create some data
-        x = np.array(list(range(0, 10)))
+        x = np.array(list(range(10)))
         y = x * 2
         df = pd.DataFrame(
             {
@@ -74,7 +72,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_fit(self):
         # create some data
-        x = np.array(list(range(0, 10)))
+        x = np.array(list(range(10)))
         y = x * 2
         df = pd.DataFrame(
             {
@@ -131,7 +129,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_partial_fit(self):
         # create some data
-        x = np.array(list(range(0, 10)))
+        x = np.array(list(range(10)))
         y = x * 2
         df = pd.DataFrame(
             {
@@ -167,7 +165,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         self.assertGreater(mse, 40)
         # fit mini batches add better training data, update model
         batch_size = 2
-        for i, start in enumerate(range(0, len(df))):
+        for i, start in enumerate(range(len(df))):
             previous_mse = mse
             X = df[['x']][start : start + batch_size]
             Y = df[['y']][start : start + batch_size]
@@ -184,7 +182,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_partial_fit_chunked(self):
         # create some data
-        x = np.array(list(range(0, 100)))
+        x = np.array(list(range(100)))
         y = x * 2
         df = pd.DataFrame(
             {'x': x, 'y': y},
@@ -220,7 +218,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_predict_pure_python(self):
         # create some data
-        x = np.array(list(range(0, 10)))
+        x = np.array(list(range(10)))
         y = x * 2
         df = pd.DataFrame(
             {
@@ -257,7 +255,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_predict_hdf_dataframe(self):
         # create some data
-        x = np.array(list(range(0, 10)))
+        x = np.array(list(range(10)))
         y = x * 2
         df = pd.DataFrame(
             {
@@ -290,7 +288,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_fit_pipeline(self):
         # create some data
-        x = np.array(list(range(0, 10)))
+        x = np.array(list(range(10)))
         y = x * 2
         df = pd.DataFrame(
             {
@@ -324,7 +322,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
 
     def test_score(self):
         # create some data
-        x = np.array(list(range(0, 10)))
+        x = np.array(list(range(10)))
         y = x * 2
         df = pd.DataFrame(
             {
@@ -497,7 +495,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om = Omega()
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'callback')
         with om.runtime.mapreduce() as ctr:
             # two tasks to map
@@ -524,7 +522,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         om = Omega()
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'callback')
         df = pd.DataFrame(
             {'x': range(1, 10), 'y': range(5, 14)},
@@ -558,7 +556,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         omb = om['test']
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'callback'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         omb.scripts.put(pkgsrc, 'callback')
         df = pd.DataFrame(
             {'x': range(1, 10), 'y': range(5, 14)},
@@ -685,14 +683,14 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # --parallel
         with om.runtime.parallel() as crt:
             for i in range(5):
-                om.runtime.job(f'myjob').run()
+                om.runtime.job('myjob').run()
             result = crt.run()
         results = result.getall()
         self.assertEqual(len(results), 5)
         # --sequence
         with om.runtime.sequence() as crt:
             for i in range(5):
-                om.runtime.job(f'myjob').run()
+                om.runtime.job('myjob').run()
             result = crt.run()
         results = result.getall()
         self.assertEqual(len(results), 5)
@@ -705,7 +703,7 @@ class RuntimeTests(OmegaTestMixin, TestCase):
         # --mapreduce
         with om.runtime.mapreduce() as crt:
             for i in range(5):
-                om.runtime.job(f'myjob').run()
+                om.runtime.job('myjob').run()
             result = crt.run()
         results = result.getall()
         self.assertEqual(len(results), 5)

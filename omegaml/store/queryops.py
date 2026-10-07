@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import json
 import sys
@@ -80,7 +79,7 @@ class GeoJSON(dict):
         return "%s" % self.to_json()
 
 
-class MongoQueryOps(object):
+class MongoQueryOps:
     """
     A Pythonic API to build Mongo query statements
 
@@ -98,7 +97,7 @@ class MongoQueryOps(object):
     result = coll.aggregate([query, groupby])
     """
 
-    UNARY = ('IN,LT,LTE,GT,GTE,NE,WHERE,GEOWITHIN,ALL,ELEMWITHIN,NINEXISTS,TYPE,REGEX,EQ').split(',')
+    UNARY = ['IN', 'LT', 'LTE', 'GT', 'GTE', 'NE', 'WHERE', 'GEOWITHIN', 'ALL', 'ELEMWITHIN', 'NINEXISTS', 'TYPE', 'REGEX', 'EQ']
 
     def __getattr__(self, k):
         if k.upper().replace('_', '') in MongoQueryOps.UNARY:
@@ -217,7 +216,7 @@ class MongoQueryOps(object):
     def PROJECT(self, fields, include=True):
         fields = make_tuple(fields)
         return {
-            '$project': {key: 1 if include else 0 for key in fields},
+            '$project': dict.fromkeys(fields, 1 if include else 0),
         }
 
     def LOOKUP(self, other, key=None, left_key=None, right_key=None, target=None):
@@ -251,7 +250,7 @@ class MongoQueryOps(object):
         """
         op = {
             "$unwind": {
-                "path": "${}".format(field),
+                "path": f"${field}",
             },
         }
         if preserve is not None:
@@ -297,8 +296,6 @@ class MongoQueryOps(object):
             mind = lon.get('mind')
         elif not location:
             assert "invalid arguments. Specify coordinates=GeoJSON(lon, lat)"
-        else:
-            pass
         if isinstance(location, (list, tuple)):
             lon, lat = location
         else:
@@ -322,7 +319,7 @@ class MongoQueryOps(object):
     def REPLACEROOT(self, field):
         return {
             '$replaceRoot': {
-                'newRoot': "${}".format(field),
+                'newRoot': f"${field}",
             },
         }
 
@@ -391,7 +388,7 @@ def humanize_index(idxs):
         1: 'asc',
         -1: 'desc',
     }
-    return '_'.join('{}_{}'.format(SORT_MAP.get(sort), var) for idx, spec in idxs.items() for var, sort in spec['key'])
+    return '_'.join(f'{SORT_MAP.get(sort)}_{var}' for idx, spec in idxs.items() for var, sort in spec['key'])
 
 
 def ensure_index_limit(idx, **kwargs):

@@ -17,7 +17,7 @@ from omegaml.backends.genai.strategy.tracing import TracingMixin
 from omegaml.backends.guardrails import GuardrailPolicy
 from omegaml.backends.tracking import NoTrackTracker, OmegaSimpleTracker
 from omegaml.store import OmegaStore
-from omegaml.util import KeepMissing, raise_, ensure_list
+from omegaml.util import KeepMissing, ensure_list, raise_
 
 logger = logging.getLogger(__name__)
 
@@ -479,7 +479,7 @@ class ConversationModel(
         self.documents = documents
         self.strategy = {
             # defaults
-            **{
+            
                 # kwargs to pass to DocumentIndex.retrieve()
                 'retrieve': {'top': 1},
                 # system role: 'system|developer'
@@ -489,8 +489,8 @@ class ConversationModel(
                 # guardrails applicability (all is the only supported value)
                 'guardrails': 'all',
                 # choice of tools
-                'tool_choice': 'auto',
-            },
+                'tool_choice': 'auto'
+            ,
             # override by user provided
             **(strategy or {}),
         }

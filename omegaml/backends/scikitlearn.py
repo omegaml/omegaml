@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import datetime
 import glob
@@ -278,7 +277,7 @@ class ScikitLearnBackendV2(ScikitLearnBackendV1):
         if rName:
             gs_modelname = rName
         else:
-            gs_modelname = '{}.{}.gs'.format(modelname, nowdt.isoformat())
+            gs_modelname = f'{modelname}.{nowdt.isoformat()}.gs'
         gs_meta = self.model_store.put(gs_model, gs_modelname)
         attributes = meta.attributes
         if not 'gridsearch' in attributes:

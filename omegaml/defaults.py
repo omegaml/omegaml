@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import logging
 import os
@@ -8,7 +7,7 @@ import warnings
 from os.path import basename
 from pathlib import Path
 
-from omegaml.util import dict_merge, markup, inprogress, tryOr, mlflow_available
+from omegaml.util import dict_merge, inprogress, markup, mlflow_available, tryOr
 
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_pytest_runner.py', '_jb_unittest_runner.py'}
@@ -108,7 +107,7 @@ OMEGA_CELERY_CONFIG = {
 #: enable cloud worker routing
 OMEGA_TASK_ROUTING_ENABLED = truefalse(os.environ.get('OMEGA_TASK_ROUTING_ENABLED', False))
 #: celery task packages
-OMEGA_CELERY_IMPORTS = [  #
+OMEGA_CELERY_IMPORTS = [
     'omegaml',
     'omegaml.notebook',
     'omegaml.backends.package',
@@ -145,10 +144,10 @@ OMEGA_STORE_BACKENDS_TENSORFLOW = {
     'tf.savedmodel': 'omegaml.backends.tensorflow.TensorflowSavedModelBackend',
     'tfestimator.model': 'omegaml.backends.tensorflow.TFEstimatorModelBackend',
 }
-OMEGA_STORE_BACKENDS_KERAS = {  #
+OMEGA_STORE_BACKENDS_KERAS = {
     'keras.h5': 'omegaml.backends.keras.KerasBackend'
 }
-OMEGA_STORE_BACKENDS_SQL = {  #
+OMEGA_STORE_BACKENDS_SQL = {
     'sqlalchemy.conx': 'omegaml.backends.sqlalchemy.SQLAlchemyBackend'
 }
 OMEGA_STORE_BACKENDS_MLFLOW = {
@@ -168,7 +167,7 @@ OMEGA_STORE_BACKENDS_OPENAI = {
     'pgvector.conx': 'omegaml.backends.genai.retrieval.PGVectorBackend',
     'vector.conx': 'omegaml.backends.genai.retrieval.MongoDBVectorStore',
 }
-OMEGA_STORE_BACKENDS_OPTIONAL = {  #
+OMEGA_STORE_BACKENDS_OPTIONAL = {
     'pytorch': {'pytorch.pth', 'omegaml.backends.pytorch.PytorchModelBackend'}
 }
 #: supported frameworks (deprecated since 0.16.2, it is effectively ignored)
@@ -224,7 +223,7 @@ OMEGA_MDF_APPLY_MIXINS = [
     ('omegaml.mixins.mdf.ApplyAccumulators', 'MDataFrame,MSeries'),
 ]
 #: jobs mixins
-OMEGA_JOBPROXY_MIXINS = [  #
+OMEGA_JOBPROXY_MIXINS = [
     'omegaml.runtimes.mixins.nbtasks.JobTasks'
 ]
 #: user extensions
@@ -400,7 +399,7 @@ def locate_config_file(configfile=OMEGA_CONFIG_FILE):
         location of the config file or None if not found
     """
     try:
-        from appdirs import user_config_dir, site_config_dir
+        from appdirs import site_config_dir, user_config_dir
     except:
         # we don't have appdirs installed, this can happen during setup.py. fake it
         user_config_dir = lambda *args: os.path.expanduser('~/.config/omegaml')

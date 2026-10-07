@@ -87,10 +87,10 @@ class PandasExternalData(BaseDataBackend):
                 metadata.uri = uri
             # case erroneous
             else:
-                raise ValueError(('Not supported type obj={} with name={} and uri={}').format(type(obj), name, uri))
+                raise ValueError(f'Not supported type obj={type(obj)} with name={name} and uri={uri}')
         # case erroneous parameters
         else:
-            raise ValueError(('Not supported type obj={} with name={}').format(type(obj), name))
+            raise ValueError(f'Not supported type obj={type(obj)} with name={name}')
         return metadata.save()
 
     def get(self, name, version=-1, force_python=False, lazy=False, **kwargs):

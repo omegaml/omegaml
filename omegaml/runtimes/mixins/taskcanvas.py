@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from celery import chain, group, chord
+from celery import chain, chord, group
 
 
 class CanvasTask:

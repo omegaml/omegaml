@@ -154,7 +154,7 @@ class SignatureMixin:
             list of mapped Metadata
         """
         specs = specs if isinstance(specs, dict) else markup(specs)
-        assert specs.get('swagger') == '2.0', f"Only swagger version 2.0 is currently supported."
+        assert specs.get('swagger') == '2.0', "Only swagger version 2.0 is currently supported."
         paths = specs['paths']
         definitions = specs['definitions']
         actions = []

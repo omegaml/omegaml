@@ -22,8 +22,9 @@ class BackgroundProfiler:
             disk_use (float): percent of disk used
             disk_total (int): total size of disk, bytes
         """
-        import psutil
         from datetime import datetime as dt
+
+        import psutil
 
         p = psutil
         disk = p.disk_usage('/')

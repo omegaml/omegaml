@@ -1,8 +1,8 @@
-from unittest import TestCase
-
 import unittest
-from flask import url_for
+from unittest import TestCase
 from unittest.mock import patch
+
+from flask import url_for
 
 from omegaml.server.app import create_app
 from omegaml.tests.util import OmegaTestMixin

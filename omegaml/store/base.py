@@ -71,29 +71,29 @@ as follows:
     a plugin system will enable extension to other types.
 """
 
-from __future__ import absolute_import
 
-import bson
-import gridfs
 import logging
 import os
 import shutil
 import warnings
 import weakref
-from mongoengine.connection import disconnect, connect, get_db
-from mongoengine.errors import DoesNotExist
-from mongoengine.queryset.visitor import Q
 from uuid import uuid4
 
-from omegaml.documents import make_Metadata, MDREGISTRY
+import bson
+import gridfs
+from mongoengine.connection import connect, disconnect, get_db
+from mongoengine.errors import DoesNotExist
+from mongoengine.queryset.visitor import Q
+
+from omegaml.documents import MDREGISTRY, make_Metadata
 from omegaml.mongoshim import sanitize_mongo_kwargs, waitForConnection
-from omegaml.util import load_class, extend_instance, ensure_index, PickableCollection, signature
-from omegaml.util import settings as omega_settings, urlparse
+from omegaml.util import PickableCollection, ensure_index, extend_instance, load_class, signature, urlparse
+from omegaml.util import settings as omega_settings
 
 logger = logging.getLogger(__name__)
 
 
-class OmegaStore(object):
+class OmegaStore:
     """The storage backend for models and data
 
     .. versionchanged:: 0.18.0
@@ -129,7 +129,7 @@ class OmegaStore(object):
         weakref.finalize(self, self._cleanup, repr(self), tmppath=str(self._tmppath))
 
     def __repr__(self):
-        return 'OmegaStore(bucket={}, prefix={})'.format(self.bucket, self.prefix)
+        return f'OmegaStore(bucket={self.bucket}, prefix={self.prefix})'
 
     def __equal__(self, other):
         """test for equality of OmegaStore instances
@@ -179,7 +179,7 @@ class OmegaStore(object):
         #
         # use an instance specific alias, note that access to Metadata and
         # QueryCache must pass the very same alias
-        self._dbalias = alias = self._dbalias or 'omega-{}'.format(uuid4().hex)
+        self._dbalias = alias = self._dbalias or f'omega-{uuid4().hex}'
         # local import of _connections ensure we get the actual object, not an earlier version
         from mongoengine.connection import _connections
 
@@ -515,8 +515,8 @@ class OmegaStore(object):
             * help(obj) if python is in interactive mode
             * text(str) if python is in not interactive mode
         """
-        import sys
         import pydoc
+        import sys
 
         interactive = bool(display) if display is not None else sys.flags.interactive
         display = display or help
@@ -762,8 +762,8 @@ class OmegaStore(object):
         # backwards compatilibity implementation of object_store_key()
         name = '%s.%s' % (name, ext) if not name.endswith(ext) else name
         filename = (
-            '{bucket}.{prefix}.{name}'
-            .format(bucket=bucket or self.bucket, prefix=prefix or self.prefix, name=name, ext=ext)
+            f'{bucket or self.bucket}.{prefix or self.prefix}.{name}'
+            
             .replace('/', '_')
             .replace('..', '.')
         )
@@ -781,7 +781,7 @@ class OmegaStore(object):
         # since 0.13.2, all buckets other than the default use a qualified collection name to
         # effectively separate files in different buckets, enabling finer-grade access control
         # and avoiding name collisions from different buckets
-        return '{}_{}'.format(self.defaults.OMEGA_MONGO_COLLECTION, self.bucket)
+        return f'{self.defaults.OMEGA_MONGO_COLLECTION}_{self.bucket}'
 
     def _ensure_fs_index(self, fs):
         # make sure we have proper chunks and file indicies. this should be created on first write, but sometimes is not

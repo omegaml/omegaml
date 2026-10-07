@@ -6,7 +6,7 @@ from unittest import TestCase
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from sqlalchemy.engine import Connection, create_engine, ResultProxy
+from sqlalchemy.engine import Connection, ResultProxy, create_engine
 
 from omegaml import Omega
 from omegaml.backends.sqlalchemy import SQLAlchemyBackend

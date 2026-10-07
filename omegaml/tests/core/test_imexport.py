@@ -158,7 +158,7 @@ class ImportExportMixinTests(OmegaTestMixin, unittest.TestCase):
         om = self.om
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'helloworld')
         om.scripts.to_archive('helloworld', '/tmp/test')
         om.scripts.drop('helloworld', force=True)

@@ -1,4 +1,4 @@
-class PythonPackageMixin(object):
+class PythonPackageMixin:
     """
     Install and load scripts
     """

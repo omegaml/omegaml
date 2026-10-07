@@ -103,9 +103,10 @@ else:
             # implement a dynamic backend that can handle torch models as a generic approach
             @virtualobj
             def torchhelper(method=None, obj=None, name=None, meta=None, store=None, data=None, **kwargs):
-                import torch
-                import dill
                 from pathlib import Path
+
+                import dill
+                import torch
 
                 # support (obj, virtualobj) syntax to save a virtualobj along with obj?
                 # prepare paths
@@ -224,7 +225,7 @@ else:
             self.assertEqual(output.shape, torch.Size([5, 1]))
 
         def test_pytorch_model_implied_helper(self):
-            import torch.nn as nn
+            from torch import nn
 
             om = self.om
 
@@ -280,7 +281,7 @@ else:
             self.assertEqual(output.shape, torch.Size([5, 1]))
 
         def _create_torch_model(self):
-            import torch.nn as nn
+            from torch import nn
 
             class SimpleLinear(nn.Module):
                 def __init__(self, input_dim, output_dim):

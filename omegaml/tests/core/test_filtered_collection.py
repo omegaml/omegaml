@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import random
 import warnings
@@ -16,8 +15,8 @@ class FilteredCollectionTests(TestCase):
     def setUp(self):
         TestCase.setUp(self)
         df = pd.DataFrame({
-            'x': list(range(0, 10)) + list(range(0, 10)),
-            'y': random.sample(list(range(0, 100)), 20),
+            'x': list(range(10)) + list(range(10)),
+            'y': random.sample(list(range(100)), 20),
         })
         om = Omega()
         om.datasets.put(df, 'sample', append=False)

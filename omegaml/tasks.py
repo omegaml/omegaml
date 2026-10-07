@@ -2,7 +2,6 @@
 omega runtime model tasks
 """
 
-from __future__ import absolute_import
 
 import datetime
 import inspect
@@ -204,7 +203,6 @@ def omega_ping(task, *args, exception=False, **kwargs):
 @shared_task(base=OmegamlTask, bind=True)
 def omega_preload(task, *args, items=None, **kwargs):
     """preload models, datasets and other items into worker process"""
-    pass
 
 
 @worker_process_init.connect

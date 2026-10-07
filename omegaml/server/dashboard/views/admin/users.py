@@ -1,6 +1,5 @@
 from omegaml.server.dashboard.views.base import BaseView
 from omegaml.server.dashboard.views.listdetail import ListDetailMixin
-from omegaml.server.flaskview import FlaskView
 
 
 class UsersView(ListDetailMixin, BaseView):
@@ -15,4 +14,3 @@ class UsersView(ListDetailMixin, BaseView):
 def create_view(bp):
     view = UsersView('users')
     view.create_routes(bp)
-    return

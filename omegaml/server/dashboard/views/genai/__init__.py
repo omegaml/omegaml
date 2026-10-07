@@ -207,7 +207,6 @@ class GenAIView(BaseView):
 def create_view(bp):
     view = GenAIView('index')
     view.create_routes(bp)
-    return
 
 
 # Allowed file extensions

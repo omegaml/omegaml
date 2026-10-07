@@ -5,7 +5,7 @@ from pathlib import Path
 
 from omegaml import Omega
 from omegaml.backends.rsystem.rscripts import RPackageData, RScript
-from omegaml.runtimes.rsystem import r_available, inside_r
+from omegaml.runtimes.rsystem import inside_r, r_available
 from omegaml.tests.util import OmegaTestMixin
 
 

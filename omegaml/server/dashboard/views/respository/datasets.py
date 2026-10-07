@@ -8,4 +8,3 @@ class DatasetsRepositoryView(RepositoryBaseView):
 def create_view(bp):
     view = DatasetsRepositoryView('datasets')
     view.create_routes(bp)
-    return

@@ -1,7 +1,7 @@
 from os import abort
 
 import flask
-from flask import Blueprint, app, render_template, url_for, render_template_string
+from flask import Blueprint, app, render_template, render_template_string, url_for
 from werkzeug.utils import redirect
 
 from omegaml.server.dashboard.views import genai
@@ -13,9 +13,9 @@ omega_bp = Blueprint('omega-server', __name__, static_folder='static', template_
 
 omega_ai_bp = Blueprint('omega-ai', __name__, static_folder='static', template_folder='templates')
 
-from omegaml.server.dashboard.views.respository import scripts, datasets, jobs, models, dashboard
-from omegaml.server.dashboard.views.runtime import summary, streams, tracking
-from omegaml.server.dashboard.views.genai import prompts, chatapps, agents
+from omegaml.server.dashboard.views.genai import agents, chatapps, prompts
+from omegaml.server.dashboard.views.respository import dashboard, datasets, jobs, models, scripts
+from omegaml.server.dashboard.views.runtime import streams, summary, tracking
 
 
 def add_common_routes(bp):
@@ -45,7 +45,7 @@ def explain(segment):
     from omegaml.store import OmegaStore
 
     name = flask.request.args.get('name')
-    om = getattr(flask.current_app, 'current_om')
+    om = flask.current_app.current_om
     # several places to specify contents of explain tab
     # -- object metadata (attributes.explain)
     segment_template_fqdn = f'.system/explain/{segment}'

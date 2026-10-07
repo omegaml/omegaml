@@ -3,7 +3,7 @@ import pandas as pd
 from omegaml.backends.monitoring.base import DriftMonitorBase
 from omegaml.backends.monitoring.datadrift import DataDriftMonitor
 from omegaml.backends.monitoring.stats import DriftStats
-from omegaml.util import tryOr, ensure_list
+from omegaml.util import ensure_list, tryOr
 
 
 class ModelDriftMonitor(DriftMonitorBase):

@@ -1,6 +1,5 @@
-import json
-
 import datetime
+import json
 import os
 import sys
 from shutil import rmtree
@@ -9,7 +8,7 @@ from unittest import TestCase
 from omegaml import Omega
 from omegaml.backends.package import PythonPackageData
 from omegaml.backends.package.packager import build_sdist
-from omegaml.util import settings, delete_database, mkdirs
+from omegaml.util import delete_database, mkdirs, settings
 
 
 class PythonLocalPackageDataTests(TestCase):
@@ -47,7 +46,7 @@ class PythonLocalPackageDataTests(TestCase):
     def test_build_put(self):
         om = self.om
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'helloworld')
         metas = om.scripts.list(raw=True)
         self.assertEqual(metas[0].kind, 'python.package')
@@ -55,7 +54,7 @@ class PythonLocalPackageDataTests(TestCase):
     def test_build_get(self):
         om = self.om
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'helloworld')
         # load and install
         # -- since this is loading from gridfs first and installing the package using pip
@@ -78,7 +77,7 @@ class PythonLocalPackageDataTests(TestCase):
     def test_install(self):
         om = self.om
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'helloworld')
         om.scripts.install()
         self.assertIn('helloworld', sys.modules)
@@ -86,7 +85,7 @@ class PythonLocalPackageDataTests(TestCase):
     def test_install_fully_qualified(self):
         om = self.om
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld', 'setup.py'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'helloworld')
         om.scripts.install()
         self.assertIn('helloworld', sys.modules)
@@ -94,7 +93,7 @@ class PythonLocalPackageDataTests(TestCase):
     def test_install_specifics(self):
         om = self.om
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'helloworld')
         om.scripts.install('helloworld')
         self.assertIn('helloworld', sys.modules)
@@ -105,7 +104,7 @@ class PythonLocalPackageDataTests(TestCase):
     def test_runtime(self):
         om = self.om
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'helloworld')
         print("***omega test_runtime (om, om.runtime)", om, om.runtime)
         result = om.runtime.script('helloworld').run({'foo': 'bar'}, text='foo')
@@ -121,7 +120,7 @@ class PythonLocalPackageDataTests(TestCase):
         om = self.om
         orig_sysargv = ' '.join(sys.argv)
         pkgpath = os.path.abspath(os.path.join(self.basepath, 'demo', 'helloworld'))
-        pkgsrc = 'pkg://{}'.format(pkgpath)
+        pkgsrc = f'pkg://{pkgpath}'
         om.scripts.put(pkgsrc, 'helloworld')
         new_sysargv = ' '.join(sys.argv)
         self.assertEqual(new_sysargv, orig_sysargv)

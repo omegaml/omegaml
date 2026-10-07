@@ -1,5 +1,6 @@
-from .runtime import OmegaRuntime
-from omegaml.runtimes.proxies.modelproxy import OmegaModelProxy
-from .daskruntime import OmegaRuntimeDask
-from omegaml.runtimes.proxies.jobproxy import OmegaJobProxy
-from .loky import OmegaRuntimeBackend
+from omegaml.runtimes.proxies.jobproxy import OmegaJobProxy as OmegaJobProxy
+from omegaml.runtimes.proxies.modelproxy import OmegaModelProxy as OmegaModelProxy
+
+from .daskruntime import OmegaRuntimeDask as OmegaRuntimeDask
+from .loky import OmegaRuntimeBackend as OmegaRuntimeBackend
+from .runtime import OmegaRuntime as OmegaRuntime

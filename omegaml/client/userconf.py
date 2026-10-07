@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import warnings
+
 import yaml
 from urllib3 import Retry
 
@@ -39,8 +40,7 @@ def session_backoff(retries=5):
 
 def _get_userconfig_from_api(api_auth, api_url=None, requested_userid=None, qualifier=None, view=False):
     # safe way to talk to either the remote API or the in-process test server
-    from omegaml import settings
-    from omegaml import _base_config
+    from omegaml import _base_config, settings
 
     defaults = settings()
     api_url = ensure_api_url(api_url, defaults)
@@ -48,17 +48,17 @@ def _get_userconfig_from_api(api_auth, api_url=None, requested_userid=None, qual
     api_url = api_url.replace('//api', '/api')
     query = []
     if requested_userid:
-        query.append('user={}'.format(requested_userid))
+        query.append(f'user={requested_userid}')
     if view:
-        query.append('view={}'.format(int(view)))
+        query.append(f'view={int(view)}')
     if qualifier:
-        query.append('qualifier={}'.format(qualifier))
+        query.append(f'qualifier={qualifier}')
     api_url += '?' + '&'.join(query)
     # -- setup appropriate client API
     if _base_config.is_test_run or api_url.startswith('/'):
         try:
             from tastypie.test import TestApiClient
-        except ModuleNotFoundError as e:
+        except ModuleNotFoundError:
             # we need omegaee environment to proceed
             raise
         server = TestApiClient()
@@ -66,13 +66,12 @@ def _get_userconfig_from_api(api_auth, api_url=None, requested_userid=None, qual
         server_kwargs = dict(authentication=api_auth.get_credentials())
         deserialize = lambda resp: json.loads(resp.content.decode('utf-8'))
     elif api_url.startswith('http'):
-        import requests
 
         server = session_backoff()
         server_kwargs = dict(auth=api_auth)
         deserialize = lambda resp: resp.json()
     else:
-        raise ValueError('invalid api_url >{}<'.format(api_url))
+        raise ValueError(f'invalid api_url >{api_url}<')
     # -- actual logic to get configs
     fail_msg = "omegaml hub refused authentication by {api_auth}, status code={resp.status_code} using {api_url}."
     resp = server.get(api_url, **server_kwargs)
@@ -110,8 +109,8 @@ def _get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None, 
     Returns:
         OmegaCloud
     """
+    from omegaml import _base_config, settings
     from omegaml.client.cloud import OmegaCloud
-    from omegaml import settings, _base_config
 
     defaults = settings(reload=True)
     qualifier = qualifier or 'default'
@@ -128,7 +127,7 @@ def _get_omega_from_apikey(userid, apikey, api_url=None, requested_userid=None, 
     elif api_url == 'local':
         configs = {k: getattr(defaults, k) for k in dir(defaults) if k.startswith('OMEGA')}
     else:
-        raise ValueError('invalid api_url >{}<'.format(api_url))
+        raise ValueError(f'invalid api_url >{api_url}<')
     config = configs.get(qualifier, configs)
     # update
     _base_config.update_from_dict(config, attrs=defaults)
@@ -159,8 +158,7 @@ def get_omega_from_config(*args, **kwargs):
 
 
 def _get_omega_from_config(configfile, qualifier=None):
-    from omegaml import Omega
-    from omegaml import settings, _base_config
+    from omegaml import Omega, _base_config, settings
 
     defaults = settings()
     with open(configfile, 'r') as fconfig:

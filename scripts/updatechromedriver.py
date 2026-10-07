@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # quick hack according to https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json
 import shlex
+from subprocess import run
 
 import requests
 import validators
-from subprocess import run
 
 
 def get_chromedriver(version, platform):
@@ -17,7 +17,7 @@ def get_chromedriver(version, platform):
         releases = requests.get(last_good_url).json()
         good_version = releases['channels']['Stable']['version']
         print(f"CRITICAL chromedriver: no downloads found for Chrome {version} on {platform}")
-        print(f"CRITICAL Details see https://googlechromelabs.github.io/chrome-for-testing/")
+        print("CRITICAL Details see https://googlechromelabs.github.io/chrome-for-testing/")
         print(f"CRITICAL The last known good version is {good_version} (channel Stable)")
         exit(1)
     # SEC: CWE-78 Command Injection
@@ -27,12 +27,12 @@ def get_chromedriver(version, platform):
     url = match[0]['url']
     assert validators.url(url), f"expected a valid url, got {url}"
     if not match:
-        raise ValueError('no chromedriver found for version {} and platform {}'.format(version, platform))
+        raise ValueError(f'no chromedriver found for version {version} and platform {platform}')
     cmds = [
         f"curl {shlex.quote(url)} -S -s -o /tmp/chromedriver.zip",
-        f"unzip -o -j -d /tmp /tmp/chromedriver.zip",
-        f"sudo mv /tmp/chromedriver /usr/local/bin/chromedriver",
-        f"sudo chmod +x /usr/local/bin/chromedriver",
+        "unzip -o -j -d /tmp /tmp/chromedriver.zip",
+        "sudo mv /tmp/chromedriver /usr/local/bin/chromedriver",
+        "sudo chmod +x /usr/local/bin/chromedriver",
     ]
     for cmd in cmds:
         result = run(cmd.split(' '), capture_output=True)

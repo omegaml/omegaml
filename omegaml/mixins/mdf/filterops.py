@@ -1,9 +1,8 @@
 from omegaml.mdataframe import MSeries
-from omegaml.store import Filter
-from omegaml.store import MongoQ
+from omegaml.store import Filter, MongoQ
 
 
-class FilterOpsMixin(object):
+class FilterOpsMixin:
     """
     filter operators on MSeries
     """
@@ -18,7 +17,7 @@ class FilterOpsMixin(object):
         # the actual filter operator
         q = None
         for col in self.columns:
-            queryop = '{col}__{op}'.format(col=col, op=op)
+            queryop = f'{col}__{op}'
             value = other if not isinstance(other, MSeries) else '$' + other.columns[0]
             qq = MongoQ(**{queryop: value})
             if q is None:

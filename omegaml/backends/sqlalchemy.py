@@ -15,7 +15,6 @@ from omegaml.backends.basedata import BaseDataBackend
 from omegaml.util import KeepMissing, ProcessLocal, signature, tqdm_if_interactive
 
 try:
-    import snowflake
 
     sql_logger = logging.getLogger('snowflake')
     sql_logger.setLevel('CRITICAL')
@@ -67,7 +66,7 @@ try:
     # -- this is only effective before the first pyodbc connection
     pyodbc.pooling = False
 except:
-    pass  # noqa
+    pass
 
 
 class SQLAlchemyBackend(BaseDataBackend):
@@ -290,7 +289,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         sqlvars = sqlvars or {}
         table = self._default_table(table or meta.kind_meta.get('table') or name)
         if not raw and not valid_sql(sql):
-            sql = f'select * from :sqltable'
+            sql = 'select * from :sqltable'
         chunksize = chunksize or meta.kind_meta.get('chunksize')
         _default_keep = getattr(self.data_store.defaults, 'SQLALCHEMY_ALWAYS_CACHE', ALWAYS_CACHE)
         keep = keep if keep is not None else _default_keep
@@ -380,7 +379,7 @@ class SQLAlchemyBackend(BaseDataBackend):
         if not insert and self._is_valid_url(obj):
             # store a connection object
             url = obj
-            cnx_name = name if not copy else '_cnx_{}'.format(name)
+            cnx_name = name if not copy else f'_cnx_{name}'
             table = self._default_table(table or name)
             metadata = self._put_as_connection(
                 url, cnx_name, sql=sql, chunksize=chunksize, table=table, attributes=attributes, **kwargs
@@ -404,7 +403,7 @@ class SQLAlchemyBackend(BaseDataBackend):
                 obj, name, append=append, table=table, chunksize=chunksize, transform=transform, **kwargs
             )
         else:
-            raise ValueError('type {} is not supported by {}'.format(type(obj), self.KIND))
+            raise ValueError(f'type {type(obj)} is not supported by {self.KIND}')
         metadata.attributes.update(attributes) if attributes else None
         return metadata.save()
 
@@ -516,13 +515,13 @@ class SQLAlchemyBackend(BaseDataBackend):
             # -- this way the user needs to have the same secrets in order to reuse the connection
             enc_secrets = encoded(secrets or {})
             connection_str = connection_str.format(**enc_secrets)
-            cache_key = sha256(f'{name}:{connection_str}'.encode('utf8')).hexdigest()
+            cache_key = sha256(f'{name}:{connection_str}'.encode()).hexdigest()
             engine = self.__CNX_CACHE.get(cache_key) or sqa.create_engine(connection_str, **ENGINE_KWARGS)
             connection = engine.connect()
-        except KeyError as e:
+        except KeyError:
             msg = '{e}, ensure secrets are specified for connection >{connection_str}<'.format(**locals())
             raise KeyError(msg)
-        except Exception as e:
+        except Exception:
             if connection is not None:
                 connection.close()
                 self.__CNX_CACHE.pop(cache_key, None)
@@ -558,7 +557,7 @@ class SQLAlchemyBackend(BaseDataBackend):
                 if pbar:
                     pbar.update(len(cdf))
                 else:
-                    print("writing chunk {}".format(i))
+                    print(f"writing chunk {i}")
 
         with tqdm_if_interactive().tqdm(total=len(df), unit='rows') as pbar:
             to_sql(df, table, connection, pbar=pbar)
@@ -573,7 +572,7 @@ class SQLAlchemyBackend(BaseDataBackend):
                 df = transform(df)
             try:
                 meta = self.data_store.put(df, name, append=should_append)
-            except Exception as e:
+            except Exception:
                 rows = df.iloc[0:10].to_dict()
                 raise ValueError("{e}: {rows}".format(**locals()))
         return meta
@@ -664,12 +663,12 @@ class SQLAlchemyBackend(BaseDataBackend):
             if vars and trusted != self.sign(sqlvars):
                 warnings.warn(f'Statement >{sql}< contains unsafe variables {vars}. Use :notation or sanitize input.')
             sql = sql.format(**{**sqlvars, **safe_replacements})
-        except KeyError as e:
+        except KeyError:
             raise KeyError('{e}, specify sqlvars= to build query >{sql}<'.format(**locals()))
         # prepare sql statement with bound variables
         try:
             stmt = sqlalchemy.sql.text(sql)
-        except StatementError as exc:
+        except StatementError:
             raise
         return stmt
 
@@ -697,7 +696,7 @@ def _dataframe_to_indexcols(df, metadata, index_columns=None):
     if index_cols is not None:
         for i, col in enumerate(index_cols):
             if col is None:
-                index_cols[i] = 'index' if not multi else 'index_{}'.format(i)
+                index_cols[i] = 'index' if not multi else f'index_{i}'
     return index_cols
 
 
@@ -707,7 +706,7 @@ def _meta_to_indexcols(meta):
     if index_cols is not None and not isinstance(index_cols, str):
         for i, col in enumerate(index_cols):
             if col is None:
-                index_cols[i] = 'index' if not multi else 'index_{}'.format(i)
+                index_cols[i] = 'index' if not multi else f'index_{i}'
     return index_cols
 
 
@@ -756,7 +755,7 @@ def load_sql(om=None, kind=SQLAlchemyBackend.KIND):
     from unittest.mock import MagicMock
 
     from IPython import get_ipython
-    from sql.connection import Connection  # noqa
+    from sql.connection import Connection
 
     import omegaml as om
 

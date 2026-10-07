@@ -1,8 +1,9 @@
-import pandas as pd
 import re
 
+import pandas as pd
 
-class ProjectedMixin(object):
+
+class ProjectedMixin:
     """
     A OmegaStore mixin to process column specifications in dataset name
     """
@@ -12,7 +13,7 @@ class ProjectedMixin(object):
     def metadata(self, name, *args, **kwargs):
         if isinstance(name, str):
             name, colspec = self._extract_column_specs(name)
-        return super(ProjectedMixin, self).metadata(name, *args, **kwargs)
+        return super().metadata(name, *args, **kwargs)
 
     def get(self, name, *args, **kwargs):
         """
@@ -35,7 +36,7 @@ class ProjectedMixin(object):
         name, colspec = self._extract_column_specs(name)
         if colspec is None:
             # no column spec in name, avoid projection
-            data = super(ProjectedMixin, self).get(name, *args, **kwargs)
+            data = super().get(name, *args, **kwargs)
         else:
             # column specs in name, get projected data
             data = self._get_data_from_projection(name, colspec, *args, **kwargs)
@@ -62,11 +63,11 @@ class ProjectedMixin(object):
                 all_columns = list(zip(*colmap))[1]
             columns = columnset(colspec, all_columns)
             kwargs['columns'] = columns
-            data = super(ProjectedMixin, self).get(name, *args, **kwargs)
+            data = super().get(name, *args, **kwargs)
         else:
             # we don't have columns in metadata, get the data first
             # only subset on dataframes
-            data = super(ProjectedMixin, self).get(name, *args, **kwargs)
+            data = super().get(name, *args, **kwargs)
             if isinstance(data, pd.DataFrame):
                 all_columns = data.columns
                 name, columns = columnset(colspec, all_columns)

@@ -1,2 +1,2 @@
-from .localpip import PythonPackageData
-from .remotepip import PythonPipSourcedPackageData
+from .localpip import PythonPackageData as PythonPackageData
+from .remotepip import PythonPipSourcedPackageData as PythonPipSourcedPackageData

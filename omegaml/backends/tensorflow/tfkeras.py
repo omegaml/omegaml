@@ -40,7 +40,7 @@ class TensorflowKerasBackend(KerasBackend):
         with K.name_scope(model.optimizer.__class__.__name__):
             try:
                 for i, var in enumerate(model.optimizer.weights):
-                    name = 'variable{}'.format(i)
+                    name = f'variable{i}'
                     model.optimizer.weights[i] = tf.Variable(var, name=name)
             except NotImplementedError:
                 pass
@@ -66,7 +66,7 @@ class TensorflowKerasBackend(KerasBackend):
                 logger.warning('Error in _fit_tpu, reverting to fit on CPU')
             else:
                 return result
-        result = super(TensorflowKerasBackend, self).fit(
+        result = super().fit(
             modelname, Xname, Yname=Yname, pure_python=pure_python, **kwargs
         )
         return result

@@ -2,11 +2,12 @@
 omega runtime job tasks
 """
 
-from __future__ import absolute_import
 
 import datetime
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
+
 from omegaml.celery_util import OmegamlTask, sanitized
 from omegaml.documents import MDREGISTRY
 
@@ -96,7 +97,7 @@ def execute_scripts(self, **kwargs):
         if job_meta.name.startswith('results'):
             # ignore any scheduled results
             continue
-        logger.debug("***** {}".format(job_meta))
+        logger.debug(f"***** {job_meta}")
         triggers = job_meta.attributes.get('triggers', [])
         # run pending jobs
         pending = (
@@ -104,7 +105,7 @@ def execute_scripts(self, **kwargs):
         )
         for trigger in pending:
             run_at = trigger['run-at']
-            logger.info("***** now={} run_at={}".format(now, run_at))
+            logger.info(f"***** now={now} run_at={run_at}")
             if now >= run_at:
                 om.runtime.job(job_meta.name).run(event=trigger['event'])
                 # immediately schedule for next time

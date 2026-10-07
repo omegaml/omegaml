@@ -1,4 +1,4 @@
-class RequestsLikeTestClient(object):
+class RequestsLikeTestClient:
     # inspired by https://stackoverflow.com/a/41151251
     def __init__(self, app, is_json=True):
         """a in-process test client that works like the requests library

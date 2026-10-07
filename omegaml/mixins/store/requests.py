@@ -118,9 +118,8 @@ class RequestCache:
 
     def put(self, obj, name, **kwargs):
         meta = super().put(obj, name, **kwargs)
-        if self.current_request:
-            if isinstance(meta, self._Metadata):
-                self._request_cache[name] = meta
+        if self.current_request and isinstance(meta, self._Metadata):
+            self._request_cache[name] = meta
         return meta
 
     def drop(self, name, *args, **kwargs):

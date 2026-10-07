@@ -147,7 +147,7 @@ class CloudCommandBase(CommandBase):
         size = self.args.get('--count')
         node_type = self.args.get('--node-type')
         specs = self.args.get('--specs')
-        user = getattr(om.defaults, 'OMEGA_USERID')
+        user = om.defaults.OMEGA_USERID
         default_specs = f"size={size},node-type={node_type},provider={self._provider}"
         params = specs or default_specs
         if 'provider=' not in params:
@@ -291,7 +291,7 @@ class CloudCommandBase(CommandBase):
                 colors = 'red', 'green', 'yellow', 'organge', 'blue', 'violet', 'cyan'
                 metric_group = metric_group_column[metric_name.split('_', 1)[0]]
                 for i, (g, gdf) in enumerate(df.groupby(metric_group)):
-                    x = range(0, len(gdf))
+                    x = range(len(gdf))
                     y = gdf['value'].values
                     plx.plot(x, y, line_color=colors[i])
                 plx.show()
@@ -383,7 +383,7 @@ class CloudCommandBase(CommandBase):
             return row
 
         df = df.apply(node_summary, axis=1)
-        cols = 'name,status,role,cpu,memory,disk'.split(',')
+        cols = ['name', 'status', 'role', 'cpu', 'memory', 'disk']
         print(tabulate(df[cols], headers='keys', showindex=False))
 
     def status_storage(self, kind, auth):

@@ -1,4 +1,5 @@
 import datetime
+
 import nbformat
 from cron_descriptor import get_description
 
@@ -91,7 +92,7 @@ class JobsCommandBase(StoresCommandMixin, CommandBase):
             if next_n:
                 self.logger.info("Given this existing interval, next {next_n} times would be:".format(**locals()))
                 for time in om.jobs.Schedule.from_cron(run_at).next_times(int(next_n)):
-                    self.logger.info("  {}".format(time))
+                    self.logger.info(f"  {time}")
         else:
             self.logger.info("Currently {name} is not scheduled".format(**locals()))
         # show current triggers
@@ -101,11 +102,10 @@ class JobsCommandBase(StoresCommandMixin, CommandBase):
                 event = trigger['event']
                 self.logger.info("{name} is scheduled to run next at {event}".format(**locals()))
         # delete if currently scheduled
-        if delete:
-            if run_at or triggers:
-                answer = self.ask("Do you want to delete this schedule?", options='Y/n', default='y')
-                should_drop = answer.lower().startswith('y')
-                return om.jobs.drop_schedule(name) if should_drop else None
+        if delete and (run_at or triggers):
+            answer = self.ask("Do you want to delete this schedule?", options='Y/n', default='y')
+            should_drop = answer.lower().startswith('y')
+            return om.jobs.drop_schedule(name) if should_drop else None
         # create new schedule
         if not (show or delete):
             if interval:
@@ -134,7 +134,7 @@ class JobsCommandBase(StoresCommandMixin, CommandBase):
             if next_n:
                 self.logger.info("Given this new interval, next {next_n} times would be:".format(**locals()))
                 for time in om.jobs.Schedule.from_cron(cron_sched).next_times(int(next_n)):
-                    self.logger.info("  {}".format(time))
+                    self.logger.info(f"  {time}")
             text = "Do you want to schedule {name} at {human_sched}?".format(**locals())
             answer = self.ask(text, options="Y/n", default='y')
             if answer.lower().startswith('n'):

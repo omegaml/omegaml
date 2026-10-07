@@ -1,6 +1,5 @@
-from sqlalchemy import create_engine, Column, Integer, String, MetaData, text
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Column, Integer, MetaData, String, create_engine, text
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 
 class DatabaseMigrator:
@@ -82,7 +81,7 @@ class DatabaseMigrator:
         """Context manager exit point."""
         if getattr(self, 'session', None):
             self.session.close()
-        if getattr(self, 'engine'):
+        if self.engine:
             self.engine.dispose()
 
     def get_current_columns(self, table_name):

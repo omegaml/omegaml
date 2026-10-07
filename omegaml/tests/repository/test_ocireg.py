@@ -1,10 +1,12 @@
-from pathlib import Path
-from unittest import TestCase, skipUnless, skip
-
 import os
 import shutil
 import unittest
+from pathlib import Path
 from shutil import rmtree
+from unittest import TestCase, skip, skipUnless
+
+import torch
+from sentence_transformers import CrossEncoder
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from omegaml import Omega
@@ -12,9 +14,6 @@ from omegaml.backends.repository.ocireg import OCIRegistryBackend
 from omegaml.backends.repository.orasreg import OrasOciRegistry
 from omegaml.mixins.store.repository import RepositoryStorageMixin
 from omegaml.tests.util import OmegaTestMixin
-
-import torch
-from sentence_transformers import CrossEncoder
 
 
 @skipUnless(shutil.which('oras') is not None, "oras executable cannot be found on PATH")

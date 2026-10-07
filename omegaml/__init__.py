@@ -3,7 +3,9 @@ import cachetools
 from omegaml import defaults as _base_config
 from omegaml._version import version
 from omegaml.omega import OmegaDeferredInstance
-from omegaml.util import load_class, settings, base_loader
+from omegaml.util import base_loader
+from omegaml.util import load_class as load_class
+from omegaml.util import settings as settings
 
 # session cache must be defined here globally so can be imported from anywhere
 # without causing circular import issues

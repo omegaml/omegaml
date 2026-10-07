@@ -31,4 +31,3 @@ class ChatAppsView(BaseView):
 def create_view(bp):
     view = ChatAppsView('app')
     view.create_routes(bp)
-    return

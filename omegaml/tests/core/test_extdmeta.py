@@ -1,15 +1,17 @@
 import json
-import numpy as np
-import pandas as pd
 import unittest
 from datetime import datetime
-from marshmallow import Schema, fields, ValidationError
+
+import numpy as np
+import pandas as pd
+from marshmallow import Schema, ValidationError, fields
 from numpy.testing import assert_array_equal
+from sklearn.linear_model import LinearRegression
+
 from omegaml import Omega
 from omegaml.backends.virtualobj import virtualobj
-from omegaml.mixins.store.extdmeta import SignatureMixin, ModelSignatureMixin, ScriptSignatureMixin, DatasetIndexesMixin
+from omegaml.mixins.store.extdmeta import DatasetIndexesMixin, ModelSignatureMixin, ScriptSignatureMixin, SignatureMixin
 from omegaml.tests.util import OmegaTestMixin
-from sklearn.linear_model import LinearRegression
 
 
 class ExtendedMetadataMixinTests(OmegaTestMixin, unittest.TestCase):

@@ -1,8 +1,8 @@
-from unittest import TestSuite, TestLoader, TextTestRunner
+from unittest import TestLoader, TestSuite, TextTestRunner
 
 # list all test cases to be called from within reticulated python
 from omegaml.runtimes.rsystem import rhelper
-from omegaml.util import temp_filename, remove_temp_filename
+from omegaml.util import remove_temp_filename, temp_filename
 
 RE_TEST_CASES = [
     'omegaml.tests.rsystem.test_rmodels.RSystemModelTests',

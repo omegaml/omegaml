@@ -101,4 +101,3 @@ class AIPromptsView(AIRepositoryView):
 def create_view(bp):
     view = AIPromptsView('prompts', store='models')
     view.create_routes(bp)
-    return

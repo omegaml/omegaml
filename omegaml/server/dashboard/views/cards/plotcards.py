@@ -37,7 +37,7 @@ class PlotcardsView(BaseView):
 
     @property
     def enabled(self):
-        return getattr(self.om.defaults, 'OMEGA_CARDS_ENABLED') or self.app.config.get('CARDS_ENABLED', False)
+        return self.om.defaults.OMEGA_CARDS_ENABLED or self.app.config.get('CARDS_ENABLED', False)
 
 
 @virtualobj
@@ -78,4 +78,3 @@ def myplots(*args, **kwargs):
 def create_view(bp):
     view = PlotcardsView('cards')
     view.create_routes(bp)
-    return

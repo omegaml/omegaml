@@ -1,6 +1,6 @@
 import os
 
-from behave import when, then
+from behave import then, when
 
 from omegaml.tests.features.util import Notebook, jburl
 

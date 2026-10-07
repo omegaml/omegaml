@@ -1,10 +1,9 @@
-from __future__ import absolute_import
 
 import datetime
 
 from mongoengine.base.fields import ObjectIdField
 from mongoengine.document import Document
-from mongoengine.fields import StringField, FileField, DictField, DateTimeField
+from mongoengine.fields import DateTimeField, DictField, FileField, StringField
 from mongoengine.pymongo_support import LEGACY_JSON_OPTIONS
 from pymongo.errors import OperationFailure
 
@@ -95,7 +94,7 @@ def make_Metadata(db_alias='omega', collection=None):
 
         def __new__(cls, *args, **kwargs):
             # undo the Metadata.__new__ protection
-            newcls = super(Metadata, cls).__real_new__(cls)
+            newcls = super().__real_new__(cls)
             return newcls
 
         def __eq__(self, other):

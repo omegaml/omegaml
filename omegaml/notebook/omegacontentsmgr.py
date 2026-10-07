@@ -27,7 +27,7 @@ class OmegaStoreContentsManager(ContentsManager):
     def __init__(self, **kwargs):
         # pass omega= for testing purpose
         self._omega = kwargs.pop('omega', None)
-        super(OmegaStoreContentsManager, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _checkpoints_class_default(self):
         return NoOpCheckpoints
@@ -73,7 +73,7 @@ class OmegaStoreContentsManager(ContentsManager):
             # the frontend will request the specific contents
             model = self._dir_model(path, content=False)
         else:
-            raise web.HTTPError(404, 'Type {} at {} is not supported'.format(type, path))
+            raise web.HTTPError(404, f'Type {type} at {path} is not supported')
         return model
 
     def save(self, model, path):
@@ -144,7 +144,7 @@ class OmegaStoreContentsManager(ContentsManager):
         path = unquote(path).strip('/')
         try:
             self.omega.jobs.drop(path)
-        except Exception as e:
+        except Exception:
             self.omega.jobs.drop(path + '/' + self._dir_placeholder)
 
     def rename_file(self, old_path, new_path):
@@ -196,7 +196,7 @@ class OmegaStoreContentsManager(ContentsManager):
         path = unquote(path).strip('/')
         if path == '':
             return True
-        pattern = r'^{path}.*/({placeholder}|.+)'.format(path=path, placeholder=self._dir_placeholder)
+        pattern = rf'^{path}.*/({self._dir_placeholder}|.+)'
         return len(self.omega.jobs.list(regexp=pattern)) > 0
 
     def file_exists(self, path=""):
@@ -212,7 +212,7 @@ class OmegaStoreContentsManager(ContentsManager):
         if not path:
             return False
         # always check for an actual file, not some sub path
-        pattern = r'^{}$'.format(path)
+        pattern = rf'^{path}$'
         does_exist = len(self.omega.jobs.list(regexp=pattern)) > 0
         does_exist |= len(self.omega.datasets.list(regexp=pattern)) > 0
         return does_exist
@@ -249,7 +249,7 @@ class OmegaStoreContentsManager(ContentsManager):
         if content:
             nb = self._read_notebook(path, as_version=4)
             if nb is None:
-                raise web.HTTPError(400, "Cannot read non-file {}".format(path))
+                raise web.HTTPError(400, f"Cannot read non-file {path}")
             self.mark_trusted_cells(nb, path)
             model['content'] = nb
             model['format'] = 'json'
@@ -304,11 +304,11 @@ class OmegaStoreContentsManager(ContentsManager):
         pattern = r'([^\/]+\/)?([^\/]+\.[^\/]*)$'
         # if we're looking in an existing directory, prepend that
         if path:
-            pattern = r'{path}/{pattern}'.format(path=path, pattern=pattern)
-        pattern = r'^{}'.format(pattern)
+            pattern = rf'{path}/{pattern}'
+        pattern = rf'^{pattern}'
         entries = self.omega.jobs.list(regexp=pattern, raw=True, hidden=True, include_temp=True)
         if path and not entries:
-            raise web.HTTPError(400, "Directory not found {}".format(path))
+            raise web.HTTPError(400, f"Directory not found {path}")
         # by default assume the current path is listed already
         directories = [path]
         for meta in entries:
@@ -329,7 +329,7 @@ class OmegaStoreContentsManager(ContentsManager):
             try:
                 entry = self._notebook_model(meta.name, content=content, meta=meta)
             except Exception as e:
-                msg = '_dir_model error, cannot get {}, removing from list, exception {}'.format(meta.name, str(e))
+                msg = f'_dir_model error, cannot get {meta.name}, removing from list, exception {e!s}'
                 self.log.warning(msg)
             else:
                 contents.append(entry)

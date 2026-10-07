@@ -1,10 +1,11 @@
-import cron_descriptor
 import datetime
+
+import cron_descriptor
 from celery.schedules import crontab
 from croniter import croniter
 
 
-class JobSchedule(object):
+class JobSchedule:
     """
     Produce a cron tab spec from text, time periods, or a crontab spec
 
@@ -63,7 +64,7 @@ class JobSchedule(object):
         if text:
             try:
                 self.sched = self.from_cron(text).sched
-            except Exception as e:
+            except Exception:
                 # assume natural language
                 self.sched = self._convert_text(text).sched
             return
@@ -146,7 +147,7 @@ class JobSchedule(object):
             n -= 1 if n > 0 else None
 
     def __repr__(self):
-        return 'JobSchedule(cron={}, text={})'.format(self.cron, self.text)
+        return f'JobSchedule(cron={self.cron}, text={self.text})'
 
     def _convert_weekdays(self, v):
         # convert full name weekdays to short
@@ -171,19 +172,19 @@ class JobSchedule(object):
         return v
 
     def _has_month(self, v):
-        months = ('january,february,march,april,may,june,july,august,september,october,november,december').split(',')
+        months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
         long = any(m in v for m in months)
         short = any(m[0:3] in v for m in months)
         return long or short
 
     def _has_day(self, v):
-        days = ('monday,tuesday,wednesday,thursday,friday,saturday,sunday').split(',')
+        days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         long = any(d in v for d in days)
         short = any(d[0:3] in v for d in days)
         return long or short
 
     def _convert_months(self, v):
-        months = ('january,february,march,april,may,june,july,august,september,october,november,december').split(',')
+        months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
         if not self._has_month(v):
             return v
         v = v.lower()

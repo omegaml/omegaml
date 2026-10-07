@@ -1,11 +1,10 @@
 import copy
-import warnings
 
 from omegaml.store.queryops import MongoQueryOps, flatten_keys
 from omegaml.util import restore_index
 
 
-class MongoQ(object):
+class MongoQ:
     """
     Query object to filter mongodb collections
 
@@ -175,9 +174,7 @@ class MongoQ(object):
                 addq(k, qops.EQ(qops.TYPE('array')))
             elif op == 'isdouble':
                 addq(k, qops.TYPE('double'))
-            elif op == 'isobject':
-                addq(k, qops.TYPE('object'))
-            elif op == 'isobject':
+            elif op == 'isobject' or op == 'isobject':
                 addq(k, qops.TYPE('object'))
             elif op == 'isdate':
                 addq(k, qops.TYPE('date'))
@@ -242,7 +239,7 @@ class MongoQ(object):
         return sanitize_filter(filter, trusted=trusted)
 
 
-class Filter(object):
+class Filter:
     """
     Filter for OmegaStore objects
 

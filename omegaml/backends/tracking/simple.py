@@ -3,9 +3,9 @@ import os
 import platform
 import warnings
 from base64 import b64decode, b64encode
+from collections.abc import Iterable
 from datetime import date
 from itertools import chain
-from typing import Iterable
 from uuid import uuid4
 
 import dill
@@ -272,7 +272,7 @@ class OmegaSimpleTracker(TrackingProvider):
             try:
                 rawdata = b64encode(dill.dumps(obj)).decode('utf8')
                 format = 'pickle'
-            except TypeError as e:
+            except TypeError:
                 rawdata = repr(obj)
                 format = 'repr'
         value = {'name': name, 'data': rawdata, 'format': format}

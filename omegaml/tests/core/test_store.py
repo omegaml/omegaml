@@ -184,7 +184,7 @@ class StoreTests(unittest.TestCase):
         # create some dataframe
         # force fast insert
         df = pd.DataFrame(
-            {'a': list(range(0, int(1e4 + 1))), 'b': list(range(0, int(1e4 + 1)))},
+            {'a': list(range(int(1e4 + 1))), 'b': list(range(int(1e4 + 1)))},
         )
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
@@ -262,7 +262,7 @@ class StoreTests(unittest.TestCase):
         # filter in mongodb
         specs = ['a', ':b', ':', 'b:', '^c']
         for spec in specs:
-            name_spec = 'mydata[{}]'.format(spec)
+            name_spec = f'mydata[{spec}]'
             df2 = store.get(name_spec)
             # filter local dataframe
             if spec == ':':
@@ -354,7 +354,7 @@ class StoreTests(unittest.TestCase):
     def test_put_dataframe_timeseries(self):
         # create some dataframe
         tsidx = pd.date_range(datetime(2016, 1, 1), datetime(2016, 4, 1))
-        df = pd.DataFrame({'a': list(range(0, len(tsidx))), 'b': list(range(0, len(tsidx)))}, index=tsidx)
+        df = pd.DataFrame({'a': list(range(len(tsidx))), 'b': list(range(len(tsidx)))}, index=tsidx)
         store = self._make_store(prefix='')
         store.put(df, 'mydata')
         dfx = store.get('mydata')
@@ -371,7 +371,7 @@ class StoreTests(unittest.TestCase):
             codes=[[0, 0, 1, 1, 2, 2, 3, 3], [0, 1, 0, 1, 0, 1, 0, 1]],
             names=['first', 'second'],
         )
-        df = pd.DataFrame({'x': range(0, len(midx))}, index=midx)
+        df = pd.DataFrame({'x': range(len(midx))}, index=midx)
         store.put(df, 'mydata')
         dfx = store.get('mydata')
         assert_frame_equal(df, dfx)
@@ -410,7 +410,7 @@ class StoreTests(unittest.TestCase):
         coll = store.collection('mydata')
         # SON(..., 'keys': { key: order, ...}) => ['key', ...]
         idxs = [son.to_dict()['key'] for son in coll.list_indexes()]
-        idxs_keys = [list(sorted(d.keys())) for d in idxs]
+        idxs_keys = [sorted(d.keys()) for d in idxs]
         self.assertTrue(any(keys == ['data.a'] for keys in idxs_keys))
 
     def test_put_python_dict_multiple(self):
@@ -533,14 +533,14 @@ class StoreTests(unittest.TestCase):
         # new **kwargs filter spec
         df2 = store.get(
             'dfgroup',
-            **{'b': 1},
+            b=1,
         )
         self.assertTrue(df2.equals(result_df[df2.columns]))
         df3 = store.get('dfgroup')
         self.assertTrue(df3.equals(df[df3.columns]))
         df4 = store.get(
             'dfgroup',
-            **{'a': 1},
+            a=1,
         )
         self.assertTrue(df4.equals(result_df[df4.columns]))
 

@@ -520,7 +520,7 @@ class CoreObjectsBackend(BaseDataBackend):
             df = self._extract_dataframe_hdf(filename, version=version)
             return df
         else:
-            raise gridfs.errors.NoFile("{0} does not exist in mongo collection '{1}'".format(name, self.store.bucket))
+            raise gridfs.errors.NoFile(f"{name} does not exist in mongo collection '{self.store.bucket}'")
 
     def get_python_data(self, name, filter=None, version=-1, lazy=False, trusted=False, **kwargs):
         """
