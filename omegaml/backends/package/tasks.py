@@ -2,7 +2,6 @@
 omega runtime script tasks
 """
 
-from __future__ import absolute_import
 
 import datetime
 
@@ -95,7 +94,7 @@ def run_omega_script(self, scriptname, *args, **kwargs):
         'args': self.delegate_args[1:],
         'kwargs': self.delegate_kwargs,
         'result': result,
-        'runtimes': float(duration.seconds) + duration.microseconds / float(1e6),
+        'runtimes': float(duration.seconds) + duration.microseconds / 1e6,
         'started': dtstart.isoformat(),
         'ended': dtend.isoformat(),
     }

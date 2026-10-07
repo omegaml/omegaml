@@ -74,9 +74,8 @@ class BackendBaseCommon:
             ):
                 try:
                     store.fs.delete(fileobj._id)
-                except Exception as e:
+                except Exception:
                     warn("deleting {filename} resulted in {e}".format(**locals()))
-                    pass
         is_directory = self._is_path(obj) and Path(obj).is_dir()
         is_file = self._is_path(obj) and Path(obj).is_file()
         if uri:
@@ -215,8 +214,8 @@ class BackendBaseCommon:
         pre_call = getattr(self._call_handler, f"_pre_{method}", pre_nop)
         post_call = getattr(self._call_handler, f"_post_{method}", post_nop)
         common_kwargs = dict(
-            data_store=getattr(self, "data_store"),  # fmt:asis
-            model_store=getattr(self, "model_store"),
+            data_store=self.data_store,  # fmt:asis
+            model_store=self.model_store,
         )
         args, kwargs = pre_call(*args, **kwargs)
         try:

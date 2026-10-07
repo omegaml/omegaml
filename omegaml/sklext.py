@@ -12,7 +12,7 @@ class OnlinePipeline(Pipeline):
 
     def __init__(self, steps, safe=False):
         self.safe = safe
-        super(OnlinePipeline, self).__init__(steps)
+        super().__init__(steps)
 
     def partial_fit(self, X, y=None):
         """

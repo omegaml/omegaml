@@ -248,7 +248,7 @@ class CompletionsMixin:
                         tool_calls_map.setdefault(idx, tool_message.get('tool_calls') or {})
                         dict_merge(tool_calls_map[idx], partial_call)
                     # -- finalize tool call message
-                    tool_calls = list(sorted(tool_calls_map.values(), key=lambda v: v.get('index')))
+                    tool_calls = sorted(tool_calls_map.values(), key=lambda v: v.get('index'))
                 else:
                     tool_calls = tool_message.get('tool_calls')
                 if use_tools and tool_calls:

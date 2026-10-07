@@ -65,7 +65,6 @@ See Also
 """
 
 import os
-
 import shutil
 import sys
 from pathlib import Path
@@ -116,7 +115,7 @@ def start_worker(om, queue=None):
     Returns:
         this is a blocking call, does not stop until worker is stopped
     """
-    argv = 'worker --loglevel=DEBUG -E'.split(' ')
+    argv = ['worker', '--loglevel=DEBUG', '-E']
     if queue:
         argv.extend(f'-Q {queue}'.split(' '))
     om.runtime.celeryapp.worker_main(argv=argv)

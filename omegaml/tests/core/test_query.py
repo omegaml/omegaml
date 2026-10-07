@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import random
 from unittest.case import TestCase
@@ -7,7 +6,6 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 
 from omegaml import Omega
-from omegaml.mdataframe import MDataFrame
 from omegaml.store import qops
 from omegaml.store.query import Filter
 from omegaml.store.queryops import GeoJSON
@@ -26,8 +24,8 @@ class FilterQueryTests(TestCase):
         TestCase.setUp(self)
         df = self.df = pd.DataFrame(
             {
-                'x': list(range(0, 10)) + list(range(0, 10)),
-                'y': random.sample(list(range(0, 100)), 20),
+                'x': list(range(10)) + list(range(10)),
+                'y': random.sample(list(range(100)), 20),
             },
         )
         om = self.om = Omega()
@@ -80,15 +78,15 @@ class FilterQueryTests(TestCase):
         # ordered by distance
         result = Filter(coll, location__near=dict(location=(8.541694, 47.3768866)))
         places = list(result.value.place.unique())
-        self.assertListEqual(places, 'Zurich,Bern,Geneva,New York'.split(','))
+        self.assertListEqual(places, ['Zurich', 'Bern', 'Geneva', 'New York'])
         # use tuple (lon, lat, maxd)
         result = Filter(coll, location__near=(8.541694, 47.3768866, 1))
         places = list(result.value.place.unique())
-        self.assertListEqual(places, 'Zurich'.split(','))
+        self.assertListEqual(places, ['Zurich'])
         # use tuple (lon, lat, mind, maxd)
         result = Filter(coll, location__near=(8.541694, 47.3768866, 0, 100))
         places = list(result.value.place.unique())
-        self.assertListEqual(places, 'Zurich'.split(','))
+        self.assertListEqual(places, ['Zurich'])
 
     def test_filter_subdoc(self):
         coll = self.coll
@@ -101,7 +99,7 @@ class FilterQueryTests(TestCase):
         om = self.om
         df = pd.DataFrame(
             {
-                'x': list(range(0, 5)),
+                'x': list(range(5)),
                 'y': [1, 2, 3, None, None],
             },
         )

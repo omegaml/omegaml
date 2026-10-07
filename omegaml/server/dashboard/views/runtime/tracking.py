@@ -345,7 +345,6 @@ class TrackingView(RepositoryBaseView):
 def create_view(bp):
     view = TrackingView('tracking')
     view.create_routes(bp)
-    return
 
 
 hasdata = lambda d: d is not None and len(d) > 0

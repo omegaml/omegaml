@@ -228,11 +228,11 @@ def virtualobj(fn):
     Returns:
         fn
     """
-    setattr(fn, '_omega_virtual', True)
+    fn._omega_virtual = True
     return fn
 
 
-class VirtualObjectHandler(object):
+class VirtualObjectHandler:
     """
     Object-oriented API for virtual object functions
     """
@@ -328,7 +328,7 @@ class _DillDip:
         freevars = [n for n in set(freevars) if n not in dir(builtins)]
         if len(freevars):
             warnings.warn(
-                f'The {repr(obj)} module references {freevars}, this may lead to errors at runtime; import/declare all variables within method/function scope'
+                f'The {obj!r} module references {freevars}, this may lead to errors at runtime; import/declare all variables within method/function scope'
             )
 
     def _dill_dill(self, obj, **dill_kwargs):
@@ -356,7 +356,7 @@ class _DillDip:
             source_obj = {
                 '__dipped__': self.__calories,
                 'source': ''.join(source),
-                'name': getattr(obj, '__name__'),
+                'name': obj.__name__,
                 '__dict__': getattr(obj, '__dict__', {}),
             }
         except:
@@ -364,21 +364,21 @@ class _DillDip:
         else:
             # check obvious references in source
             if '__main__' in source_obj.get('source', []):
-                warnings.warn(f'The {repr(obj)} references __main__, this may lead to unexpected results')
+                warnings.warn(f'The {obj!r} references __main__, this may lead to unexpected results')
         if as_source and source_obj:
             # if source code was requested, transport as source code
             data = dill.dumps(source_obj, **dill_kwargs)
         elif source_obj and dill.detect.getmodule(obj) != '__main__':
             # we have a source obj, make sure we can dill it and have source to revert from
             # compile to __main__ module to enable full serialization
-            warnings.warn(f'The {repr(obj)} is defined outside of __main__, recompiling in __main__.')
+            warnings.warn(f'The {obj!r} is defined outside of __main__, recompiling in __main__.')
             obj = self._dynamic_compile(source_obj, module='__main__')
             source_obj['dill'] = dill.dumps(obj, **dill_kwargs)
             data = dill.dumps(source_obj, **dill_kwargs)
         else:
             # we have no source object, revert to standard dill
             if as_source:
-                warnings.warn(f'Cannot save {repr(obj)} as source code, reverting to dill')
+                warnings.warn(f'Cannot save {obj!r} as source code, reverting to dill')
             # could not get source code, revert to dill
             data = dill.dumps(obj, **dill_kwargs)
         return data
@@ -430,7 +430,7 @@ class _DillDip:
 
 
 def tool(fn):
-    setattr(fn, '_omega_virtual', True)
+    fn._omega_virtual = True
     return fn
 
 

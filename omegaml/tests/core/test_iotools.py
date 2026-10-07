@@ -1,11 +1,10 @@
 import os
-
 import unittest
+
+import pandas as pd
 from pandas.testing import assert_frame_equal
 
 from omegaml import Omega
-import pandas as pd
-
 from omegaml.tests.util import OmegaTestMixin
 
 

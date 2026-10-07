@@ -37,7 +37,7 @@ class ShellCommandBase(CommandBase):
         try:
             import IPython
         except:
-            self.logger.warn("you should pip install ipython for convenience")
+            self.logger.warning("you should pip install ipython for convenience")
         else:
             use_ipython = True
         # ipython
@@ -57,9 +57,9 @@ class ShellCommandBase(CommandBase):
 
         om = get_omega(self.args)
         try:
-            import gnureadline
+            pass
         except:
-            self.logger.warn("you should pip install gnureadline for convenience")
+            self.logger.warning("you should pip install gnureadline for convenience")
         variables = {}
         variables.update(locals())
         shell = code.InteractiveConsole(locals=variables)

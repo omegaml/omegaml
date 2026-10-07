@@ -1,7 +1,7 @@
 import getpass
 import logging
 
-from omegaml import settings, load_class
+from omegaml import load_class, settings
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ def run(om, payload, *args, **query):
 
     factor = payload.get('factor')
     df = pd.DataFrame({
-        'a': range(0, 5),
-        'b': range(0, 5),
+        'a': range(5),
+        'b': range(5),
     })
     return (df * factor).to_dict(orient='list')

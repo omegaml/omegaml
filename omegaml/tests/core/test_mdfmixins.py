@@ -10,8 +10,8 @@ class MDataFrameMixinTests(TestCase):
     def setUp(self):
         TestCase.setUp(self)
         df = self.df = pd.DataFrame({
-            'x': list(range(0, 10)) + list(range(0, 10)),
-            'y': list(range(0, 10)) + list(range(0, 10)),
+            'x': list(range(10)) + list(range(10)),
+            'y': list(range(10)) + list(range(10)),
         })
         om = self.om = Omega()
         om.datasets.put(df, 'sample', append=False)

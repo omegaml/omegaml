@@ -1,12 +1,11 @@
-from unittest import TestCase
-
 import os
 import sys
+from unittest import TestCase
 
 from omegaml import Omega
-from omegaml.server import restapi
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.server import restapi
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
 
@@ -36,7 +35,7 @@ class ScriptResourceTests(OmegaTestMixin, TestCase):
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
         om = self.om
-        pkg = 'pkg://{}'.format(pkgpath)
+        pkg = f'pkg://{pkgpath}'
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster
@@ -72,7 +71,7 @@ class ScriptResourceTests(OmegaTestMixin, TestCase):
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
         om = self.om
-        pkg = 'pkg://{}'.format(pkgpath)
+        pkg = f'pkg://{pkgpath}'
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster

@@ -7,11 +7,12 @@ class KerasBackend(BaseModelBackend):
 
     @classmethod
     def supports(self, obj, name, **kwargs):
-        from tensorflow.keras import Sequential as tfSequential, Model as tfModel
+        from tensorflow.keras import Model as tfModel
+        from tensorflow.keras import Sequential as tfSequential
 
         is_tf_keras = isinstance(obj, (tfSequential, tfModel))
         try:
-            from keras import Sequential, Model
+            from keras import Model, Sequential
         except (ImportError, AttributeError):
             # keras 2.4.3, python 3.9 is not compatible
             # https://github.com/keras-team/keras/issues/14632

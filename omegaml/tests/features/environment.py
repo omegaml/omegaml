@@ -92,7 +92,7 @@ def after_step(context, step):
                 dirname = os.path.dirname(outname)
                 os.makedirs(dirname, exist_ok=True)
                 nbformat.write(nb, outname)
-        except Exception as e:
+        except Exception:
             print("WARNING could not write {nbname} to {outname}, got {e}".format(**locals()))
 
 

@@ -1,4 +1,3 @@
-import os
 
 from omegaml import load_class
 from omegaml.runtimes.proxies.baseproxy import RuntimeProxyBase

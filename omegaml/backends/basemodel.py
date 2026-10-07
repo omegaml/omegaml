@@ -1,9 +1,9 @@
+import shutil
+import tarfile
 from pathlib import Path
 
 import joblib
-import shutil
 import smart_open
-import tarfile
 
 from omegaml.backends.basecommon import BackendBaseCommon
 from omegaml.util import reshaped
@@ -60,7 +60,7 @@ class BaseModelBackend(BackendBaseCommon):
     #: model deserializer - load a model instance from a filename (or directory)
     loader = lambda store, infile, filename=None, **kwargs: joblib.load(infile or filename)
     #: return the equivalent of the predict() function, defaults to obj.predict()
-    infer = lambda obj, **kwargs: getattr(obj, 'predict')
+    infer = lambda obj, **kwargs: obj.predict
     #: transform the input data into model predict() format, defaults to np.array(data).reshape(-1, -1)
     reshape = lambda data, **kwargs: reshaped(data)
     #: the types this backend can store, defaults to (object,),
@@ -143,7 +143,7 @@ class BaseModelBackend(BackendBaseCommon):
         .. versionchanged: NEXT
             enable multi-file serialized models
         """
-        serializer = serializer or getattr(self.serializer, '__func__')  # __func__ is the unbound method
+        serializer = serializer or self.serializer.__func__  # __func__ is the unbound method
         kwargs.setdefault('key', key)
         tmpfn = serializer(self, model, tmpfn, **kwargs) or tmpfn
         modelfn = Path(tmpfn)
@@ -180,7 +180,7 @@ class BaseModelBackend(BackendBaseCommon):
         .. versionchanged: NEXT
             enable multi-file serialized models
         """
-        loader = loader or getattr(self.loader, '__func__')  # __func__ is the unbound method
+        loader = loader or self.loader.__func__  # __func__ is the unbound method
 
         def is_omegaml_tgz(infile):
             try:
@@ -292,8 +292,8 @@ class BaseModelBackend(BackendBaseCommon):
         """
         model = self.model_store.get(modelname)
         data = self._resolve_input_data('predict', Xname, 'X', **kwargs)
-        infer = getattr(self.infer, '__func__')  # __func__ is the unbound method
-        reshape = getattr(self.reshape, '__func__')
+        infer = self.infer.__func__  # __func__ is the unbound method
+        reshape = self.reshape.__func__
         result = infer(model)(reshape(data))
         return self._prepare_result('predict', result, rName=rName, pure_python=pure_python, **kwargs)
 

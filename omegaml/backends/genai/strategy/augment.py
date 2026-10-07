@@ -62,5 +62,5 @@ class AugmentationMixin:
         augmented = self._augment_prompt(
             message.get('content', ''), documents=documents, query=query, template=template
         )
-        message['content'] = augmented if augmented else message.get('content')
+        message['content'] = augmented or message.get('content')
         return message

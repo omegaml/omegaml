@@ -1,6 +1,5 @@
-from unittest import TestCase
-
 import os
+from unittest import TestCase
 
 import nbformat
 
@@ -53,7 +52,7 @@ class CliJobsTest(CliTestScenarios, OmegaTestMixin, TestCase):
         cells.append(nbformat.v4.new_code_cell(source=code))
         notebook = nbformat.v4.new_notebook(cells=cells)
         self.om.jobs.put(notebook, 'testnb')
-        self.cli(f'jobs drop testnb')
+        self.cli('jobs drop testnb')
         expected = self.pretend_log('True')
         self.assertLogContains('info', expected)
         self.assertNotIn('testnb', self.om.jobs.list())

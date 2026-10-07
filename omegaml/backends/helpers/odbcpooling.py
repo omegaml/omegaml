@@ -42,8 +42,9 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
         result (DataFrame|Connection|None): for method == 'get', the result of the backend.get() call; for
         all other methods None, the object helper mixin will call the backend directly.
     """
-    from dataclasses import dataclass
     import time
+    from dataclasses import dataclass
+
     import omegaml as om
 
     om.logger.debug(f"helper called with {method=} {store=} {backend=} {kwargs=}")
@@ -92,7 +93,7 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
                     pool_pre_ping=True,
                     pool_recycle=config.pool_recycle,
                 )
-                SQLAlchemyBackend._SQLAlchemyBackend__CNX_CACHE.clear()  # noqa
+                SQLAlchemyBackend._SQLAlchemyBackend__CNX_CACHE.clear()
                 # keep-false clears the sqlalchemy engine pool for matching datasets
                 # -- any future connections will be fresh. We try multiple times to clear caches
                 # -- this adds a small delay on initial connections
@@ -110,7 +111,7 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
         [
             kwargs.pop("keep", None)
             for k in dict(kwargs)
-            if k not in "sql,chunksize,raw,sqlvars,secret,index,keep,lazy,table,trusted".split(",")
+            if k not in ["sql", "chunksize", "raw", "sqlvars", "secret", "index", "keep", "lazy", "table", "trusted"]
         ]
         # reset connection pool with retry for this dataset, ensure a new connection can be established
         # since we have a new pool, pre ping is not issued by sqlalchemy, so we do it
@@ -130,7 +131,6 @@ def helper(*args, method=None, meta=None, store=None, backend=None, **kwargs):
             dataset_preping()
 
     # returning None triggers the default backend processing
-    return None
 
 
 def install():

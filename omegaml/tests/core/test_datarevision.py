@@ -1,10 +1,12 @@
-import pandas as pd
 import unittest
 from datetime import datetime
+
+import pandas as pd
+from pandas._testing import assert_frame_equal
+
 from omegaml import Omega
 from omegaml.mixins.store.datarevision import DataRevisionMixin
 from omegaml.tests.util import OmegaTestMixin
-from pandas._testing import assert_frame_equal
 
 
 class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
@@ -19,7 +21,7 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
         )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
@@ -70,9 +72,9 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
-            index=range(0, 10),
+            index=range(10),
         )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
         # update with new data
@@ -110,7 +112,7 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
         )
         dt_a = datetime.utcnow()
@@ -143,7 +145,7 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
         )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True, tag='rev_a')
@@ -159,9 +161,9 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
-            index=range(0, 10),
+            index=range(10),
         )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
         # update with new data
@@ -207,13 +209,13 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
         )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True, tag='rev_a')
         df_b = pd.DataFrame(
             {
-                'x': range(0, 2),
+                'x': range(2),
             },
         )
         om.datasets.put(df_b, 'revtest')
@@ -227,7 +229,7 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
         )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
@@ -268,7 +270,7 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
         )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True)
@@ -303,7 +305,7 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
         )
         meta = om.datasets.put(df_a, 'revtest', append=False, revisions=True, tag='rev_a')
@@ -319,13 +321,13 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
         )
         df_b = pd.DataFrame(
             {
-                'x': range(0, 10),
-                'y': range(0, 10),
+                'x': range(10),
+                'y': range(10),
             },
         )
         om.datasets.put(df_a, 'revtest', append=False, revisions=True, tag='rev_a')
@@ -348,7 +350,7 @@ class DataRevisionMixinTests(OmegaTestMixin, unittest.TestCase):
         # storing dataset by numeric index, 0-9
         df_a = pd.DataFrame(
             {
-                'x': range(0, 10),
+                'x': range(10),
             },
         )
         om.datasets.put(df_a, 'revtest', append=False)

@@ -4,7 +4,7 @@ from sqlalchemy.exc import OperationalError
 from omegaml.util import ProcessLocal
 
 
-class ParallelStep(object):
+class ParallelStep:
     def __init__(self, steps=None, agg=None, n_jobs=-1):
         self.steps = steps
         self.agg = agg or self._default_agg
@@ -21,7 +21,7 @@ class ParallelStep(object):
         return self.aggregate(values, **kwargs)
 
 
-class DataPipeline(object):
+class DataPipeline:
     """A data pipeline that processes data through a series of steps
 
     The pipeline is a sequence of steps, each of which is a callable that
@@ -115,7 +115,7 @@ class Model:
         sql = sql or self.delete_sql
         try:
             cursor = self.store.get(self.name, sql=sql, sqlvars=kwargs, lazy=True)
-        except OperationalError as e:
+        except OperationalError:
             pass
         else:
             cursor.close()

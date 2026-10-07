@@ -43,10 +43,10 @@ def predict(ctx):
     om = ctx.feature.om
     resp = om.runtime.model('regmodel').predict([1])
     result = resp.get()
-    assert np.isclose(result[0], 2), "expected approx. 2, got {}".format(result[0])
+    assert np.isclose(result[0], 2), f"expected approx. 2, got {result[0]}"
     resp = om.runtime.model('regmodel').predict([50])
     result = resp.get()
-    assert np.isclose(result[0], 100), "expected approx. 100, got {}".format(result[0])
+    assert np.isclose(result[0], 100), f"expected approx. 100, got {result[0]}"
 
 
 @when('we store {scope} credentials in {dataset}')

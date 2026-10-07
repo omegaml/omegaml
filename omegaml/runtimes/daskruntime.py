@@ -1,13 +1,12 @@
-from __future__ import absolute_import
 
 import datetime
-from importlib import import_module
 import os
+from importlib import import_module
 
 from omegaml.runtimes.proxies.jobproxy import OmegaJobProxy
 
 
-class DaskTask(object):
+class DaskTask:
     """
     A dask remote function wrapper mimicking a Celery task
     """
@@ -34,7 +33,7 @@ class DaskTask(object):
         return DaskAsyncResult(self.client.submit(self.fn, *args, **kwargs))
 
 
-class DaskAsyncResult(object):
+class DaskAsyncResult:
     """
     A dask Future wrapper mimicking a Celery AsyncResult
     """
@@ -53,10 +52,10 @@ class DaskAsyncResult(object):
 
 def daskhello(*args, **kwargs):
     # test function for dask distributed
-    return "hello from {} at {}".format(os.getpid(), datetime.datetime.now())
+    return f"hello from {os.getpid()} at {datetime.datetime.now()}"
 
 
-class OmegaRuntimeDask(object):
+class OmegaRuntimeDask:
     """
     omegaml compute cluster gateway to a dask distributed cluster
 

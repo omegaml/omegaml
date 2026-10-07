@@ -1,4 +1,4 @@
-class GridSearchMixin(object):
+class GridSearchMixin:
     def gridsearch(self, Xname, Yname=None, parameters=None, pure_python=False, **kwargs):
         """run gridsearch on model
 

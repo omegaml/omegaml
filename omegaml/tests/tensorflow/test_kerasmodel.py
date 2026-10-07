@@ -1,7 +1,7 @@
+import unittest
 from unittest import TestCase
 
 import numpy as np
-import unittest
 
 from omegaml.backends.keras import KerasBackend
 from omegaml.tests.util import OmegaTestMixin
@@ -21,15 +21,15 @@ class KerasBackendTests(OmegaTestMixin, TestCase):
         # build a dummy model for testing. does not need to make sense
         try:
             import keras
-            from keras import Sequential, Model
+            from keras import Model, Sequential
             from keras.layers import Dense, Dropout
             from keras.optimizers import SGD
         except (ImportError, AttributeError):
             # keras 2.4.3, python 3.9 is not compatible
             # https://github.com/keras-team/keras/issues/14632
             from tensorflow import keras
-            from tensorflow.keras.models import Sequential
             from tensorflow.keras.layers import Dense, Dropout
+            from tensorflow.keras.models import Sequential
             from tensorflow.keras.optimizers import SGD
 
         # Generate dummy data

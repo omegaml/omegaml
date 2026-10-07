@@ -1,10 +1,9 @@
-from pathlib import Path
-from unittest import skipUnless
-
 import json
 import shutil
 import unittest
+from pathlib import Path
 from tempfile import mkdtemp
+from unittest import skipUnless
 from unittest.mock import patch
 
 from omegaml.backends.repository.basereg import chdir

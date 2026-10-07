@@ -10,7 +10,7 @@ import pymongo
 from pymongo import WriteConcern
 from pymongo.read_concern import ReadConcern
 
-from omegaml.util import load_class, ensure_index_relaxed
+from omegaml.util import ensure_index_relaxed, load_class
 
 LOGGER_HOSTNAME = os.environ.get('HOSTNAME') or platform.node()
 python_logger = logging.getLogger(__name__)
@@ -106,8 +106,9 @@ class OmegaLoggingHandler(logging.Handler):
             fmt (str): the format specification
             exit_hook (bool): when True attach the logger to the system exception handler
         """
-        import omegaml as om
         import logging
+
+        import omegaml as om
 
         store = store or om.setup().datasets
         defaults = defaults or store.defaults
@@ -187,7 +188,7 @@ class OmegaSimpleLogger:
         om.logger.dataset.tail(wait=True).
     """
 
-    levels = 'QUIET,CRITICAL,ERROR,WARNING,INFO,DEBUG'.split(',')
+    levels = ['QUIET', 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
 
     def __init__(
         self, store=None, dataset=None, collection=None, level=None, size=1 * 1024 * 1024, defaults=None, name='simple'
@@ -390,6 +391,7 @@ class TailableLogDataset:
     def _tailer(self, collection, stdout):
         # this runs in a thread to tail the log
         from time import sleep
+
         import pymongo
 
         def printer(record, stdout=stdout):
@@ -417,6 +419,7 @@ class TailableLogDataset:
         this is to support ipykernel stdout
         """
         import sys
+
         from ipykernel import iostream
 
         if isinstance(sys.stdout, iostream.OutStream):
@@ -448,7 +451,7 @@ def _make_log_entry(level, levelno, name, message, text=None, fmt='{message}', h
 
 def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 1024 * 1024, reset=False):
     # setup the dataset
-    assert dsname, 'need a valid dsname, got {}'.format(dsname)
+    assert dsname, f'need a valid dsname, got {dsname}'
     if reset:
         store.drop(dsname, force=True)
     collection = collection if collection is not None else store.collection(dsname)
@@ -469,6 +472,7 @@ def _setup_logging_dataset(store, dsname, logger, collection=None, size=10 * 102
 
 
 def _attach_sysexcept_hook(logger):
-    import traceback, sys
+    import sys
+    import traceback
 
-    sys.excepthook = lambda t, v, tb: logger.error('{t} {v} {tb}'.format(t=t, v=v, tb=traceback.format_tb(tb)))
+    sys.excepthook = lambda t, v, tb: logger.error(f'{t} {v} {traceback.format_tb(tb)}')

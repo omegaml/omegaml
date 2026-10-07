@@ -1,9 +1,8 @@
+import os
 from os.path import basename, dirname
 
-import os
-
 from omegaml.backends.basedata import BaseDataBackend
-from omegaml.backends.package.packager import build_sdist, install_and_import, load_from_path, RunnablePackageMixin
+from omegaml.backends.package.packager import RunnablePackageMixin, build_sdist, install_and_import, load_from_path
 
 
 class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
@@ -80,7 +79,7 @@ class PythonPackageData(RunnablePackageMixin, BaseDataBackend):
         :return: the loaded module
         """
         pkgname = basename(name)
-        packagefname = '{}.tar.gz'.format(os.path.join(localpath or self.data_store.tmppath, pkgname))
+        packagefname = f'{os.path.join(localpath or self.data_store.tmppath, pkgname)}.tar.gz'
         os.makedirs(dirname(packagefname), exist_ok=True)
         self.path = self.packages_path
         dstdir = localpath or self.path

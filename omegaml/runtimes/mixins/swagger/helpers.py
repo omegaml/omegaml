@@ -317,7 +317,7 @@ class SpecFromScriptHelper(SpecFromResourceHelperBase):
             {
                 'resource_uri': fields.String(),
                 'script': fields.String(),
-                'result': Result if Result else fields.Raw,
+                'result': Result or fields.Raw,
                 'runtimes': fields.Float,
                 'started': fields.DateTime,
                 'ended': fields.DateTime,

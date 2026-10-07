@@ -1,5 +1,6 @@
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 from sphinx_polyversion import *
 from sphinx_polyversion.git import *
 from sphinx_polyversion.pyvenv import Poetry

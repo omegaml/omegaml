@@ -363,9 +363,9 @@ class CommandParser:
         for command in self.commands:
             if command.__doc__:
                 usage, options, description = command.get_command_docparts()
-                usage_placeholder = '[usage:{}]'.format(command.command)
-                options_placeholder = '[options:{}]'.format(command.command)
-                descr_placeholder = '[description:{}]'.format(command.command)
+                usage_placeholder = f'[usage:{command.command}]'
+                options_placeholder = f'[options:{command.command}]'
+                descr_placeholder = f'[description:{command.command}]'
                 self.docs = self.docs.replace(usage_placeholder, usage)
                 self.docs = self.docs.replace(options_placeholder, options)
                 self.docs = re.sub(r'\n\s*\n', '\n\n', self.docs)
@@ -432,8 +432,8 @@ class CommandParser:
             raise e
         if self.should_debug:
             print("*** docopt parsed args", self.args)
-            print("*** docopt using command class {}".format(repr(self.command)))
-            print("*** docopt using command method {}".format(repr(self.command.get_command_method())))
+            print(f"*** docopt using command class {self.command!r}")
+            print(f"*** docopt using command method {self.command.get_command_method()!r}")
         return self
 
     def parse_command(self):
@@ -915,11 +915,11 @@ def safe_docopt(doc, argv=None, help=True, version=None, options_first=False):
     try:
         args = docopt(doc, argv=argv, help=help, version=version, options_first=options_first)
     except Exception as e:
-        print("*** ERROR {}, check below".format(e))
+        print(f"*** ERROR {e}, check below")
         print("arguments to doctopt were")
         print("   argv=", argv)
         print("   doc=", doc)
-        print("**** ERROR {}, check above messages ***".format(e))
+        print(f"**** ERROR {e}, check above messages ***")
         exit(1)
     return args
 

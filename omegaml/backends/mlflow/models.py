@@ -1,12 +1,10 @@
-import shutil
-
-from pathlib import Path
-
 import glob
+import os
+import shutil
+from pathlib import Path
+from tarfile import TarFile
 
 import mlflow
-import os
-from tarfile import TarFile
 
 from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.util import tarfile_safe_extractall

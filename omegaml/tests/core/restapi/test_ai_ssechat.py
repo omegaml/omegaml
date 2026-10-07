@@ -1,11 +1,12 @@
 import json
 import unittest
-from flask import Flask
 from hashlib import pbkdf2_hmac
+from unittest.mock import MagicMock, patch
+from uuid import uuid4
+
+from flask import Flask
 from jose import jwe
 from jose.exceptions import JWEError
-from unittest.mock import patch, MagicMock
-from uuid import uuid4
 
 from omegaml import Omega
 from omegaml.backends.restapi.streamable import StreamableResourceMixin

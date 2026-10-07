@@ -2,7 +2,7 @@ import logging
 import unittest
 
 from omegaml import Omega
-from omegaml.store.logging import OmegaSimpleLogger, OmegaLoggingHandler
+from omegaml.store.logging import OmegaLoggingHandler, OmegaSimpleLogger
 from omegaml.tests.util import OmegaTestMixin
 
 
@@ -33,13 +33,13 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         for level in OmegaSimpleLogger.levels:
             expected = 1 if level != 'QUIET' else 0
             df = logger.dataset.get(level=level)
-            self.assertTrue(len(df) == expected, 'level {} did not have a record'.format(level))
+            self.assertTrue(len(df) == expected, f'level {level} did not have a record')
             if expected:
                 # msg contains the exact message as passed in
-                self.assertEqual(df.iloc[0].msg, '{} message'.format(level).lower())
+                self.assertEqual(df.iloc[0].msg, f'{level} message'.lower())
                 # text contains the formatted msg
-                self.assertNotEqual(df.iloc[0].text, '{} message'.format(level).lower())
-                self.assertIn('{} message'.format(level).lower(), df.iloc[0].text)
+                self.assertNotEqual(df.iloc[0].text, f'{level} message'.lower())
+                self.assertIn(f'{level} message'.lower(), df.iloc[0].text)
 
     def test_simple_logger_level(self):
         logger = self.om.logger
@@ -83,12 +83,12 @@ class OmegaLoggingTests(OmegaTestMixin, unittest.TestCase):
         for level in ['INFO', 'ERROR', 'WARNING', 'DEBUG']:
             df = omlogger.dataset.get(filter=dict(level=level, logger='root'))
             expected = 1
-            self.assertEqual(len(df), expected, 'expected 1 message for level {}'.format(level))
+            self.assertEqual(len(df), expected, f'expected 1 message for level {level}')
             if expected:
-                self.assertEqual(df.iloc[0].msg, '{} message'.format(level).lower())
+                self.assertEqual(df.iloc[0].msg, f'{level} message'.lower())
                 # text contains the formatted msg
-                self.assertNotEqual(df.iloc[0].text, '{} message'.format(level).lower())
-                self.assertIn('{} message'.format(level).lower(), df.iloc[0].text)
+                self.assertNotEqual(df.iloc[0].text, f'{level} message'.lower())
+                self.assertIn(f'{level} message'.lower(), df.iloc[0].text)
 
     def test_named_simplelogger(self):
         """

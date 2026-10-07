@@ -12,7 +12,7 @@ from omegaml.store.filtered import FilteredCollection
 from omegaml.util import extend_instance, make_tuple
 
 
-class ApplyMixin(object):
+class ApplyMixin:
     """
     Implements the apply() mixin supporting arbitrary functions to build aggregation pipelines
 
@@ -24,7 +24,7 @@ class ApplyMixin(object):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ApplyMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._init_mixin(*args, **kwargs)
 
     def _init_mixin(self, *args, **kwargs):
@@ -49,7 +49,7 @@ class ApplyMixin(object):
                 break
         else:
             # fake connection register
-            alias = self._db_alias = 'omega-{}'.format(uuid4().hex)
+            alias = self._db_alias = f'omega-{uuid4().hex}'
             _connections[alias] = seek_db.client
             _dbs[alias] = seek_db
         return self._db_alias
@@ -80,7 +80,7 @@ class ApplyMixin(object):
         if '$out' in pipeline[-1] and pipeline[-1]['$out'].startswith('cache'):
             pipeline = list(pipeline)[:-1]
         spipeline = json.dumps(pipeline, sort_keys=True)
-        data = '{}_{}'.format(collection.name, spipeline).encode('utf-8')
+        data = f'{collection.name}_{spipeline}'.encode()
         # SEC: CWE-916
         # - status: wontfix
         # - reason: hashcode is used purely for name resolution, not a security function
@@ -88,7 +88,7 @@ class ApplyMixin(object):
         return key
 
     def _getcopy_kwargs(self, **kwargs):
-        kwargs = super(ApplyMixin, self)._getcopy_kwargs(**kwargs)
+        kwargs = super()._getcopy_kwargs(**kwargs)
         kwargs.update(
             is_from_facet=self.is_from_facet,
             index_columns=self.index_columns,
@@ -124,7 +124,7 @@ class ApplyMixin(object):
         # generate a cache key
         pipeline = self._build_pipeline()
         key = self._make_cache_key(self.collection, pipeline)
-        outname = 'cache_{}'.format(uuid4().hex)
+        outname = f'cache_{uuid4().hex}'
         value = {
             'collection': self.collection.name,
             'result': outname,
@@ -156,7 +156,7 @@ class ApplyMixin(object):
             if explain:
                 details.update(self.__dict__)
             return details
-        return super(ApplyMixin, self).inspect(*args, explain=explain, **kwargs)
+        return super().inspect(*args, explain=explain, **kwargs)
 
     def _execute(self):
         ctx = ApplyContext(self, columns=self.columns)
@@ -192,7 +192,7 @@ class ApplyMixin(object):
             }
             self.is_from_facet = True
             return [facet]
-        raise ValueError('Cannot build pipeline from apply result of type {}'.format(type(result)))
+        raise ValueError(f'Cannot build pipeline from apply result of type {type(result)}')
 
     def _build_pipeline(self):
         pipeline = []
@@ -229,11 +229,11 @@ class ApplyMixin(object):
                     pipeline, filter=filter_criteria, allowDiskUse=True
                 )
         else:
-            cursor = super(ApplyMixin, self)._get_cursor()
+            cursor = super()._get_cursor()
         return cursor
 
     def _get_dataframe_from_cursor(self, cursor):
-        df = super(ApplyMixin, self)._get_dataframe_from_cursor(cursor)
+        df = super()._get_dataframe_from_cursor(cursor)
         if self.is_from_facet:
             # if this was from a facet pipeline (i.e. multi-column mapping), combine
             # $facet returns one document for each stage.
@@ -249,7 +249,7 @@ class ApplyMixin(object):
         return df
 
 
-class ApplyContext(object):
+class ApplyContext:
     """
     Enable apply functions
 
@@ -340,7 +340,7 @@ class ApplyContext(object):
         self.project(mapping)
 
     def __repr__(self):
-        return 'ApplyContext(stages={}, expressions={},)'.format(self.stages, self.expressions)
+        return f'ApplyContext(stages={self.stages}, expressions={self.expressions},)'
 
     def add(self, stage):
         """
@@ -417,13 +417,13 @@ class ApplyContext(object):
         # add a projection to extract groupby values
         extractId = {col: '$_id.' + col for col in by}
         # add a projection to keep accumulator columns
-        keepCols = {col: 1 for col in expr}
+        keepCols = dict.fromkeys(expr, 1)
         keepCols.update(extractId)
         self.project(keepCols, append=True)
         # sort by groupby keys
         self.add(
             {
-                '$sort': {col: 1 for col in by},
+                '$sort': dict.fromkeys(by, 1),
             },
         )
         return self
@@ -459,7 +459,7 @@ class ApplyContext(object):
         return self
 
 
-class ApplyArithmetics(object):
+class ApplyArithmetics:
     """
     Math operators for ApplyContext
 
@@ -545,7 +545,7 @@ class ApplyArithmetics(object):
     sqrt = __arithmop__('sqrt')
 
 
-class ApplyDateTime(object):
+class ApplyDateTime:
     """
     Datetime operators for ApplyContext
     """
@@ -601,7 +601,7 @@ class ApplyDateTime(object):
     dayofweek = property(_dayOfWeek)
 
 
-class ApplyString(object):
+class ApplyString:
     """
     String operators
     """
@@ -703,7 +703,7 @@ class ApplyString(object):
     index = __strexpr__('$indexOfBytes', base=True)
 
 
-class ApplyAccumulators(object):
+class ApplyAccumulators:
     def agg(self, map=None, **kwargs):
         stage = self._getGroupBy(by='$$last')
         specs = map or kwargs
@@ -718,7 +718,7 @@ class ApplyAccumulators(object):
                     method = getattr(self, colExpr)
                     method(col)
                 else:
-                    raise SyntaxError('{} is not known'.format(colExpr))
+                    raise SyntaxError(f'{colExpr} is not known')
             elif isinstance(colExpr, (tuple, list)):
                 # specify a list of some known operators
                 for statExpr in colExpr:
@@ -726,13 +726,13 @@ class ApplyAccumulators(object):
                         method = getattr(self, statExpr)
                         method(col)
                     else:
-                        raise SyntaxError('{} is not known'.format(statExpr))
+                        raise SyntaxError(f'{statExpr} is not known')
             elif callable(colExpr):
                 # specify a callable that returns an expression
                 groupby = stage['$group']
                 groupby[col] = colExpr(col)
             else:
-                SyntaxError('{} on column {} is unknown or invalid'.format(colExpr, col))
+                SyntaxError(f'{colExpr} on column {col} is unknown or invalid')
         return self
 
     def __statop__(op, opname=None):
@@ -744,7 +744,7 @@ class ApplyAccumulators(object):
             groupby = stage['$group']
             groupby.update(
                 {
-                    '{}_{}'.format(col, opname): {
+                    f'{col}_{opname}': {
                         op: '$' + col,
                     }
                     for col in columns
@@ -764,7 +764,7 @@ class ApplyAccumulators(object):
     std = __statop__('$stdDevSamp', 'std')
 
 
-class ApplyCache(object):
+class ApplyCache:
     """
     A Cache that works on collections and pipelines
     """
@@ -776,7 +776,7 @@ class ApplyCache(object):
         # https://stackoverflow.com/a/22003440/890242
         QueryCache = make_QueryCache(self._db_alias)
         QueryCache.objects(key=key).update_one(
-            set__key="{}".format(key),
+            set__key=f"{key}",
             set__value=value,
             upsert=True,
         )
@@ -790,7 +790,7 @@ class ApplyCache(object):
         return result
 
 
-class ApplyStatistics(object):
+class ApplyStatistics:
     def quantile(self, q=0.5):
         def preparefn(val):
             return val.pivot(columns='var', index='percentile', values='value')
@@ -855,7 +855,7 @@ class ApplyStatistics(object):
                 }
             }
             pipeline = [agg, project]
-            outcol = '{}_{}'.format(x, y)
+            outcol = f'{x}_{y}'
             facets[outcol] = pipeline
             unwinds.append(
                 {'$unwind': '$' + outcol},
@@ -940,7 +940,7 @@ class ApplyStatistics(object):
                 }
             }
             pipeline = [sumcolumns, rho]
-            outcol = '{}_{}'.format(x, y)
+            outcol = f'{x}_{y}'
             facets[outcol] = pipeline
             unwinds.append(
                 {'$unwind': '$' + outcol},
@@ -1001,7 +1001,7 @@ class ApplyStatistics(object):
             project = {
                 '$project': {
                     'var': col,
-                    'percentile': 'p{}'.format(p),
+                    'percentile': f'p{p}',
                     'value': perc,
                 },
             }
@@ -1017,7 +1017,7 @@ class ApplyStatistics(object):
             for col in ctx.columns:
                 for p in pctls:
                     # e.g. outcol for perc .25 of column abc => abcp25
-                    outcol = '{}_p{}'.format(col, p).replace('0.', '')
+                    outcol = f'{col}_p{p}'.replace('0.', '')
                     facets[outcol] = calc(col, p, outcol)
                     unwind.append(
                         {'$unwind': '$' + outcol},

@@ -7,7 +7,7 @@ def protected(kw):
 
 @ignorewarnings
 def get_omega(args, require_config=False):
-    from omegaml import setup, _base_config
+    from omegaml import _base_config, setup
     from omegaml.client.cloud import setup_from_config
 
     config_file = args.get('--config')
@@ -34,7 +34,7 @@ def get_omega(args, require_config=False):
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__dict__ = self
 
     def to_dict(self):
@@ -62,7 +62,7 @@ class dotable(dict):
             value = dotable(value)
         elif isinstance(value, (list, tuple)):
             value = [dotable(x) if isinstance(x, dict) and not isinstance(x, dotable) else x for x in value]
-        super(dotable, self).__setitem__(key, value)
+        super().__setitem__(key, value)
 
     def __getitem__(self, key):
         found = self.get(key, dotable.MARKER)

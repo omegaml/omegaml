@@ -1,8 +1,6 @@
 from pathlib import Path
-
 from shutil import rmtree
 
-from omegaml.backends.basemodel import BaseModelBackend
 from omegaml.backends.repository.basereg import ArtifactRepository, chdir
 from omegaml.store import OmegaStore
 

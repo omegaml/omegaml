@@ -12,7 +12,7 @@ class StrictModel(Model):
     # See: https://github.com/noirbizarre/flask-restplus/issues/241
     @property
     def _schema(self):
-        old = super(StrictModel, self)._schema
+        old = super()._schema
         old['additionalProperties'] = False
         return old
 
@@ -22,7 +22,7 @@ class AnyObject(fields.Wildcard):
         super().__init__(fields.Raw, **kwargs)
 
 
-class strict(object):
+class strict:
     # a poor man's stand-in for api.model
     def __init__(self, api):
         self.api = api
@@ -35,7 +35,7 @@ class strict(object):
         return smodel
 
 
-class OmegaResourceMixin(object):
+class OmegaResourceMixin:
     """
     helper mixin to resolve the request to a configured Omega instance
     """
@@ -127,7 +127,7 @@ class OmegaResourceMixin(object):
             error_id = str(uuid.uuid4())
             tb = traceback.format_exc()
             logging.error(f"Error ID: {error_id}\n{tb}")
-            message, status_code = f"{repr(e)} [Error ID: {error_id}]", BadRequest.code
+            message, status_code = f"{e!r} [Error ID: {error_id}]", BadRequest.code
         exc = HTTPException(message)
         exc.code = status_code
         return exc

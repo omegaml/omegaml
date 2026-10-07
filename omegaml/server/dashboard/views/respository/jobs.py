@@ -57,4 +57,3 @@ class JobsRepositoryView(RepositoryBaseView):
 def create_view(bp):
     view = JobsRepositoryView('jobs')
     view.create_routes(bp)
-    return

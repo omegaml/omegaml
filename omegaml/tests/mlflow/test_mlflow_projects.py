@@ -1,9 +1,8 @@
 import json
 import unittest
+import warnings
 from pathlib import Path
 from unittest import TestCase
-
-import warnings
 
 from omegaml import Omega
 from omegaml.tests.util import OmegaTestMixin
@@ -11,7 +10,7 @@ from omegaml.util import module_available
 
 try:
     from omegaml.backends.mlflow.gitprojects import MLFlowGitProjectBackend
-    from omegaml.backends.mlflow.localprojects import MLFlowProjectBackend, MLFlowProject
+    from omegaml.backends.mlflow.localprojects import MLFlowProject, MLFlowProjectBackend
 except:
     warnings.warn("mlflow not installed")
 else:

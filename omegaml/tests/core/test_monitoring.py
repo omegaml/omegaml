@@ -1,20 +1,21 @@
+import datetime
 from unittest import TestCase, mock, skip
 
-import datetime
 import numpy as np
 import pandas as pd
 from numpy import random
-from omegaml.backends.monitoring.alerting import AlertRule
-from omegaml.backends.monitoring.datadrift import DataDriftMonitor
-from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
-from omegaml.backends.monitoring.stats import DriftStats, DriftStatsSeries, DriftStatsCalc
-from omegaml.backends.virtualobj import virtualobj
-from omegaml.tests.util import OmegaTestMixin, dict_almost_equal
 from pandas._testing import assert_frame_equal
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+from omegaml.backends.monitoring.alerting import AlertRule
+from omegaml.backends.monitoring.datadrift import DataDriftMonitor
+from omegaml.backends.monitoring.modeldrift import ModelDriftMonitor
+from omegaml.backends.monitoring.stats import DriftStats, DriftStatsCalc, DriftStatsSeries
+from omegaml.backends.virtualobj import virtualobj
+from omegaml.tests.util import OmegaTestMixin, dict_almost_equal
 
 
 class DriftMonitoringTests(OmegaTestMixin, TestCase):
@@ -737,8 +738,9 @@ class DriftMonitoringTests(OmegaTestMixin, TestCase):
         self.assertIsNotNone(snapshot['Y'])
 
     def test_catcol_xy_tracking(self):
-        import omegaml as om
         from sklearn import datasets
+
+        import omegaml as om
         from omegaml.backends.monitoring import ModelDriftMonitor
 
         x, y = datasets.load_iris(return_X_y=True, as_frame=True)

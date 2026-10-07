@@ -1,13 +1,13 @@
-from unittest import TestCase
-
 import os
 import sys
-from marshmallow import fields, Schema
+from unittest import TestCase
+
+from marshmallow import Schema, fields
 
 from omegaml import Omega
-from omegaml.server import restapi
 from omegaml.backends.virtualobj import virtualobj
 from omegaml.client.auth import OmegaRestApiAuth
+from omegaml.server import restapi
 from omegaml.tests.core.restapi.util import RequestsLikeTestClient
 from omegaml.tests.util import OmegaTestMixin
 
@@ -43,7 +43,7 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
         om = self.om
-        pkg = 'pkg://{}'.format(pkgpath)
+        pkg = f'pkg://{pkgpath}'
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster
@@ -63,7 +63,7 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloservice'))
         om = self.om
-        pkg = 'pkg://{}'.format(pkgpath)
+        pkg = f'pkg://{pkgpath}'
         om.scripts.put(pkg, 'helloservice')
 
         # specify service input and output
@@ -103,7 +103,7 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloservice'))
         om = self.om
-        pkg = 'pkg://{}'.format(pkgpath)
+        pkg = f'pkg://{pkgpath}'
         om.scripts.put(pkg, 'helloservice')
 
         # specify service input and output
@@ -146,7 +146,7 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloservice'))
         om = self.om
-        pkg = 'pkg://{}'.format(pkgpath)
+        pkg = f'pkg://{pkgpath}'
         om.models.put(pkg, 'helloservice')
 
         # specify service input and output
@@ -397,7 +397,7 @@ class ServiceDirectResourceTests(OmegaTestMixin, TestCase):
         basepath = os.path.join(os.path.dirname(sys.modules['omegaml'].__file__), 'example')
         pkgpath = os.path.abspath(os.path.join(basepath, 'demo', 'helloworld'))
         om = self.om
-        pkg = 'pkg://{}'.format(pkgpath)
+        pkg = f'pkg://{pkgpath}'
         # put script
         meta = om.scripts.put(pkg, 'helloworld')
         # run the script on the cluster

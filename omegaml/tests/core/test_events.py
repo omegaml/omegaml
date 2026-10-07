@@ -1,9 +1,9 @@
+import logging
+from time import sleep
 from unittest import TestCase
 
-import logging
 from omegaml import Omega
 from omegaml.client.lunamon import LunaMonitor, OmegaMonitors
-from time import sleep
 
 
 class EventsTestClass(TestCase):

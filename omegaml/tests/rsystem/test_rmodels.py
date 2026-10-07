@@ -1,11 +1,12 @@
 import os
 import unittest
-from numpy.testing import assert_almost_equal
 from subprocess import run
+
+from numpy.testing import assert_almost_equal
 
 from omegaml import Omega
 from omegaml.backends.rsystem.rmodels import RModelBackend
-from omegaml.runtimes.rsystem import r_available, inside_r
+from omegaml.runtimes.rsystem import inside_r, r_available
 from omegaml.tests.rsystem.rtestutil import r_source
 from omegaml.tests.util import OmegaTestMixin
 

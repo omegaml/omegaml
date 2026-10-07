@@ -105,10 +105,10 @@ class OrasOciRegistry(ArtifactRepository):
         if not exists:
             self._validate('repo', **x(locals()))
             self._oras(
-                (
+                
                     f'push {self.ociurl(self.url)}/{repo} '
                     f'--config /dev/null:application/vnd.oci.image.config.v1+json --format json'
-                )
+                
             )
         return self.manifest(repo)
 
@@ -127,7 +127,7 @@ class OrasOciRegistry(ArtifactRepository):
         Returns:
             dict: Parsed JSON output from oras describing the push.
         """
-        repo_path = repo if repo else self.repo
+        repo_path = repo or self.repo
         self.create(repo, exists_ok=True)
         self._validate('repo', **x(locals()))
         types = types or []
@@ -200,7 +200,7 @@ class OrasOciRegistry(ArtifactRepository):
         #      (for digests). that is, we don't need to go one by one, or unpack gzips ourselves
         #      (although this may be more failsafe/controllable
         # use repo without tag when pulling blobs
-        repo_path = repo if repo else self.repo
+        repo_path = repo or self.repo
         repo_path = repo_path.split(':')[0]
         lpath = Path(path)
         lpath.mkdir(parents=True, exist_ok=True)
@@ -306,7 +306,7 @@ class OrasOciRegistry(ArtifactRepository):
         Returns:
             str: The manifest text for the digest.
         """
-        repo_path = repo if repo else self.repo
+        repo_path = repo or self.repo
         self._validate('repo', **x(locals()))
         self._ensure_login()
         cmd = f"manifest fetch {self.url}/{repo_path}@{digest}"
@@ -378,7 +378,7 @@ class OrasOciRegistry(ArtifactRepository):
         logger.debug('run command {cmd}')
         try:
             result = c(cmd)
-        except Exception as e:
+        except Exception:
             raise
         logger.debug(f'run command {cmd=} {result=}')
         return result

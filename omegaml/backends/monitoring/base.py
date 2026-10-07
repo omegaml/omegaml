@@ -105,7 +105,7 @@ class DriftMonitorBase:
             drifts = [self._calculate_drift(seq=[i, j], ci=ci, raw=True, since=since) for i, j in pairwise(seq)]
         elif seq == 'series':
             # [0, 1, 2, ...] => compare each snapshot to the previous
-            seq = range(0, len(self))
+            seq = range(len(self))
             drifts = [self._calculate_drift(seq=[i, j], ci=ci, raw=True, since=since) for i, j in pairwise(seq)]
         elif seq == 'baseline':
             # [0, 1], [0, 2], [0, 3], ... => compare each snapshot to the baseline

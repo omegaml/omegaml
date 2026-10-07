@@ -15,7 +15,7 @@ class ClientCliTest(OmegaTestMixin, TestCase):
 
     def test_cli_models_list(self):
         # start with an empty list
-        argv = 'models list'.split(' ')
+        argv = ['models', 'list']
         parser = main(argv=argv, logger=get_test_logger())
         expected = ([],)
         data = parser.logger.data['info']
@@ -30,7 +30,7 @@ class ClientCliTest(OmegaTestMixin, TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0], expected)
         # check we can get back a Metadata object
-        argv = 'models list --raw'.split(' ')
+        argv = ['models', 'list', '--raw']
         parser = main(argv=argv, logger=get_test_logger())
         data = parser.logger.data['info']
         self.assertTrue(str(data[0][0][0]).startswith('Metadata('))

@@ -1,10 +1,8 @@
-import shutil
-
-from pathlib import Path
-
 import os
+import shutil
 import unittest
 import warnings
+from pathlib import Path
 from shutil import rmtree
 from unittest import TestCase
 
@@ -15,7 +13,7 @@ from sklearn.linear_model import LinearRegression
 import omegaml.defaults
 from omegaml import Omega
 from omegaml.tests.util import OmegaTestMixin
-from omegaml.util import reshaped, module_available
+from omegaml.util import module_available, reshaped
 
 try:
     from omegaml.backends.mlflow.models import MLFlowModelBackend
@@ -23,7 +21,6 @@ try:
 except:
     warnings.warn("mlflow is not installed")
 else:
-    from mlflow.exceptions import MlflowException
     import mlflow
 
     @unittest.skipUnless(module_available('mlflow'), 'mlflow not available')
@@ -52,7 +49,7 @@ else:
 
             model_path = os.path.join(omegaml.defaults.OMEGA_TMP, 'mymodel')
             model = LinearRegression()
-            X = pd.Series(range(0, 10))
+            X = pd.Series(range(10))
             Y = pd.Series(X) * 2 + 3
             model.fit(reshaped(X), reshaped(Y))
             rmtree(model_path, ignore_errors=True)
@@ -74,7 +71,7 @@ else:
 
             model_path = os.path.join(omegaml.defaults.OMEGA_TMP, 'mymodel')
             model = LinearRegression()
-            X = pd.Series(range(0, 10))
+            X = pd.Series(range(10))
             Y = pd.Series(X) * 2 + 3
             model.fit(reshaped(X), reshaped(Y))
             rmtree(model_path, ignore_errors=True)
@@ -119,7 +116,7 @@ else:
 
             om = self.om
             model = LinearRegression()
-            X = pd.Series(range(0, 10))
+            X = pd.Series(range(10))
             Y = pd.Series(X) * 2 + 3
             model.fit(reshaped(X), reshaped(Y))
             meta = om.models.put(model, 'mymodel', kind='mlflow.model')
@@ -141,7 +138,7 @@ else:
 
             with mlflow.start_run() as run:
                 model = LinearRegression()
-                X = pd.Series(range(0, 10))
+                X = pd.Series(range(10))
                 Y = pd.Series(X) * 2 + 3
                 model.fit(reshaped(X), reshaped(Y))
             mlflow.sklearn.log_model(

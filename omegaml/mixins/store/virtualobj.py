@@ -3,7 +3,7 @@ import re
 from omegaml.backends.virtualobj import VirtualObjectBackend
 
 
-class VirtualObjectMixin(object):
+class VirtualObjectMixin:
     """
     process virtual objects
 
@@ -22,7 +22,7 @@ class VirtualObjectMixin(object):
         return VirtualObjectBackend._is_tool_virtualobj(lambda: None, name)
 
     def _getvirtualobjfn(self, name, **kwargs):
-        virtualobjfn = super(VirtualObjectMixin, self).get(name, **kwargs)
+        virtualobjfn = super().get(name, **kwargs)
         if isinstance(virtualobjfn, type):
             virtualobjfn = virtualobjfn()
         return virtualobjfn
@@ -54,7 +54,7 @@ class VirtualObjectMixin(object):
             handler = self._getvirtualobjfn(name)
             result = handler(method='get', meta=self._vobj_meta, store=self, **kwargs)
         else:
-            result = super(VirtualObjectMixin, self).get(name, **kwargs)
+            result = super().get(name, **kwargs)
         return result
 
     def put(self, obj, name, replace=False, attributes=None, **kwargs):
@@ -67,7 +67,7 @@ class VirtualObjectMixin(object):
         if not should_version and not raw and not replace and self._isvirtual(name) and not self._istool(name):
             result = self._getvirtualobjfn(name)(data=obj, method='put', meta=self._vobj_meta, store=self, **kwargs)
         else:
-            result = super(VirtualObjectMixin, self).put(obj, name, attributes=attributes, replace=replace, **kwargs)
+            result = super().put(obj, name, attributes=attributes, replace=replace, **kwargs)
         return result
 
     def drop(self, name, force=False, **kwargs):
@@ -83,4 +83,4 @@ class VirtualObjectMixin(object):
             else:
                 if not force:
                     return bool(result)
-        return super(VirtualObjectMixin, self).drop(name, force=force, **kwargs)
+        return super().drop(name, force=force, **kwargs)

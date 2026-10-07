@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import logging
 from copy import deepcopy
@@ -13,7 +12,7 @@ from omegaml.util import dict_merge
 logger = logging.getLogger(__name__)
 
 
-class CeleryTask(object):
+class CeleryTask:
     """
     A thin wrapper for a Celery.Task object
 
@@ -80,7 +79,7 @@ class CeleryTask(object):
         return self.delay(*args, **kwargs)
 
 
-class OmegaRuntime(object):
+class OmegaRuntime:
     """
     omegaml compute cluster gateway
     """
@@ -102,7 +101,7 @@ class OmegaRuntime(object):
         self._default_label = self.celeryapp.conf.get('CELERY_DEFAULT_QUEUE')
 
     def __repr__(self):
-        return 'OmegaRuntime({})'.format(self.omega.__repr__())
+        return f'OmegaRuntime({self.omega.__repr__()})'
 
     @property
     def auth(self):
@@ -186,9 +185,7 @@ class OmegaRuntime(object):
 
     def _client_is_pure_python(self):
         try:
-            import numpy as np
-            import pandas as pd
-            import sklearn
+            pass
         except Exception as e:
             logging.getLogger().info(e)
             return True

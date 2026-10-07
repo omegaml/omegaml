@@ -1,15 +1,14 @@
-from unittest import TestCase
-
 import os
 from io import StringIO
+from unittest import TestCase
 from unittest.mock import patch
 
 from omegaml import Omega
 from omegaml.client.auth import AuthenticationEnv
-from omegaml.defaults import update_from_config, update_from_obj, update_from_dict
+from omegaml.defaults import update_from_config, update_from_dict, update_from_obj
 
 
-class BareObj(object):
+class BareObj:
     pass
 
 
@@ -85,10 +84,10 @@ class ConfigurationTests(TestCase):
         Test an Omega instance can be created from user specific configs
         """
         import omegaml as om
-        from omegaml.util import settings
 
         # check we get default without patching
         from omegaml import _base_config as _real_base_config
+        from omegaml.util import settings
 
         with patch('omegaml._base_config', new=BareObj) as defaults:
             # link callbacks used by get_omega_from_api_key
@@ -156,8 +155,8 @@ class ConfigurationTests(TestCase):
 
     def test_user_extensions_config(self):
         # check we get default without patching
-        from omegaml.util import settings
         from omegaml import _base_config as _real_base_config
+        from omegaml.util import settings
 
         with patch('omegaml.client.userconf._get_userconfig_from_api') as mock:
             mock.return_value = {
@@ -210,7 +209,7 @@ class ConfigurationTests(TestCase):
         not_raised = False
         try:
             context_repr = repr(om.defaults)
-        except RecursionError as e:
+        except RecursionError:
             pass
         else:
             not_raised = True

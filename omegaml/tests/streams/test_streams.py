@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from mongoengine import disconnect
 
@@ -98,7 +98,6 @@ class StreamsTestCase(OmegaTestMixin, TestCase):
             stream.stop()
             mx_stream.assert_called_once()
             self.assertEqual(mx_stream.call_args.kwargs['max_age'], 0.1)
-        return
 
     def test_streams_attach_runtime(self):
         om = self.om
@@ -122,8 +121,8 @@ class StreamsTestCase(OmegaTestMixin, TestCase):
             stream.clear()
 
     def test_streams_emitter(self):
-        from minibatch.window import CountWindow
         from minibatch.tests.util import LocalExecutor
+        from minibatch.window import CountWindow
 
         om = self.om
         runner = om.streams.getl('test', size=1, executor=LocalExecutor())

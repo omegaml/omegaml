@@ -118,11 +118,11 @@ def configure_logging(logging_config=None, settings=None):
 def logutil_flask(app, mapping=None, **extra):
     # https://flask.palletsprojects.com/en/2.2.x/api/#signals
     import flask
-    from flask import request_started, request_tearing_down  # noqa
+    from flask import request_started, request_tearing_down
 
     def starter(*args, **kwargs):
         requestId = flask.request.headers.get(request_header_id) or uuid.uuid4().hex
-        setattr(flask.request, '_requestid', requestId)
+        flask.request._requestid = requestId
         LoggingRequestContext.start(requestId=requestId)
 
     request_header_id = app.config.get('REQUEST_ID_HEADER', 'x-request-id')
@@ -140,14 +140,14 @@ def logutil_django(mapping=None, **extra):
         LoggingRequestContext.start(requestId=requestId)
 
     _header_id = getattr(settings, 'REQUEST_ID_HEADER', 'X_REQUEST_ID').replace('-', '_')
-    request_header_id = 'HTTP_{}'.format(_header_id)
+    request_header_id = f'HTTP_{_header_id}'
     request_started.connect(LoggingRequestContext.link_up(starter=starter, mapping=mapping, **extra), weak=False)
     request_finished.connect(LoggingRequestContext.link_down(), weak=False)
     got_request_exception.connect(LoggingRequestContext.link_down(), weak=False)
 
 
 def logutil_celery(mapping=None, **extra):
-    from celery.signals import task_prerun, task_postrun
+    from celery.signals import task_postrun, task_prerun
 
     def starter(task_id, task, *args, **kwargs):
         LoggingRequestContext.start(requestId=task_id)

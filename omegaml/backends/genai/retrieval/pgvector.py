@@ -4,10 +4,10 @@ import re
 from collections import Counter
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Column, Integer, String, text, ForeignKey, select, Index, LargeBinary, and_
+from sqlalchemy import Column, ForeignKey, Index, Integer, LargeBinary, String, and_, select, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.engine import RowMapping
-from sqlalchemy.orm import Session, relationship, declarative_base
+from sqlalchemy.orm import Session, declarative_base, relationship
 
 from omegaml.backends.genai.retrieval.dbmigrate import DatabaseMigrator
 from omegaml.backends.genai.retrieval.index import VectorStoreBackend
@@ -274,7 +274,7 @@ class PGVectorBackend(VectorStoreBackend):
                     postgresql_ops={'embedding': 'vector_l2_ops'},
                 )
                 index.create(session.get_bind())
-            except Exception as e:
+            except Exception:
                 pass
             session.commit()
         return Document, Chunk

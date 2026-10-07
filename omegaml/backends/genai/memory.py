@@ -1,5 +1,5 @@
-from uuid import uuid4
 from textwrap import dedent
+from uuid import uuid4
 
 from omegaml.store import MongoQueryOps
 

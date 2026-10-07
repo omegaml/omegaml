@@ -184,8 +184,8 @@ class CliTestScenarios:
         return df
 
     def create_local_image_file(self, path):
-        from imageio import imsave
         import numpy as np
+        from imageio import imsave
 
         img = np.zeros([100, 100, 3], dtype=np.uint8)
         img.fill(255)

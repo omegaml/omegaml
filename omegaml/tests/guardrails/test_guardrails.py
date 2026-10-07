@@ -1,9 +1,9 @@
 """Integration test that exercises the logic defined in guardrails.py __main__ block."""
 
+import unittest
 import warnings
 from unittest import TestCase
 
-import unittest
 from omegaml.backends.guardrails import GuardrailPolicy
 from omegaml.tests.util import OmegaTestMixin
 

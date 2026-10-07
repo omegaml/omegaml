@@ -1,5 +1,6 @@
-import pandas as pd
 import unittest
+
+import pandas as pd
 
 from omegaml import Omega
 from omegaml.backends.tracking.experiment import ExperimentBackend
@@ -44,9 +45,9 @@ class TFCallbackTrackingTestCases(OmegaTestMixin, unittest.TestCase):
         import numpy as np
         import tensorflow as tf
         from tensorflow import keras
-        from tensorflow.keras.optimizers import SGD
-        from tensorflow.keras.models import Sequential
         from tensorflow.keras.layers import Dense
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.optimizers import SGD
 
         x_train = np.random.random((1000, 20))
         y_train = keras.utils.to_categorical(np.random.randint(10, size=(1000, 1)), num_classes=10)

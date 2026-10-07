@@ -4,7 +4,7 @@ from unittest import TestCase, skip
 
 from omegaml import Omega
 from omegaml.backends.tensorflow.tfdataset import TFDatasetBackend
-from omegaml.tests.util import tf_perhaps_eager_execution, OmegaTestMixin
+from omegaml.tests.util import OmegaTestMixin, tf_perhaps_eager_execution
 
 # check https://www.tensorflow.org/datasets/api_docs/python/tfds/testing/run_in_graph_and_eager_modes
 from omegaml.util import module_available

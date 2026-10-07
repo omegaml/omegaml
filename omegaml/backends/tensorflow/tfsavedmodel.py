@@ -1,17 +1,17 @@
-from zipfile import ZipFile, ZIP_DEFLATED
-
 import glob
-import numpy as np
 import os
 import tempfile
-import tensorflow as tf
 from shutil import rmtree
+from zipfile import ZIP_DEFLATED, ZipFile
+
+import numpy as np
+import tensorflow as tf
 from tensorflow.python.framework.ops import EagerTensor
 
 from omegaml.backends.basemodel import BaseModelBackend
 
 
-class TensorflowSavedModelPredictor(object):
+class TensorflowSavedModelPredictor:
     """
     A predictor model from a TF SavedModel
 
@@ -171,7 +171,7 @@ class TensorflowSavedModelBackend(BaseModelBackend):
         raise ValueError('cannot fit a saved model')
 
 
-class ServingInput(object):
+class ServingInput:
     # FIXME this is not working yet
     def __init__(
         self,
@@ -257,7 +257,7 @@ class ServingInput(object):
     def from_ndarray(self, shape, dtype):
         tf = self.tf
         if self.from_keras:
-            input_layer_name = '{}_input'.format(self.features[0])
+            input_layer_name = f'{self.features[0]}_input'
         else:
             input_layer_name = self.features[0]
         if self.v1_compat:
@@ -272,7 +272,7 @@ class ServingInput(object):
             import tensorflow as tf
 
             ndim = len(columns)
-            X_name = '{}_input'.format(input_layer_name)
+            X_name = f'{input_layer_name}_input'
             placeholder = tf.placeholder(dtype=np.float32, shape=(batch_size, ndim), name=X_name)
             receiver_tensors = {X_name: placeholder}
             features = {X_name: placeholder}

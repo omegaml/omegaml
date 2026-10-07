@@ -2,7 +2,7 @@ import pickle
 from io import BytesIO
 from pathlib import Path
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 from numpy.testing import assert_almost_equal
@@ -213,7 +213,7 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
     def test_cli_env_install(self):
         om = self.om
         # create a requirements file, store in canonical location
-        s = BytesIO("pip".encode('utf8'))
+        s = BytesIO(b"pip")
         om.scripts.put(s, '.system/requirements.txt', replace=True)
         # test envinstall as a pure in-process function
         from omegaml.runtimes.envinstall import envinstall
@@ -258,4 +258,4 @@ class CliRuntimeTests(CliTestScenarios, OmegaTestMixin, TestCase):
         with self.assertRaises(ValueError):
             envinstall.run(om)
         with self.assertRaises(RuntimeError):
-            self.cli(f'runtime env install')
+            self.cli('runtime env install')

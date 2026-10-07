@@ -29,17 +29,17 @@ class ScriptsCommandBase(StoresCommandMixin, CommandBase):
         om = get_omega(self.args)
         script_path = self.args.get('<path>')
         name = self.args.get('<name>')
-        as_pypi = lambda v: 'pypi://{}'.format(v)
+        as_pypi = lambda v: f'pypi://{v}'
         if os.path.exists(script_path):
             name = name or os.path.basename(script_path)
             abs_path = os.path.abspath(script_path)
-            meta = om.scripts.put('pkg://{}'.format(abs_path), name)
+            meta = om.scripts.put(f'pkg://{abs_path}', name)
         elif PythonPipSourcedPackageData.supports(script_path, name):
             meta = om.scripts.put(script_path, name)
         elif PythonPipSourcedPackageData.supports(as_pypi(script_path), name):
             meta = om.scripts.put(as_pypi(script_path), name)
         else:
-            raise ValueError('{} is not a valid path'.format(script_path))
+            raise ValueError(f'{script_path} is not a valid path')
         self.logger.info(meta)
 
     def get(self):

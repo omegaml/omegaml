@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import logging
 import sys
@@ -10,7 +9,7 @@ from omegaml.util import is_dataframe, is_ndarray, is_series
 logger = logging.getLogger(__file__)
 
 
-class ModelMixin(object):
+class ModelMixin:
     """mixin methods to OmegaModelProxy"""
 
     def fit(self, Xname, Yname=None, **kwargs):
@@ -213,10 +212,7 @@ class ModelMixin(object):
                 )
                 name = '%s_%s' % (prefix, uuid4().hex)
                 self.runtime.omega.datasets.put(name_or_data, name)
-        elif is_dataframe(name_or_data) or is_series(name_or_data):
-            name = '%s_%s' % (prefix, uuid4().hex)
-            self.runtime.omega.datasets.put(name_or_data, name)
-        elif is_ndarray(name_or_data):
+        elif is_dataframe(name_or_data) or is_series(name_or_data) or is_ndarray(name_or_data):
             name = '%s_%s' % (prefix, uuid4().hex)
             self.runtime.omega.datasets.put(name_or_data, name)
         else:

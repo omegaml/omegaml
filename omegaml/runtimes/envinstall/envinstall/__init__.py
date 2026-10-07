@@ -39,7 +39,7 @@ def run(om, *args, package=None, requirements=None, action='install', options=No
                 reqspec = f'-r {reqfile_local} {reqspec}'
             assert reqspec, "specify either package= or requirements= (no default .system/requirements.txt exists)"
             # -- determine action
-            action_opts = {  #
+            action_opts = {
                 'install': f'-U {reqspec}',
                 'uninstall': f'-y {reqspec}',
             }
@@ -51,7 +51,7 @@ def run(om, *args, package=None, requirements=None, action='install', options=No
                 shlex.split(pipcmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8'
             )
             om.logger.info(f'** finished running {pipcmd} {process}')
-    except IOError as e:
+    except OSError as e:
         result = f'envinstall cannot run due to another pip install is running on this node: {e}'
         om.logger.error(result)
         raise ValueError(result)

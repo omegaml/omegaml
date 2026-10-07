@@ -1,5 +1,5 @@
-from tqdm import tqdm
 import joblib
+from tqdm import tqdm
 
 LokyBackend = joblib.parallel.BACKENDS['loky']
 

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from omegaml import Omega
-from omegaml.backends.virtualobj import VirtualObjectBackend, virtualobj, VirtualObjectHandler
+from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandler, virtualobj
 from omegaml.mixins.store.virtualobj import VirtualObjectMixin
 from omegaml.tests.util import OmegaTestMixin
 
@@ -142,7 +142,7 @@ class VirtualObjectTests(OmegaTestMixin, TestCase):
 def myvirtualfn(data=None, meta=None, method=None, store=None, **kwargs):
     import datetime
 
-    real_data_name = '{}_data'.format(meta.name)
+    real_data_name = f'{meta.name}_data'
     if method == 'get':
         data = store.get(real_data_name)
         return data or 'no data yet'
@@ -165,7 +165,7 @@ def myvirtualfn(data=None, meta=None, method=None, store=None, **kwargs):
 
 class MyVirtualObjectHandler(VirtualObjectHandler):
     def real_data_name(self, meta):
-        return '{}_data'.format(meta.name)
+        return f'{meta.name}_data'
 
     def get(self, data=None, meta=None, store=None, **kwargs):
         return store.get(self.real_data_name(meta)) or 'no data yet'

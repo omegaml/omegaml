@@ -52,7 +52,7 @@ class UtilitiesMixin:
         # stats
         stats = ['mean', 'std', 'min', 'max']
         numcols = [col for col in dtypes.index if np.issubdtype(dtypes[col], np.number)]
-        specs = {col: stats for col in numcols}
+        specs = dict.fromkeys(numcols, stats)
         stats_df = self.apply(lambda v: v.agg(**specs)).value
         melted = stats_df.melt()
         melted['stat'] = (

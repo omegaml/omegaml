@@ -65,13 +65,13 @@ class CombinedOmegaStoreMixin:
         return _stats if as_dict else self.store_by_prefix('data')._get_stats_dataframe(_stats, scale=scale)
 
     def help(self, name_or_obj):
-        import sys
         import pydoc
+        import sys
 
         if isinstance(name_or_obj, str):
             try:
                 store, store_name = self.store_by_name(name_or_obj)
-            except ValueError as e:
+            except ValueError:
                 pass
             else:
                 return store.help(store_name)

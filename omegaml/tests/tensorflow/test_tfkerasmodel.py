@@ -1,7 +1,7 @@
+import unittest
 from unittest import TestCase
 
 import numpy as np
-import unittest
 
 from omegaml import Omega
 from omegaml.tests.util import OmegaTestMixin, tf_perhaps_eager_execution

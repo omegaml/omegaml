@@ -1,12 +1,11 @@
-from pathlib import Path
-
 from functools import partial
+from pathlib import Path
 
 from omegaml.documents import MDREGISTRY
 from omegaml.util import dict_merge
 
 
-class PromotionMixin(object):
+class PromotionMixin:
     """Promote objects from one bucket to another
 
     Promotion Methods:

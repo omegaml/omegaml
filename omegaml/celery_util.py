@@ -1,7 +1,8 @@
 import getpass
 import sys
-from celery import Task
 from contextlib import contextmanager
+
+from celery import Task
 from kombu.serialization import registry
 from kombu.utils import cached_property
 
@@ -9,7 +10,7 @@ from omegaml.client.auth import AuthenticationEnv
 from omegaml.store.logging import OmegaLoggingHandler
 
 
-class EagerSerializationTaskMixin(object):
+class EagerSerializationTaskMixin:
     # ensure eager tasks are being serialized to capture serialization errors
     # adopted from https://github.com/celery/celery/issues/4008#issuecomment-330292405
     abstract = True
@@ -25,13 +26,13 @@ class EagerSerializationTaskMixin(object):
 
     def apply_async(self, args=None, kwargs=None, *args_, **kwargs_):
         if self._not_eager:
-            return super(EagerSerializationTaskMixin, self).apply_async(args=args, kwargs=kwargs, *args_, **kwargs_)
+            return super().apply_async(args=args, kwargs=kwargs, *args_, **kwargs_)
         # only execute if eager
         # -- perform a serialization / deserialization roundtrip, as we would in distributed mode (not eager)
         sargs, skwargs = self._eager_serialize_args(args=args, kwargs=kwargs, **kwargs_)
         sargs_, skwargs_ = self._eager_serialize_args(args=args_, kwargs=kwargs_, **kwargs_)
         # -- call actual task with deserialized args, kwargs, as it would be by remote
-        result = super(EagerSerializationTaskMixin, self).apply_async(args=sargs, kwargs=skwargs, *sargs_, **skwargs_)
+        result = super().apply_async(args=sargs, kwargs=skwargs, *sargs_, **skwargs_)
         # -- do the same for the result
         result = self._eager_serialize_result(result, **kwargs_)
         return result
@@ -70,7 +71,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
     abstract = True
 
     def __init__(self, *args, **kwargs):
-        super(OmegamlTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.auth_env = AuthenticationEnv.active()
 
     @property
@@ -218,7 +219,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
                 # -- only log delegate args, kwargs
                 # -- avoid logging internal arguments
                 exp.log_event(
-                    f'task_call',
+                    'task_call',
                     self.name,
                     {'args': self.delegate_args, 'kwargs': self.delegate_kwargs},
                 )
@@ -256,7 +257,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         try:
             with self.tracking as exp:
                 exp.log_event(
-                    f'task_failure',
+                    'task_failure',
                     self.name,
                     {'exception': repr(exc), 'task_id': task_id},
                 )
@@ -270,7 +271,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         try:
             with self.tracking as exp:
                 exp.log_event(
-                    f'task_retry',
+                    'task_retry',
                     self.name,
                     {'exception': repr(exc), 'task_id': task_id},
                 )
@@ -285,7 +286,7 @@ class OmegamlTask(EagerSerializationTaskMixin, Task):
         try:
             exp = self.tracking
             exp.log_event(
-                f'task_success',
+                'task_success',
                 self.name,
                 {'result': sanitized(retval), 'task_id': task_id},
             )

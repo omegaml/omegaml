@@ -1,8 +1,9 @@
 import os
+
 from requests.auth import AuthBase
 
 from omegaml import session_cache
-from omegaml.util import load_class, settings, DefaultsContext
+from omegaml.util import DefaultsContext, load_class, settings
 
 
 class OmegaRestApiAuth(AuthBase):
@@ -35,7 +36,7 @@ class OmegaRestApiAuth(AuthBase):
         return r
 
     def __repr__(self):
-        return ('OmegaRestApiAuth(username={}, apikey="*****",qualifier={})').format(self.username, self.qualifier)
+        return (f'OmegaRestApiAuth(username={self.username}, apikey="*****",qualifier={self.qualifier})')
 
     @property
     def kind(self):
@@ -59,12 +60,10 @@ class OmegaRuntimeAuthentication:
         return self.userid, self.apikey, self.qualifier
 
     def __repr__(self):
-        return ('OmegaRuntimeAuthentication(userid={}, apikey="*****", qualifier={})').format(
-            self.userid, self.qualifier
-        )
+        return (f'OmegaRuntimeAuthentication(userid={self.userid}, apikey="*****", qualifier={self.qualifier})')
 
 
-class AuthenticationEnv(object):
+class AuthenticationEnv:
     """AuthenticationEnv creates Omega() configured to the current environment
 
     This provides a basic authentication environment that is not protected. It
@@ -266,16 +265,16 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
                 view = defaults.OMEGA_SERVICES_INCLUSTER
                 om = cls.get_omega_from_apikey(userid, apikey, qualifier=qualifier, view=view)
             else:
-                raise ValueError('cannot parse authentication as {}'.format(auth))
+                raise ValueError(f'cannot parse authentication as {auth}')
         elif token == default_auth:
             # we provide the default implementation as per configuration
             from omegaml import _omega
 
             om = _omega._om
             if not getattr(defaults, 'OMEGA_ALLOW_TASK_DEFAULT_AUTH', True):
-                raise ValueError('Default task authentication is not allowed, got {}'.format(auth))
+                raise ValueError(f'Default task authentication is not allowed, got {auth}')
         else:
-            raise ValueError('Missing runtime task authentication, got {}'.format(auth))
+            raise ValueError(f'Missing runtime task authentication, got {auth}')
         return om
 
     @classmethod
@@ -347,7 +346,7 @@ class CloudClientAuthenticationEnv(AuthenticationEnv):
 
     @classmethod
     def taskrepr(cls, args, kwargs, celery_kwargs):
-        celery_kwargs.update({'argsrepr': ['*****'] * len(args), 'kwargsrepr': {k: '*****' for k in kwargs}})
+        celery_kwargs.update({'argsrepr': ['*****'] * len(args), 'kwargsrepr': dict.fromkeys(kwargs, '*****')})
 
     @classmethod
     def resultrepr(cls, value):

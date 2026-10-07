@@ -20,4 +20,3 @@ class ModelsRepositoryView(RepositoryBaseView):
 def create_view(bp):
     view = ModelsRepositoryView('models')
     view.create_routes(bp)
-    return

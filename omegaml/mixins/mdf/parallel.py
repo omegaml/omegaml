@@ -64,7 +64,7 @@ class ParallelApplyMixin:
             'chunkfn': chunkfn,
             'mdf': mdf,
             'append': False,
-            'outname': outname or '_tmp{}_'.format(mdf.collection.name),
+            'outname': outname or f'_tmp{mdf.collection.name}_',
             'resolve': resolve,  # worker or function
             'backend': backend,
         })
@@ -104,7 +104,7 @@ class ParallelApplyMixin:
             jobs = [runner(mdf, i, chunksize, applyfn, outcoll, worker_resolves_mdf) for i, mdf in enumerate(chunks)]
             p._backend._job_count = len(jobs)
             if verbose:
-                print("Submitting {} tasks".format(len(jobs)))
+                print(f"Submitting {len(jobs)} tasks")
             p(jobs)
         return outcoll
 
@@ -187,8 +187,9 @@ def pyappply_nop_transform(ldf):
 
 def pyapply_process_chunk(mdf, i, chunksize, applyfn, outcoll, worker_resolves):
     # chunk processor
-    import pandas as pd
     from inspect import signature
+
+    import pandas as pd
 
     # fix pickling issues
     mdf._parser = getattr(mdf, '_parser', None)

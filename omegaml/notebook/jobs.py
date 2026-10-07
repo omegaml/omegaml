@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 import datetime
 import re
@@ -132,7 +131,7 @@ class NotebookBackend(BaseDataBackend):
             nb = nbread(sbuf, as_version=4)
             return nb
         else:
-            raise gridfs.errors.NoFile(">{0}< does not exist in jobs bucket '{1}'".format(name, self.store.bucket))
+            raise gridfs.errors.NoFile(f">{name}< does not exist in jobs bucket '{self.store.bucket}'")
 
 
 class NotebookMixin:
@@ -167,7 +166,7 @@ class NotebookMixin:
         return store.prefix == 'jobs/'
 
     def __repr__(self):
-        return 'OmegaJobs(store={},)'.format(super().__repr__())
+        return f'OmegaJobs(store={super().__repr__()},)'
 
     def collection(self, name):
         if not name.endswith('.ipynb'):
@@ -280,7 +279,7 @@ class NotebookMixin:
         """
         notebook = self.get(nb_filename)
         config_cell = None
-        config_magic = ['# {}'.format(kw) for kw in self._nb_config_magic]
+        config_magic = [f'# {kw}' for kw in self._nb_config_magic]
         for cell in notebook.get('cells'):
             if any(cell.source.startswith(kw) for kw in config_magic):
                 config_cell = cell
@@ -650,7 +649,7 @@ class NotebookMixin:
         }
         # get exporter according to format
         if format not in EXPORTERS:
-            raise ValueError('format {} is invalid. Choose one of {}'.format(format, EXPORTERS.keys()))
+            raise ValueError(f'format {format} is invalid. Choose one of {EXPORTERS.keys()}')
         exporter_cls, fmode, configkw = EXPORTERS[format]
         # prepare config
         # http://nbconvert.readthedocs.io/en/latest/nbconvert_library.html#Using-different-preprocessors

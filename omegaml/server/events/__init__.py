@@ -2,11 +2,12 @@ import logging
 import os
 
 from flask import Flask
+
 from flask_session import Session
 
-from .ssechat import bp as bp_ssechat
 from ..config import CONFIG_MAP
 from ..logutil import configure_logging, logutil_flask
+from .ssechat import bp as bp_ssechat
 
 
 def create_app():

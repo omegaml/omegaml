@@ -1,4 +1,4 @@
-class GenericScriptResource(object):
+class GenericScriptResource:
     def __init__(self, om, is_async=False):
         self.om = om
         self.is_async = is_async
