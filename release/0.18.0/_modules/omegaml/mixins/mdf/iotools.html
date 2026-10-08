@@ -14,8 +14,8 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -78,71 +78,71 @@
            <div itemprop="articleBody">
              
   <h1>Source code for omegaml.mixins.mdf.iotools</h1><div class="highlight"><pre>
-<span></span><span class="linenos">  1</span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="linenos">  1</span><span class="sd">"""</span>
 <span class="linenos">  2</span><span class="sd">omegaml write and read large CSV files from/to remote or local file paths</span>
 <span class="linenos">  3</span><span class="sd">Supports s3, hdfs, http/s, sftp, scp, ssh</span>
 <span class="linenos">  4</span>
 <span class="linenos">  5</span><span class="sd">Usage:</span>
 <span class="linenos">  6</span><span class="sd">    # read</span>
-<span class="linenos">  7</span><span class="sd">    om.read_csv(&#39;protocol://path/test.csv&#39;, &#39;foobar&#39;)</span>
+<span class="linenos">  7</span><span class="sd">    om.read_csv('protocol://path/test.csv', 'foobar')</span>
 <span class="linenos">  8</span>
 <span class="linenos">  9</span><span class="sd">    # write</span>
-<span class="linenos"> 10</span><span class="sd">    mdf = om.datasets.getl(&#39;tripdata&#39;)</span>
-<span class="linenos"> 11</span><span class="sd">    mdf.to_csv(&#39;protocol://path/test.csv&#39;)</span>
+<span class="linenos"> 10</span><span class="sd">    mdf = om.datasets.getl('tripdata')</span>
+<span class="linenos"> 11</span><span class="sd">    mdf.to_csv('protocol://path/test.csv')</span>
 <span class="linenos"> 12</span>
 <span class="linenos"> 13</span><span class="sd">    -- note path can be local, s3, http/s, scp, ftp, ssh (anything that smart_open supports,</span>
 <span class="linenos"> 14</span><span class="sd">       see https://github.com/RaRe-Technologies/smart_open</span>
 <span class="linenos"> 15</span>
 <span class="linenos"> 16</span><span class="sd">(c) 2019, 2020 omegaml.io by oneseven GmbH, Zurich, Switzerland</span>
-<span class="linenos"> 17</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="linenos"> 18</span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="linenos"> 19</span><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
-<span class="linenos"> 20</span>
-<span class="linenos"> 21</span><span class="k">try</span><span class="p">:</span>
-<span class="linenos"> 22</span>    <span class="kn">from</span><span class="w"> </span><span class="nn">smart_open</span><span class="w"> </span><span class="kn">import</span> <span class="nb">open</span> <span class="k">as</span> <span class="n">open_file</span>
-<span class="linenos"> 23</span><span class="k">except</span><span class="p">:</span>
-<span class="linenos"> 24</span>    <span class="n">open_file</span> <span class="o">=</span> <span class="nb">open</span>
-<span class="linenos"> 25</span>
+<span class="linenos"> 17</span><span class="sd">"""</span>
+<span class="linenos"> 18</span>
+<span class="linenos"> 19</span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="linenos"> 20</span><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="linenos"> 21</span>
+<span class="linenos"> 22</span><span class="k">try</span><span class="p">:</span>
+<span class="linenos"> 23</span>    <span class="kn">from</span><span class="w"> </span><span class="nn">smart_open</span><span class="w"> </span><span class="kn">import</span> <span class="nb">open</span> <span class="k">as</span> <span class="n">open_file</span>
+<span class="linenos"> 24</span><span class="k">except</span><span class="p">:</span>
+<span class="linenos"> 25</span>    <span class="n">open_file</span> <span class="o">=</span> <span class="nb">open</span>
 <span class="linenos"> 26</span>
-<span class="linenos"> 27</span><span class="k">class</span><span class="w"> </span><span class="nc">IOToolsMDFMixin</span><span class="p">:</span>
-<span class="linenos"> 28</span>    <span class="k">def</span><span class="w"> </span><span class="nf">to_csv</span><span class="p">(</span><span class="n">mdf</span><span class="p">,</span> <span class="n">csvfn</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">maxobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">apply</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">open_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos"> 29</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="linenos"> 30</span><span class="sd">        write MDataframe to s3, hdfs, http/s, sftp, scp, ssh, write to om.datasets</span>
-<span class="linenos"> 31</span>
-<span class="linenos"> 32</span><span class="sd">        Usage:</span>
-<span class="linenos"> 33</span><span class="sd">            mdf = om.datasets.getl(&#39;name&#39;)</span>
-<span class="linenos"> 34</span><span class="sd">            mdf.to_csv(&#39;/path/filename.csv&#39;)</span>
-<span class="linenos"> 35</span><span class="sd">        &quot;&quot;&quot;</span>
-<span class="linenos"> 36</span>        <span class="n">df_iter</span> <span class="o">=</span> <span class="n">mdf</span><span class="o">.</span><span class="n">iterchunks</span><span class="p">(</span><span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">)</span>
-<span class="linenos"> 37</span>        <span class="n">_chunked_to_csv</span><span class="p">(</span><span class="n">df_iter</span><span class="p">,</span> <span class="n">csvfn</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">apply</span><span class="p">,</span> <span class="n">open_kwargs</span><span class="o">=</span><span class="n">open_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<span class="linenos"> 38</span>
+<span class="linenos"> 27</span>
+<span class="linenos"> 28</span><span class="k">class</span><span class="w"> </span><span class="nc">IOToolsMDFMixin</span><span class="p">:</span>
+<span class="linenos"> 29</span>    <span class="k">def</span><span class="w"> </span><span class="nf">to_csv</span><span class="p">(</span><span class="n">mdf</span><span class="p">,</span> <span class="n">csvfn</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">maxobs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">apply</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'w'</span><span class="p">,</span> <span class="n">open_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 30</span><span class="w">        </span><span class="sd">"""</span>
+<span class="linenos"> 31</span><span class="sd">        write MDataframe to s3, hdfs, http/s, sftp, scp, ssh, write to om.datasets</span>
+<span class="linenos"> 32</span>
+<span class="linenos"> 33</span><span class="sd">        Usage:</span>
+<span class="linenos"> 34</span><span class="sd">            mdf = om.datasets.getl('name')</span>
+<span class="linenos"> 35</span><span class="sd">            mdf.to_csv('/path/filename.csv')</span>
+<span class="linenos"> 36</span><span class="sd">        """</span>
+<span class="linenos"> 37</span>        <span class="n">df_iter</span> <span class="o">=</span> <span class="n">mdf</span><span class="o">.</span><span class="n">iterchunks</span><span class="p">(</span><span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">)</span>
+<span class="linenos"> 38</span>        <span class="n">_chunked_to_csv</span><span class="p">(</span><span class="n">df_iter</span><span class="p">,</span> <span class="n">csvfn</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">apply</span><span class="p">,</span> <span class="n">open_kwargs</span><span class="o">=</span><span class="n">open_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 <span class="linenos"> 39</span>
+<span class="linenos"> 40</span>
 <div class="viewcode-block" id="IOToolsStoreMixin">
 <a class="viewcode-back" href="../../../../reference/datasets.html#omegaml.mixins.mdf.iotools.IOToolsStoreMixin">[docs]</a>
-<span class="linenos"> 40</span><span class="k">class</span><span class="w"> </span><span class="nc">IOToolsStoreMixin</span><span class="p">:</span>
+<span class="linenos"> 41</span><span class="k">class</span><span class="w"> </span><span class="nc">IOToolsStoreMixin</span><span class="p">:</span>
 <div class="viewcode-block" id="IOToolsStoreMixin.read_csv">
 <a class="viewcode-back" href="../../../../reference/datasets.html#omegaml.mixins.mdf.iotools.IOToolsStoreMixin.read_csv">[docs]</a>
-<span class="linenos"> 41</span>    <span class="k">def</span><span class="w"> </span><span class="nf">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csvfn</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">apply</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span>
-<span class="linenos"> 42</span>                 <span class="n">open_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos"> 43</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 42</span>    <span class="k">def</span><span class="w"> </span><span class="nf">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csvfn</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">apply</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'r'</span><span class="p">,</span> <span class="n">open_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos"> 43</span><span class="w">        </span><span class="sd">"""</span>
 <span class="linenos"> 44</span><span class="sd">        read large files from s3, hdfs, http/s, sftp, scp, ssh, write to om.datasets</span>
 <span class="linenos"> 45</span>
 <span class="linenos"> 46</span><span class="sd">        Usage:</span>
 <span class="linenos"> 47</span>
 <span class="linenos"> 48</span><span class="sd">            To insert a local csv file into a dataset::</span>
 <span class="linenos"> 49</span>
-<span class="linenos"> 50</span><span class="sd">                om.datasets.read_csv(&#39;/path/filename.csv&#39;, &#39;dataset-name&#39;)</span>
+<span class="linenos"> 50</span><span class="sd">                om.datasets.read_csv('/path/filename.csv', 'dataset-name')</span>
 <span class="linenos"> 51</span>
 <span class="linenos"> 52</span><span class="sd">            To insert a file stored in any of the supported locations specify</span>
 <span class="linenos"> 53</span><span class="sd">            its fully qualified location and filename. The specific format must</span>
 <span class="linenos"> 54</span><span class="sd">            be specified according to the `smart_open`_ library::</span>
 <span class="linenos"> 55</span>
-<span class="linenos"> 56</span><span class="sd">                om.datasets.read_csv(&#39;https://...&#39;, &#39;dataset-name&#39;)</span>
-<span class="linenos"> 57</span><span class="sd">                om.datasets.read_csv(&#39;s3://...&#39;, &#39;dataset-name&#39;)</span>
-<span class="linenos"> 58</span><span class="sd">                om.datasets.read_csv(&#39;hdfs://...&#39;, &#39;dataset-name&#39;)</span>
-<span class="linenos"> 59</span><span class="sd">                om.datasets.read_csv(&#39;sftp://...&#39;, &#39;dataset-name&#39;)</span>
-<span class="linenos"> 60</span><span class="sd">                om.datasets.read_csv(&#39;scp://...&#39;, &#39;dataset-name&#39;)</span>
-<span class="linenos"> 61</span><span class="sd">                om.datasets.read_csv(&#39;ssh://...&#39;, &#39;dataset-name&#39;)</span>
+<span class="linenos"> 56</span><span class="sd">                om.datasets.read_csv('https://...', 'dataset-name')</span>
+<span class="linenos"> 57</span><span class="sd">                om.datasets.read_csv('s3://...', 'dataset-name')</span>
+<span class="linenos"> 58</span><span class="sd">                om.datasets.read_csv('hdfs://...', 'dataset-name')</span>
+<span class="linenos"> 59</span><span class="sd">                om.datasets.read_csv('sftp://...', 'dataset-name')</span>
+<span class="linenos"> 60</span><span class="sd">                om.datasets.read_csv('scp://...', 'dataset-name')</span>
+<span class="linenos"> 61</span><span class="sd">                om.datasets.read_csv('ssh://...', 'dataset-name')</span>
 <span class="linenos"> 62</span>
 <span class="linenos"> 63</span><span class="sd">            Optionally define a function to receives each chunk as a dataframe</span>
 <span class="linenos"> 64</span><span class="sd">            and apply further processing (e.g. transformations, filtering)::</span>
@@ -175,7 +175,7 @@
 <span class="linenos"> 91</span><span class="sd">            * `pandas.read_csv`</span>
 <span class="linenos"> 92</span>
 <span class="linenos"> 93</span><span class="sd">        .. _smart_open: https://github.com/RaRe-Technologies/smart_open</span>
-<span class="linenos"> 94</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 94</span><span class="sd">        """</span>
 <span class="linenos"> 95</span>        <span class="n">store</span> <span class="o">=</span> <span class="bp">self</span>
 <span class="linenos"> 96</span>        <span class="n">open_kwargs</span> <span class="o">=</span> <span class="n">open_kwargs</span> <span class="ow">or</span> <span class="p">{}</span>
 <span class="linenos"> 97</span>        <span class="k">with</span> <span class="n">open_file</span><span class="p">(</span><span class="n">csvfn</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="o">**</span><span class="n">open_kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">fin</span><span class="p">:</span>
@@ -194,18 +194,18 @@
 <span class="linenos">109</span>
 <div class="viewcode-block" id="IOToolsStoreMixin.to_csv">
 <a class="viewcode-back" href="../../../../reference/datasets.html#omegaml.mixins.mdf.iotools.IOToolsStoreMixin.to_csv">[docs]</a>
-<span class="linenos">110</span>    <span class="k">def</span><span class="w"> </span><span class="nf">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">csvfn</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">apply</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">open_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos">111</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; write any dataframe to s3, hdfs, http/s, sftp, scp, ssh</span>
+<span class="linenos">110</span>    <span class="k">def</span><span class="w"> </span><span class="nf">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">csvfn</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">apply</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'w'</span><span class="p">,</span> <span class="n">open_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">111</span><span class="w">        </span><span class="sd">"""write any dataframe to s3, hdfs, http/s, sftp, scp, ssh</span>
 <span class="linenos">112</span>
 <span class="linenos">113</span><span class="sd">        Usage:</span>
 <span class="linenos">114</span>
 <span class="linenos">115</span><span class="sd">            To write a dataframe::</span>
 <span class="linenos">116</span>
-<span class="linenos">117</span><span class="sd">                om.datasets.write_csv(&#39;dataframe-dataset&#39;, &#39;/path/to/filename&#39;)</span>
+<span class="linenos">117</span><span class="sd">                om.datasets.write_csv('dataframe-dataset', '/path/to/filename')</span>
 <span class="linenos">118</span>
 <span class="linenos">119</span><span class="sd">            To write a large dataframe in chunks:</span>
 <span class="linenos">120</span>
-<span class="linenos">121</span><span class="sd">                om.datasets.write_csv(&#39;dataframe-dataset&#39;, &#39;/path/to/filename&#39;,</span>
+<span class="linenos">121</span><span class="sd">                om.datasets.write_csv('dataframe-dataset', '/path/to/filename',</span>
 <span class="linenos">122</span><span class="sd">                chunksize=100)</span>
 <span class="linenos">123</span>
 <span class="linenos">124</span><span class="sd">        Args:</span>
@@ -224,7 +224,7 @@
 <span class="linenos">137</span><span class="sd">        See Also:</span>
 <span class="linenos">138</span>
 <span class="linenos">139</span><span class="sd">            * ``pandas.to_csv``</span>
-<span class="linenos">140</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos">140</span><span class="sd">        """</span>
 <span class="linenos">141</span>        <span class="n">df_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="n">chunksize</span><span class="p">)</span>
 <span class="linenos">142</span>        <span class="n">_chunked_to_csv</span><span class="p">(</span><span class="n">df_iter</span><span class="p">,</span> <span class="n">csvfn</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">apply</span><span class="p">,</span> <span class="n">open_kwargs</span><span class="o">=</span><span class="n">open_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>

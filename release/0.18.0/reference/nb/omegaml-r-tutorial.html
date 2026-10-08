@@ -16,11 +16,11 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -87,7 +87,7 @@
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># load omegaml</span>
 <span class="nf">library</span><span class="p">(</span><span class="n">reticulate</span><span class="p">)</span>
-<span class="n">om</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">import</span><span class="p">(</span><span class="s">&quot;omegaml&quot;</span><span class="p">)</span>
+<span class="n">om</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">import</span><span class="p">(</span><span class="s">"omegaml"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -100,10 +100,10 @@
 <span class="nf">data</span><span class="p">(</span><span class="n">mtcars</span><span class="p">)</span>
 <span class="n">model</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="n">mpg</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">wt</span><span class="p">,</span>
 <span class="w">               </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mtcars</span><span class="p">,</span>
-<span class="w">              </span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;lm&quot;</span><span class="p">)</span>
+<span class="w">              </span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"lm"</span><span class="p">)</span>
 <span class="nf">predict</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="w"> </span><span class="n">mtcars</span><span class="p">)</span>
-<span class="n">om</span><span class="o">$</span><span class="n">models</span><span class="o">$</span><span class="nf">put</span><span class="p">(</span><span class="s">&#39;r$model&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;mtcars-model&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">$</span><span class="n">datasets</span><span class="o">$</span><span class="nf">put</span><span class="p">(</span><span class="n">mtcars</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;mtcars&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">$</span><span class="n">models</span><span class="o">$</span><span class="nf">put</span><span class="p">(</span><span class="s">'r$model'</span><span class="p">,</span><span class="w"> </span><span class="s">'mtcars-model'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">$</span><span class="n">datasets</span><span class="o">$</span><span class="nf">put</span><span class="p">(</span><span class="n">mtcars</span><span class="p">,</span><span class="w"> </span><span class="s">'mtcars'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -139,7 +139,7 @@ Metadata(name=mtcars,bucket=omegaml,prefix=data/,kind=pandas.dfrows,created=2022
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># run prediction on runtime</span>
-<span class="n">result</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">om</span><span class="o">$</span><span class="n">runtime</span><span class="o">$</span><span class="nf">model</span><span class="p">(</span><span class="s">&#39;mtcars-model&#39;</span><span class="p">)</span><span class="o">$</span><span class="nf">predict</span><span class="p">(</span><span class="n">mtcars</span><span class="p">)</span>
+<span class="n">result</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">om</span><span class="o">$</span><span class="n">runtime</span><span class="o">$</span><span class="nf">model</span><span class="p">(</span><span class="s">'mtcars-model'</span><span class="p">)</span><span class="o">$</span><span class="nf">predict</span><span class="p">(</span><span class="n">mtcars</span><span class="p">)</span>
 <span class="n">result</span><span class="o">$</span><span class="nf">get</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -160,7 +160,7 @@ Metadata(name=mtcars,bucket=omegaml,prefix=data/,kind=pandas.dfrows,created=2022
 </pre></div>
 </div>
 <div class="input_area highlight-r notranslate"><div class="highlight"><pre><span></span><span class="c1"># run prediction on runtime</span>
-<span class="n">result</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">om</span><span class="o">$</span><span class="n">runtime</span><span class="o">$</span><span class="nf">model</span><span class="p">(</span><span class="s">&#39;mtcars-model&#39;</span><span class="p">)</span><span class="o">$</span><span class="nf">predict</span><span class="p">(</span><span class="s">&#39;mtcars&#39;</span><span class="p">)</span>
+<span class="n">result</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">om</span><span class="o">$</span><span class="n">runtime</span><span class="o">$</span><span class="nf">model</span><span class="p">(</span><span class="s">'mtcars-model'</span><span class="p">)</span><span class="o">$</span><span class="nf">predict</span><span class="p">(</span><span class="s">'mtcars'</span><span class="p">)</span>
 <span class="n">result</span><span class="o">$</span><span class="nf">get</span><span class="p">()</span>
 </pre></div>
 </div>

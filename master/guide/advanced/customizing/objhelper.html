@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Object helpers &mdash; omega-ml 0.18.0 documentation</title>
+  <title>Object helpers &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
@@ -14,9 +14,9 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -83,13 +83,6 @@
 
       <div class="wy-nav-content">
 
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../../release/0.18.0/guide/advanced/customizing/objhelper.html">release/0.18.0</a>.
-    
-</div>
-
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -122,21 +115,21 @@ model type that needs customized processing before saving and upon loading (e.g.
 
 <span class="nd">@virtualobj</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">myhelper</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;get&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">'get'</span><span class="p">:</span>
         <span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">:</span>
             <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
                 <span class="k">return</span> <span class="mi">42</span>
 
         <span class="k">return</span> <span class="n">MyModel</span><span class="p">()</span>
 
-<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myhelper</span><span class="p">,</span> <span class="s1">&#39;myhelper&#39;</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myhelper</span><span class="p">,</span> <span class="s1">'myhelper'</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Let’s use this helper with the most simple object we can store - a dictionary. We store the object
 as usual, specifying our <cite>myhelper</cite> object helper. When retrieving the model, our helper gets called
 with the <cite>method=’get’</cite> kwarg, and returns a <cite>MyModel</cite> instance.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">({},</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">,</span> <span class="n">helper</span><span class="o">=</span><span class="s1">&#39;myhelper&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;python.model&#39;</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">({},</span> <span class="s1">'mymodel'</span><span class="p">,</span> <span class="n">helper</span><span class="o">=</span><span class="s1">'myhelper'</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">'python.model'</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span>
 <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">()</span>
 <span class="o">=&gt;</span> <span class="mi">42</span>
 </pre></div>

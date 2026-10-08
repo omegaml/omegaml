@@ -15,8 +15,8 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -162,7 +162,7 @@ objects accessible via omega-ml’s Metadata</p></li>
 sends the task <em>fit the model mymodel using datasets data-X, data-Y</em> to the
 default runtime worker, waiting for the task to complete.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># mymodel is a fitted model, newdata the name of a dataset</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">&#39;data-X&#39;</span><span class="p">,</span> <span class="s1">&#39;data-Y&#39;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">'data-X'</span><span class="p">,</span> <span class="s1">'data-Y'</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -174,9 +174,9 @@ In general the syntax follows the pattern <em>om.runtime.&lt;kind&gt;(name).&lt;
 Every task returns as <code class="code docutils literal notranslate"><span class="pre">AsyncResult</span></code> result object, which is a reference
 to the result of the task execution on a remote worker described in
 <span class="xref std std-ref">Asynchronous execution</span>. To get the actual result, call <code class="code docutils literal notranslate"><span class="pre">result.get()</span></code></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">&#39;myscript&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="s1">&#39;mynotebook&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">'myscript'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="s1">'mynotebook'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -188,12 +188,12 @@ default label is <code class="code docutils literal notranslate"><span class="pr
 <p>The list of available workers and their labels can be retrieved by running</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">labels</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">{</span><span class="s1">&#39;celery@eowyn&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]}</span>
+<span class="p">{</span><span class="s1">'celery@eowyn'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'default'</span><span class="p">]}</span>
 </pre></div>
 </div>
 <p>Tasks can be submitted to a specific worker by specifying <code class="code docutils literal notranslate"><span class="pre">.require(label)</span></code>
 just before the actual call:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="s1">&#39;gpu&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">require</span><span class="p">(</span><span class="s1">'gpu'</span><span class="p">)</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -203,7 +203,7 @@ just before the actual call:</p>
 to a runtime worker is put into a waiting queue until a worker can respond to
 it. The immediate result returned by a call to the runtime is a reference
 to the task, also known as a <em>promise</em> i.e. a reference to a future result.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;new-X&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">'new-X'</span><span class="p">)</span>
 <span class="nb">type</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="n">AsyncResult</span><span class="p">:</span> <span class="n">eda3b2f9</span><span class="o">-</span><span class="n">f675</span><span class="o">-</span><span class="mi">4690</span><span class="o">-</span><span class="mi">8303</span><span class="o">-</span><span class="mi">2</span><span class="n">a944783147c</span><span class="o">&gt;</span>
 </pre></div>
@@ -230,11 +230,11 @@ the runtime in a loop. One caveat is that we need to keep track of every
 result’s status.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">'myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
     <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
 <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="p">:</span>
-    <span class="n">done</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;SUCCESS&#39;</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">'SUCCESS'</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre></div>
@@ -252,15 +252,15 @@ to run many tasks:</p>
 previous task to the next.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">sequence</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
-        <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">'myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">result</span><span class="o">.</span><span class="n">getall</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">[</span><span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:14.690974.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:15.814244)&gt;&#39;</span><span class="p">,</span>
- <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:12.101315.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:13.185000)&gt;&#39;</span><span class="p">,</span>
- <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:13.247192.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:14.605521)&gt;&#39;</span><span class="p">,</span>
- <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:15.899301.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:17.157619)&gt;&#39;</span><span class="p">,</span>
- <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:10.690568.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:12.037948)&gt;&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:14.690974.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:15.814244)&gt;'</span><span class="p">,</span>
+ <span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:12.101315.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:13.185000)&gt;'</span><span class="p">,</span>
+ <span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:13.247192.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:14.605521)&gt;'</span><span class="p">,</span>
+ <span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:15.899301.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:17.157619)&gt;'</span><span class="p">,</span>
+ <span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:10.690568.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:12.037948)&gt;'</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
@@ -269,15 +269,15 @@ previous task to the next.</p>
 <p><code class="code docutils literal notranslate"><span class="pre">parallel()</span></code> runs many tasks in parallel.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">parallel</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
-        <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">'myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">result</span><span class="o">.</span><span class="n">getall</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">[</span><span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:14.690974.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:15.814244)&gt;&#39;</span><span class="p">,</span>
- <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:12.101315.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:13.185000)&gt;&#39;</span><span class="p">,</span>
- <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:13.247192.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:14.605521)&gt;&#39;</span><span class="p">,</span>
- <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:15.899301.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:17.157619)&gt;&#39;</span><span class="p">,</span>
- <span class="s1">&#39;&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:10.690568.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:12.037948)&gt;&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:14.690974.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:15.814244)&gt;'</span><span class="p">,</span>
+ <span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:12.101315.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:13.185000)&gt;'</span><span class="p">,</span>
+ <span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:13.247192.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:14.605521)&gt;'</span><span class="p">,</span>
+ <span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:15.899301.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:17.157619)&gt;'</span><span class="p">,</span>
+ <span class="s1">'&lt;Metadata: Metadata(name=results/myjob_2021-11-25 14:02:10.690568.ipynb,bucket=omegaml,prefix=jobs/,kind=script.ipynb,created=2021-11-25 14:02:12.037948)&gt;'</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
@@ -288,7 +288,7 @@ task will wait for all parallel jobs to be completed and then runs to combine th
 previous results.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">mapreduce</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
-        <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="sa">f</span><span class="s1">'myjob</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">result</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
 <span class="o">=&gt;</span>

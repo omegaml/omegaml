@@ -15,11 +15,11 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -119,8 +119,8 @@
 <section id="Getting-an-MDataFrame">
 <h2>Getting an MDataFrame<a class="headerlink" href="#Getting-an-MDataFrame" title="Link to this heading">¶</a></h2>
 <p>The following methods are equivalent, both return an instance of <code class="docutils literal notranslate"><span class="pre">MDataFrame</span></code></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mdf = om.datasets.getl(&#39;name&#39;)
-mdf = om.datasets.get(&#39;name&#39;, lazy=True)
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mdf = om.datasets.getl('name')
+mdf = om.datasets.get('name', lazy=True)
 </pre></div>
 </div>
 <p>Using any of these methods, <code class="docutils literal notranslate"><span class="pre">mdf</span></code> will represent the <code class="docutils literal notranslate"><span class="pre">MDataFrame</span></code> instance. Note that this will return immediately as no data access happens at this time.</p>
@@ -135,7 +135,7 @@ mdf = om.datasets.get(&#39;name&#39;, lazy=True)
 <section id="Persisting-the-result-of-a-query">
 <h3>Persisting the result of a query<a class="headerlink" href="#Persisting-the-result-of-a-query" title="Link to this heading">¶</a></h3>
 <p>To evaluate an MDataFrame without returning all data into memory, use the <code class="docutils literal notranslate"><span class="pre">.persist()</span></code> method</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mdf.persist(&#39;name&#39;, store=om.datasets)
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mdf.persist('name', store=om.datasets)
 </pre></div>
 </div>
 <p>This is the equivalent of <code class="docutils literal notranslate"><span class="pre">df</span> <span class="pre">=</span> <span class="pre">mdf.value;</span> <span class="pre">om.datasets.put(df,</span> <span class="pre">'name')</span></code>, however all operations are performed in the database, results are retrieved back to memory only if needed, and if so in small chunks.</p>
@@ -156,7 +156,7 @@ mdf = om.datasets.get(&#39;name&#39;, lazy=True)
 <section id="Filtering">
 <h2>Filtering<a class="headerlink" href="#Filtering" title="Link to this heading">¶</a></h2>
 <p><em>By filter masks</em></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>flt = mdf[&#39;column&#39;] == value  # use any operator supported by MSeries
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>flt = mdf['column'] == value  # use any operator supported by MSeries
 mdf[flt]
 </pre></div>
 </div>
@@ -174,13 +174,13 @@ mdf[flt]
 <h3>In-database transformations<a class="headerlink" href="#In-database-transformations" title="Link to this heading">¶</a></h3>
 <p>Using <code class="docutils literal notranslate"><span class="pre">MDataFrame.apply()</span></code> we can apply several column-wise transformations. Note that the function passed to apply must accept an ApplyContext.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mdf.iloc[0:1000].apply(lambda v: {
-    &#39;key&#39;      : v[&#39;l_orderkey&#39;],
-    &#39;comment&#39;: v[&#39;l_comment&#39;].str.concat(&#39; *&#39;),
-    &#39;docs&#39;: v[&#39;l_shipinstruct&#39;].str.usplit(&#39; &#39;),
-    &#39;comment_lower&#39;: v[&#39;l_shipinstruct&#39;].str.lower(),
-    &#39;comment_substr&#39;: v[&#39;l_shipinstruct&#39;].str.substr(1, 5),
-    &#39;week&#39;: v[&#39;l_shipdate&#39;].dt.week,
-    &#39;year&#39;: v[&#39;l_shipdate&#39;].dt.year,
+    'key'      : v['l_orderkey'],
+    'comment': v['l_comment'].str.concat(' *'),
+    'docs': v['l_shipinstruct'].str.usplit(' '),
+    'comment_lower': v['l_shipinstruct'].str.lower(),
+    'comment_substr': v['l_shipinstruct'].str.substr(1, 5),
+    'week': v['l_shipdate'].dt.week,
+    'year': v['l_shipdate'].dt.year,
 }, inplace=True).value
 </pre></div>
 </div>
@@ -190,9 +190,9 @@ mdf[flt]
 <p>MDataFrame supports in-parallel processing of arbitrary subsets and size of data. By default, the subset will be by row number, but any other grouping is possible.</p>
 <p>The following snipped will start N / chunksize tasks and process them in parallel. Each task processes N / chunksize records. The default chunksize is 50’000. The number of parallel jobs started by default is CPU count - 1.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>def myproc(df):
-    df[&#39;column&#39;] = df[&#39;other&#39;].apply(...)
+    df['column'] = df['other'].apply(...)
 
-mdf.transform(myproc).persist(&#39;name&#39;, store=om.datasets)
+mdf.transform(myproc).persist('name', store=om.datasets)
 </pre></div>
 </div>
 <p>More explanations:</p>
@@ -200,7 +200,7 @@ mdf.transform(myproc).persist(&#39;name&#39;, store=om.datasets)
     # df is the subset of the ith chunk of the full data
     # it is a Pandas in-memory DataFrame, apply any Pandas function you like
     # assignment is supported
-    df[&#39;column&#39;] = df[&#39;other&#39;].apply(...)
+    df['column'] = df['other'].apply(...)
     ...
     # groupby is also possible
     result = df.groupby(...)...
@@ -208,14 +208,14 @@ mdf.transform(myproc).persist(&#39;name&#39;, store=om.datasets)
     # or return a DataFrame or a Series =&gt; returned object is written to the db
     return result
 
-# this will start N = len(mdf) / 50&#39;000 tasks and store the results in om.datasets
+# this will start N = len(mdf) / 50'000 tasks and store the results in om.datasets
 # conceptually this is the equivalence of df = mdf.value.apply(myproc); om.datasets.put(df)
 # however using mdf.transform() will use much less memory and easily scale out of core
-mdf.transform(myproc).persist(&#39;name&#39;, store=om.datasets)
+mdf.transform(myproc).persist('name', store=om.datasets)
 
 # specify chunksize and n_jobs to influence the number of chunks and the number of parallel workers.
 # note this comes at a trade-off: many workers will take longer to complete, larger chunksizes will use more memory
-mdf.transform(myproc, chunksize=&lt;#records&gt;, n_jobs=#numbers).persist(&#39;name&#39;, store=om.datasets)
+mdf.transform(myproc, chunksize=&lt;#records&gt;, n_jobs=#numbers).persist('name', store=om.datasets)
 </pre></div>
 </div>
 </section>
@@ -223,24 +223,24 @@ mdf.transform(myproc, chunksize=&lt;#records&gt;, n_jobs=#numbers).persist(&#39;
 <section id="Customized-chunking">
 <h3>Customized chunking<a class="headerlink" href="#Customized-chunking" title="Link to this heading">¶</a></h3>
 <p>By default <code class="docutils literal notranslate"><span class="pre">.transform()</span></code> uses the size of the data (as in number of rows) do determine the number of chunks. You can however create any number chunks:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mdf = om.datasets.getl(&#39;retail&#39;)
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mdf = om.datasets.getl('retail')
 
 def process(ldf):
-    ldf[&#39;comments&#39;] = ldf[&#39;l_comment&#39;].str.split(&#39; &#39;)
+    ldf['comments'] = ldf['l_comment'].str.split(' ')
 
 
 def chunker(mdf, chunksize, maxobs):
     # for each chunk yield a MDataFrame subset for each chunk
-    # note: don&#39;t use .value before yielding as this would resolve the dataframe locally
+    # note: don't use .value before yielding as this would resolve the dataframe locally
     #       and potentially consume all memory.
-    groups = mdf[&#39;l_returnflag&#39;].unique().value
+    groups = mdf['l_returnflag'].unique().value
     for group in groups:
         for i in range(0, maxobs, chunksize):
             yield mdf.skip(i).head(chunksize).query(l_returnflag=group)
 
 (mdf
  .transform(process, chunkfn=chunker, n_jobs=-2)
- .persist(&#39;retail-transformed&#39;, store=om.datasets))
+ .persist('retail-transformed', store=om.datasets))
 </pre></div>
 </div>
 </section>

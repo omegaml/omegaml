@@ -15,8 +15,8 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -167,16 +167,16 @@ application that provides endpoints for datasets, models, scripts and jobs.</p>
 regular expressions:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># allow all datasets, models, scripts, jobs</span>
 $<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve
-$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">&quot;.*/.*/.*&quot;</span>
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">".*/.*/.*"</span>
 
 <span class="c1"># allow all models, no datasets, scripts and jobs</span>
-$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">&quot;model/.*/.*&quot;</span>
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">"model/.*/.*"</span>
 
 <span class="c1"># allow only model foo</span>
-$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">&quot;model/foo/.*&quot;</span>
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">"model/foo/.*"</span>
 
 <span class="c1"># allow only model foo, prediction</span>
-$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">&quot;model/foo/predict&quot;</span>
+$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve<span class="w"> </span><span class="s2">"model/foo/predict"</span>
 </pre></div>
 </div>
 <p>Rules can be specified in a file, one rule per line:</p>
@@ -189,7 +189,7 @@ $<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </spa
 </div>
 <p>Rules can be specified in the <code class="docutils literal notranslate"><span class="pre">OMEGA_RESTAPI_FILTER</span></code> env variable,
 with rules separated by <code class="docutils literal notranslate"><span class="pre">;</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">OMEGA_RESTAPI_FILTER</span><span class="o">=</span><span class="s2">&quot;model/.*/.*&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">OMEGA_RESTAPI_FILTER</span><span class="o">=</span><span class="s2">"model/.*/.*"</span>
 $<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>serve
 </pre></div>
 </div>
@@ -258,9 +258,9 @@ as query parameter:</p>
 <p>Next the most recent task status result can be queried at the URI given by Location:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">task</span><span class="o">/</span><span class="n">b552e887</span><span class="o">-</span><span class="mi">9</span><span class="n">ced</span><span class="o">-</span><span class="mf">4e87</span><span class="o">-</span><span class="n">a203</span><span class="o">-</span><span class="mi">0</span><span class="n">a4183e4f461</span><span class="o">/</span><span class="n">result</span><span class="err">?</span><span class="n">resource_uri</span><span class="o">=/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">model</span><span class="o">/</span><span class="n">mymodel</span><span class="o">/</span>
 <span class="o">=&gt;</span>
-<span class="p">{</span><span class="s2">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;mymodel&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">},</span>
- <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span>
- <span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="s2">&quot;b552e887-9ced-4e87-a203-0a4183e4f461&quot;</span>
+<span class="p">{</span><span class="s2">"response"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="s2">"mymodel"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">:</span> <span class="o">...</span><span class="p">},</span>
+ <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"SUCCESS"</span><span class="p">,</span>
+ <span class="s2">"task_id"</span><span class="p">:</span> <span class="s2">"b552e887-9ced-4e87-a203-0a4183e4f461"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -279,73 +279,73 @@ as query parameter:</p>
 <h2><a class="toc-backref" href="#id9" role="doc-backlink">Working with data (REST API)</a><a class="headerlink" href="#working-with-data-rest-api" title="Link to this heading">¶</a></h2>
 <section id="listing-datasets">
 <h3><a class="toc-backref" href="#id10" role="doc-backlink">Listing datasets</a><a class="headerlink" href="#listing-datasets" title="Link to this heading">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://host:port/api/v1/dataset/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'http://host:port/api/v1/dataset/'</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
   <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
   <span class="o">=&gt;</span>
-  <span class="p">{</span><span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;limit&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
- <span class="s1">&#39;next&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
- <span class="s1">&#39;offset&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
- <span class="s1">&#39;previous&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
- <span class="s1">&#39;total_count&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
-<span class="s1">&#39;objects&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;pandas.dfrows&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample&#39;</span><span class="p">},</span>
-  <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;resource_uri&#39;</span><span class="p">:</span> <span class="s1">&#39;/api/v1/dataset/sample/&#39;</span><span class="p">},</span>
- <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;pandas.dfrows&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample2&#39;</span><span class="p">},</span>
-  <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;resource_uri&#39;</span><span class="p">:</span> <span class="s1">&#39;/api/v1/dataset/sample2/&#39;</span><span class="p">},</span>
- <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;pandas.dfrows&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample99&#39;</span><span class="p">},</span>
-  <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-  <span class="s1">&#39;resource_uri&#39;</span><span class="p">:</span> <span class="s1">&#39;/api/v1/dataset/sample99/&#39;</span><span class="p">}]}</span>
+  <span class="p">{</span><span class="s1">'meta'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'limit'</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+ <span class="s1">'next'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+ <span class="s1">'offset'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+ <span class="s1">'previous'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+ <span class="s1">'total_count'</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+<span class="s1">'objects'</span><span class="p">:</span> <span class="p">[{</span><span class="s1">'data'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'kind'</span><span class="p">:</span> <span class="s1">'pandas.dfrows'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'sample'</span><span class="p">},</span>
+  <span class="s1">'dtypes'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'index'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'name'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'orient'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'resource_uri'</span><span class="p">:</span> <span class="s1">'/api/v1/dataset/sample/'</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">'data'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'kind'</span><span class="p">:</span> <span class="s1">'pandas.dfrows'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'sample2'</span><span class="p">},</span>
+  <span class="s1">'dtypes'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'index'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'name'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'orient'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'resource_uri'</span><span class="p">:</span> <span class="s1">'/api/v1/dataset/sample2/'</span><span class="p">},</span>
+ <span class="p">{</span><span class="s1">'data'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'kind'</span><span class="p">:</span> <span class="s1">'pandas.dfrows'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'sample99'</span><span class="p">},</span>
+  <span class="s1">'dtypes'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'index'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'name'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'orient'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+  <span class="s1">'resource_uri'</span><span class="p">:</span> <span class="s1">'/api/v1/dataset/sample99/'</span><span class="p">}]}</span>
 </pre></div>
 </div>
 </section>
 <section id="reading-data">
 <h3><a class="toc-backref" href="#id11" role="doc-backlink">Reading data</a><a class="headerlink" href="#reading-data" title="Link to this heading">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://host:port/api/v1/dataset/sample&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'http://host:port/api/v1/dataset/sample'</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
    <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
    <span class="o">=&gt;</span>
-   <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-  <span class="s1">&#39;10&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="s1">&#39;11&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-  <span class="s1">&#39;12&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-  <span class="s1">&#39;13&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-  <span class="s1">&#39;14&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-  <span class="s1">&#39;15&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-  <span class="s1">&#39;16&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
-  <span class="s1">&#39;17&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
-  <span class="s1">&#39;18&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-  <span class="s1">&#39;19&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
-  <span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-  <span class="s1">&#39;20&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="s1">&#39;21&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-  <span class="s1">&#39;22&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-  <span class="s1">&#39;23&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-  <span class="s1">&#39;24&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-  <span class="s1">&#39;25&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-  <span class="s1">&#39;26&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
-  <span class="s1">&#39;27&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
-  <span class="s1">&#39;28&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-  <span class="s1">&#39;29&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
-  <span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-  <span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-  <span class="s1">&#39;5&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-  <span class="s1">&#39;6&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
-  <span class="s1">&#39;7&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
-  <span class="s1">&#39;8&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-  <span class="s1">&#39;9&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">}},</span>
-<span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="s1">&#39;int64&#39;</span><span class="p">},</span>
-<span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Int64Index&#39;</span><span class="p">,</span>
- <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span>
+   <span class="p">{</span><span class="s1">'data'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'0'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">'1'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s1">'10'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">'11'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s1">'12'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="s1">'13'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="s1">'14'</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="s1">'15'</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+  <span class="s1">'16'</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+  <span class="s1">'17'</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+  <span class="s1">'18'</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+  <span class="s1">'19'</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+  <span class="s1">'2'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="s1">'20'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">'21'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="s1">'22'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="s1">'23'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="s1">'24'</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="s1">'25'</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+  <span class="s1">'26'</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+  <span class="s1">'27'</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+  <span class="s1">'28'</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+  <span class="s1">'29'</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+  <span class="s1">'3'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="s1">'4'</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="s1">'5'</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+  <span class="s1">'6'</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+  <span class="s1">'7'</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+  <span class="s1">'8'</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+  <span class="s1">'9'</span><span class="p">:</span> <span class="mi">9</span><span class="p">}},</span>
+<span class="s1">'dtypes'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="s1">'int64'</span><span class="p">},</span>
+<span class="s1">'index'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Int64Index'</span><span class="p">,</span>
+ <span class="s1">'values'</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span>
   <span class="mi">1</span><span class="p">,</span>
   <span class="mi">2</span><span class="p">,</span>
   <span class="mi">3</span><span class="p">,</span>
@@ -375,17 +375,17 @@ as query parameter:</p>
   <span class="mi">7</span><span class="p">,</span>
   <span class="mi">8</span><span class="p">,</span>
   <span class="mi">9</span><span class="p">]},</span>
-<span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample&#39;</span><span class="p">,</span>
-<span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">,</span>
-<span class="s1">&#39;resource_uri&#39;</span><span class="p">:</span> <span class="s1">&#39;/api/v1/dataset/None/&#39;</span><span class="p">}</span>
+<span class="s1">'name'</span><span class="p">:</span> <span class="s1">'sample'</span><span class="p">,</span>
+<span class="s1">'orient'</span><span class="p">:</span> <span class="s1">'dict'</span><span class="p">,</span>
+<span class="s1">'resource_uri'</span><span class="p">:</span> <span class="s1">'/api/v1/dataset/None/'</span><span class="p">}</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>To get a valid dataframe back do as follows.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">))</span>
-<span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="o">=</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;values&#39;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'data'</span><span class="p">))</span>
+<span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="o">=</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'index'</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'values'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>It is important to set the index to restore the correct row order. This
@@ -396,43 +396,43 @@ is due to Python’s arbitrary order of keys in the <code class="code docutils l
 <h3><a class="toc-backref" href="#id12" role="doc-backlink">Writing data</a><a class="headerlink" href="#writing-data" title="Link to this heading">¶</a></h3>
 <p>Writing data is equally straight forward. Note this works for both new
 and existing datasets. By default data is appended to an existing dataset.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-   <span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-   <span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-   <span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-   <span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-   <span class="s1">&#39;5&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-   <span class="s1">&#39;6&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
-   <span class="s1">&#39;7&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
-   <span class="s1">&#39;8&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-   <span class="s1">&#39;9&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">}},</span>
- <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="s1">&#39;int64&#39;</span><span class="p">},</span>
- <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">,</span>
- <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Int64Index&#39;</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]},</span>
- <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample&#39;</span><span class="p">}</span>
-<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://host:port/api/v1/dataset/sample/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'data'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'0'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="s1">'1'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+   <span class="s1">'2'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+   <span class="s1">'3'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+   <span class="s1">'4'</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+   <span class="s1">'5'</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+   <span class="s1">'6'</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+   <span class="s1">'7'</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+   <span class="s1">'8'</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+   <span class="s1">'9'</span><span class="p">:</span> <span class="mi">9</span><span class="p">}},</span>
+ <span class="s1">'dtypes'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="s1">'int64'</span><span class="p">},</span>
+ <span class="s1">'orient'</span><span class="p">:</span> <span class="s1">'dict'</span><span class="p">,</span>
+ <span class="s1">'index'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Int64Index'</span><span class="p">,</span> <span class="s1">'values'</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]},</span>
+ <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'sample'</span><span class="p">}</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'http://host:port/api/v1/dataset/sample/'</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
              <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
 <span class="o">=&gt;</span>
 <span class="o">&lt;</span><span class="n">Response</span> <span class="p">[</span><span class="mi">204</span><span class="p">]</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <p>To overwrite an existing data set, use <code class="code docutils literal notranslate"><span class="pre">append:</span> <span class="pre">false</span></code></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-   <span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-   <span class="s1">&#39;2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-   <span class="s1">&#39;3&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-   <span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-   <span class="s1">&#39;5&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-   <span class="s1">&#39;6&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
-   <span class="s1">&#39;7&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
-   <span class="s1">&#39;8&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
-   <span class="s1">&#39;9&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">}},</span>
- <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="s1">&#39;int64&#39;</span><span class="p">},</span>
- <span class="s1">&#39;append&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
- <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="s1">&#39;dict&#39;</span><span class="p">,</span>
- <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Int64Index&#39;</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]},</span>
- <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sample&#39;</span><span class="p">}</span>
-<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/dataset/sample/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'data'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'0'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="s1">'1'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+   <span class="s1">'2'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+   <span class="s1">'3'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+   <span class="s1">'4'</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+   <span class="s1">'5'</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+   <span class="s1">'6'</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+   <span class="s1">'7'</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+   <span class="s1">'8'</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+   <span class="s1">'9'</span><span class="p">:</span> <span class="mi">9</span><span class="p">}},</span>
+ <span class="s1">'dtypes'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'x'</span><span class="p">:</span> <span class="s1">'int64'</span><span class="p">},</span>
+ <span class="s1">'append'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+ <span class="s1">'orient'</span><span class="p">:</span> <span class="s1">'dict'</span><span class="p">,</span>
+ <span class="s1">'index'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Int64Index'</span><span class="p">,</span> <span class="s1">'values'</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]},</span>
+ <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'sample'</span><span class="p">}</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/dataset/sample/'</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
              <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
 <span class="o">=&gt;</span>
 <span class="o">&lt;</span><span class="n">Response</span> <span class="p">[</span><span class="mi">204</span><span class="p">]</span><span class="o">&gt;</span>
@@ -446,16 +446,16 @@ the following code snippet.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">pandas_to_apidata</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
      <span class="c1"># TODO put logic for this into client lib</span>
      <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
-         <span class="s1">&#39;append&#39;</span><span class="p">:</span> <span class="n">append</span><span class="p">,</span>
-         <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">to_json</span><span class="p">()),</span>
-         <span class="s1">&#39;dtypes&#39;</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+         <span class="s1">'append'</span><span class="p">:</span> <span class="n">append</span><span class="p">,</span>
+         <span class="s1">'data'</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">to_json</span><span class="p">()),</span>
+         <span class="s1">'dtypes'</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
-         <span class="s1">&#39;orient&#39;</span><span class="p">:</span> <span class="s1">&#39;columns&#39;</span><span class="p">,</span>
-         <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="p">{</span>
-             <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+         <span class="s1">'orient'</span><span class="p">:</span> <span class="s1">'columns'</span><span class="p">,</span>
+         <span class="s1">'index'</span><span class="p">:</span> <span class="p">{</span>
+             <span class="s1">'type'</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
              <span class="c1"># ensure type conversion to object for Py3 tastypie does</span>
              <span class="c1"># not recognize numpy.int64</span>
-             <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">),</span>
+             <span class="s1">'values'</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'O'</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">),</span>
          <span class="p">}</span>
      <span class="p">}</span>
      <span class="k">return</span> <span class="n">data</span>
@@ -467,20 +467,20 @@ the following code snippet.</p>
 <h2><a class="toc-backref" href="#id14" role="doc-backlink">Working with models (REST API)</a><a class="headerlink" href="#working-with-models-rest-api" title="Link to this heading">¶</a></h2>
 <section id="create-a-model">
 <h3><a class="toc-backref" href="#id15" role="doc-backlink">Create a model</a><a class="headerlink" href="#create-a-model" title="Link to this heading">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;pipeline&#39;</span><span class="p">:</span> <span class="p">[</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'mymodel'</span><span class="p">,</span>
+        <span class="s1">'pipeline'</span><span class="p">:</span> <span class="p">[</span>
             <span class="c1"># step name, model class, kwargs</span>
-            <span class="p">[</span><span class="s1">&#39;LinearRegression&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">()],</span>
+            <span class="p">[</span><span class="s1">'LinearRegression'</span><span class="p">,</span> <span class="nb">dict</span><span class="p">()],</span>
         <span class="p">]}</span>
-<span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/model/&#39;</span><span class="p">,</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/model/'</span><span class="p">,</span>
                  <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
                  <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
 <span class="o">=&gt;</span>
 <span class="o">&lt;</span><span class="n">Response</span> <span class="p">[</span><span class="mi">201</span><span class="p">]</span><span class="o">&gt;</span>
-<span class="p">{</span><span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;bucket&#39;</span><span class="p">:</span> <span class="s1">&#39;store&#39;</span><span class="p">,</span>
- <span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="s1">&#39;2016-01-16 22:05:06.192000&#39;</span><span class="p">,</span>
- <span class="s1">&#39;kind&#39;</span><span class="p">:</span> <span class="s1">&#39;sklearn.joblib&#39;</span><span class="p">,</span>
- <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">}}</span>
+<span class="p">{</span><span class="s1">'model'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'bucket'</span><span class="p">:</span> <span class="s1">'store'</span><span class="p">,</span>
+ <span class="s1">'created'</span><span class="p">:</span> <span class="s1">'2016-01-16 22:05:06.192000'</span><span class="p">,</span>
+ <span class="s1">'kind'</span><span class="p">:</span> <span class="s1">'sklearn.joblib'</span><span class="p">,</span>
+ <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'mymodel'</span><span class="p">}}</span>
 </pre></div>
 </div>
 </section>
@@ -488,34 +488,34 @@ the following code snippet.</p>
 <h3><a class="toc-backref" href="#id16" role="doc-backlink">Fit a model</a><a class="headerlink" href="#fit-a-model" title="Link to this heading">¶</a></h3>
 <p>Create some data first:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># a simple data frame to learn</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)})</span>
-<span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
-<span class="n">datax</span> <span class="o">=</span> <span class="n">pandas_to_apidata</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">&#39;x&#39;</span><span class="p">]])</span>
-<span class="n">datay</span> <span class="o">=</span> <span class="n">pandas_to_apidata</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">&#39;y&#39;</span><span class="p">]])</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)})</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">'y'</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'x'</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="n">datax</span> <span class="o">=</span> <span class="n">pandas_to_apidata</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">'x'</span><span class="p">]])</span>
+<span class="n">datay</span> <span class="o">=</span> <span class="n">pandas_to_apidata</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">'y'</span><span class="p">]])</span>
 
 <span class="c1"># store data</span>
-<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/dataset/datax/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/dataset/datax/'</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
              <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">datax</span><span class="p">))</span>
-<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/dataset/datay/&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
+<span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/dataset/datay/'</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span>
              <span class="n">json</span><span class="o">=</span><span class="n">datay</span><span class="p">)</span>
 <span class="o">=&gt;</span>
 <span class="o">&lt;</span><span class="n">Response</span> <span class="p">[</span><span class="mi">204</span><span class="p">]</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <p>Then we can fit the model:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/model/mymodel/fit/?datax=datax&amp;datay=datay&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/model/mymodel/fit/?datax=datax&amp;datay=datay'</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
 <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">{</span><span class="s1">&#39;datax&#39;</span><span class="p">:</span> <span class="s1">&#39;datax&#39;</span><span class="p">,</span> <span class="s1">&#39;datay&#39;</span><span class="p">:</span> <span class="s1">&#39;datay&#39;</span><span class="p">,</span> <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+<span class="p">{</span><span class="s1">'datax'</span><span class="p">:</span> <span class="s1">'datax'</span><span class="p">,</span> <span class="s1">'datay'</span><span class="p">:</span> <span class="s1">'datay'</span><span class="p">,</span> <span class="s1">'result'</span><span class="p">:</span> <span class="s1">'ok'</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>Subsequently, the model is ready for prediction:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/model/mymodel/predict/?datax=datax&#39;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/model/mymodel/predict/?datax=datax'</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span>
 <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">{</span><span class="s1">&#39;datax&#39;</span><span class="p">:</span> <span class="s1">&#39;datax&#39;</span><span class="p">,</span>
- <span class="s1">&#39;datay&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
- <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">,</span> <span class="mf">14.0</span><span class="p">,</span> <span class="mf">16.0</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">]}</span>
+<span class="p">{</span><span class="s1">'datax'</span><span class="p">:</span> <span class="s1">'datax'</span><span class="p">,</span>
+ <span class="s1">'datay'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+ <span class="s1">'result'</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">,</span> <span class="mf">14.0</span><span class="p">,</span> <span class="mf">16.0</span><span class="p">,</span> <span class="mf">18.0</span><span class="p">]}</span>
 </pre></div>
 </div>
 </section>
@@ -524,79 +524,79 @@ the following code snippet.</p>
 <h2><a class="toc-backref" href="#id17" role="doc-backlink">Working with jobs (REST API)</a><a class="headerlink" href="#working-with-jobs-rest-api" title="Link to this heading">¶</a></h2>
 <section id="listing-jobs">
 <h3><a class="toc-backref" href="#id18" role="doc-backlink">Listing jobs</a><a class="headerlink" href="#listing-jobs" title="Link to this heading">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/job/'</span><span class="p">,</span>
                       <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
 <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">&#39;previous&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;total_count&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-           <span class="sa">u</span><span class="s1">&#39;offset&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;limit&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;next&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
-<span class="sa">u</span><span class="s1">&#39;objects&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">[],</span>
-              <span class="sa">u</span><span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;testjob.ipynb&#39;</span><span class="p">,</span>
-              <span class="sa">u</span><span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;2016-02-06T21:33:49.833000&#39;</span><span class="p">}]}</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">'meta'</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">'previous'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'total_count'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+           <span class="sa">u</span><span class="s1">'offset'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'limit'</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'next'</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="sa">u</span><span class="s1">'objects'</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">'job_runs'</span><span class="p">:</span> <span class="p">[],</span>
+              <span class="sa">u</span><span class="s1">'job_results'</span><span class="p">:</span> <span class="p">{},</span> <span class="sa">u</span><span class="s1">'name'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'testjob.ipynb'</span><span class="p">,</span>
+              <span class="sa">u</span><span class="s1">'created'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'2016-02-06T21:33:49.833000'</span><span class="p">}]}</span>
 </pre></div>
 </div>
 </section>
 <section id="running-a-job">
 <h3><a class="toc-backref" href="#id19" role="doc-backlink">Running a job</a><a class="headerlink" href="#running-a-job" title="Link to this heading">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/testjob/run/&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/job/testjob/run/'</span><span class="p">,</span>
                       <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
 <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">&#39;1517953074&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;OK&#39;</span><span class="p">},</span>
- <span class="sa">u</span><span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">u</span><span class="s1">&#39;results/testjob_1517953074.ipynb&#39;</span><span class="p">],</span>
- <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;testjob.ipynb&#39;</span><span class="p">,</span>
- <span class="sa">u</span><span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;2016-02-06T21:37:54.014000&#39;</span><span class="p">}</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">'job_runs'</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">'1517953074'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'OK'</span><span class="p">},</span>
+ <span class="sa">u</span><span class="s1">'job_results'</span><span class="p">:</span> <span class="p">[</span><span class="sa">u</span><span class="s1">'results/testjob_1517953074.ipynb'</span><span class="p">],</span>
+ <span class="sa">u</span><span class="s1">'name'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'testjob.ipynb'</span><span class="p">,</span>
+ <span class="sa">u</span><span class="s1">'created'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'2016-02-06T21:37:54.014000'</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="getting-job-results">
 <h3><a class="toc-backref" href="#id20" role="doc-backlink">Getting job results</a><a class="headerlink" href="#getting-job-results" title="Link to this heading">¶</a></h3>
 <p>To get job results in iPython notebook format, use</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/results/testjob_1517953074.ipynb/&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/job/results/testjob_1517953074.ipynb/'</span><span class="p">,</span>
                       <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
 <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;source_job&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;testjob&#39;</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">{},</span>
-<span class="sa">u</span><span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;2016-02-06T21:36:06.704000&#39;</span><span class="p">,</span>
-<span class="sa">u</span><span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">&#39;nbformat_minor&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;nbformat&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-             <span class="sa">u</span><span class="s1">&#39;cells&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">&#39;execution_count&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;cell_type&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;code&#39;</span><span class="p">,</span>
-                         <span class="sa">u</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s2">&quot;print(&#39;hello&#39;)&quot;</span><span class="p">,</span>
-                         <span class="sa">u</span><span class="s1">&#39;outputs&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">&#39;output_type&#39;</span><span class="p">:</span>
-                                       <span class="sa">u</span><span class="s1">&#39;stream&#39;</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;stdout&#39;</span><span class="p">,</span>
-                                       <span class="sa">u</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;hello</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">}],</span>
-                                       <span class="sa">u</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{}}],</span>
-             <span class="sa">u</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{}},</span>
-<span class="sa">u</span><span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">[],</span>
-<span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;results/testjob_1517952965.ipynb&#39;</span><span class="p">}</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">'source_job'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'testjob'</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'job_results'</span><span class="p">:</span> <span class="p">{},</span>
+<span class="sa">u</span><span class="s1">'created'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'2016-02-06T21:36:06.704000'</span><span class="p">,</span>
+<span class="sa">u</span><span class="s1">'content'</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">'nbformat_minor'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'nbformat'</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+             <span class="sa">u</span><span class="s1">'cells'</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">'execution_count'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'cell_type'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'code'</span><span class="p">,</span>
+                         <span class="sa">u</span><span class="s1">'source'</span><span class="p">:</span> <span class="sa">u</span><span class="s2">"print('hello')"</span><span class="p">,</span>
+                         <span class="sa">u</span><span class="s1">'outputs'</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">'output_type'</span><span class="p">:</span>
+                                       <span class="sa">u</span><span class="s1">'stream'</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'name'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'stdout'</span><span class="p">,</span>
+                                       <span class="sa">u</span><span class="s1">'text'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'hello</span><span class="se">\n</span><span class="s1">'</span><span class="p">}],</span>
+                                       <span class="sa">u</span><span class="s1">'metadata'</span><span class="p">:</span> <span class="p">{}}],</span>
+             <span class="sa">u</span><span class="s1">'metadata'</span><span class="p">:</span> <span class="p">{}},</span>
+<span class="sa">u</span><span class="s1">'job_runs'</span><span class="p">:</span> <span class="p">[],</span>
+<span class="sa">u</span><span class="s1">'name'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'results/testjob_1517952965.ipynb'</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="getting-a-job-report">
 <h3><a class="toc-backref" href="#id21" role="doc-backlink">Getting a job report</a><a class="headerlink" href="#getting-a-job-report" title="Link to this heading">¶</a></h3>
 <p>To get job results in HTML format, use</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/export/testjob_1517953074.ipynb/&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/job/export/testjob_1517953074.ipynb/'</span><span class="p">,</span>
                       <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
 <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="s2">&quot;&lt;html&gt; ... &lt;/html&gt;&quot;</span><span class="p">,</span>
- <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;testjob_1517953074.ipynb&#39;</span><span class="p">}</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">'content'</span><span class="p">:</span> <span class="s2">"&lt;html&gt; ... &lt;/html&gt;"</span><span class="p">,</span>
+ <span class="sa">u</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'testjob_1517953074.ipynb'</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="getting-information-on-a-job">
 <h3><a class="toc-backref" href="#id22" role="doc-backlink">Getting information on a job</a><a class="headerlink" href="#getting-information-on-a-job" title="Link to this heading">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://localhost:8001/api/v1/job/testjob/&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'http://localhost:8001/api/v1/job/testjob/'</span><span class="p">,</span>
                       <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
 <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="o">=&gt;</span>
-<span class="p">{</span><span class="sa">u</span><span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">&#39;nbformat_minor&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;nbformat&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
- <span class="sa">u</span><span class="s1">&#39;cells&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">&#39;execution_count&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;cell_type&#39;</span><span class="p">:</span>
-             <span class="sa">u</span><span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s2">&quot;print(&#39;hello&#39;)&quot;</span><span class="p">,</span>
-             <span class="sa">u</span><span class="s1">&#39;outputs&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="sa">u</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{}}],</span>
-             <span class="sa">u</span><span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{}},</span> <span class="sa">u</span><span class="s1">&#39;job_runs&#39;</span><span class="p">:</span> <span class="p">[],</span>
-             <span class="sa">u</span><span class="s1">&#39;job_results&#39;</span><span class="p">:</span> <span class="p">{},</span>
-             <span class="sa">u</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;testjob.ipynb&#39;</span><span class="p">,</span>
-             <span class="sa">u</span><span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;2016-02-06T21:44:59.290000&#39;</span><span class="p">}</span>
+<span class="p">{</span><span class="sa">u</span><span class="s1">'content'</span><span class="p">:</span> <span class="p">{</span><span class="sa">u</span><span class="s1">'nbformat_minor'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'nbformat'</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+ <span class="sa">u</span><span class="s1">'cells'</span><span class="p">:</span> <span class="p">[{</span><span class="sa">u</span><span class="s1">'execution_count'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'cell_type'</span><span class="p">:</span>
+             <span class="sa">u</span><span class="s1">'code'</span><span class="p">,</span> <span class="sa">u</span><span class="s1">'source'</span><span class="p">:</span> <span class="sa">u</span><span class="s2">"print('hello')"</span><span class="p">,</span>
+             <span class="sa">u</span><span class="s1">'outputs'</span><span class="p">:</span> <span class="p">[],</span> <span class="sa">u</span><span class="s1">'metadata'</span><span class="p">:</span> <span class="p">{}}],</span>
+             <span class="sa">u</span><span class="s1">'metadata'</span><span class="p">:</span> <span class="p">{}},</span> <span class="sa">u</span><span class="s1">'job_runs'</span><span class="p">:</span> <span class="p">[],</span>
+             <span class="sa">u</span><span class="s1">'job_results'</span><span class="p">:</span> <span class="p">{},</span>
+             <span class="sa">u</span><span class="s1">'name'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'testjob.ipynb'</span><span class="p">,</span>
+             <span class="sa">u</span><span class="s1">'created'</span><span class="p">:</span> <span class="sa">u</span><span class="s1">'2016-02-06T21:44:59.290000'</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>

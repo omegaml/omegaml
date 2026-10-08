@@ -14,8 +14,8 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -80,33 +80,34 @@
   <h1>Source code for omegaml.mixins.store.package</h1><div class="highlight"><pre>
 <div class="viewcode-block" id="PythonPackageMixin">
 <a class="viewcode-back" href="../../../../reference/scripts.html#omegaml.mixins.store.package.PythonPackageMixin">[docs]</a>
-<span></span><span class="linenos"> 1</span><span class="k">class</span><span class="w"> </span><span class="nc">PythonPackageMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="linenos"> 2</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="linenos"> 1</span><span class="k">class</span><span class="w"> </span><span class="nc">PythonPackageMixin</span><span class="p">:</span>
+<span class="linenos"> 2</span><span class="w">    </span><span class="sd">"""</span>
 <span class="linenos"> 3</span><span class="sd">    Install and load scripts</span>
-<span class="linenos"> 4</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos"> 4</span><span class="sd">    """</span>
+<span class="linenos"> 5</span>
 <div class="viewcode-block" id="PythonPackageMixin.install">
 <a class="viewcode-back" href="../../../../reference/scripts.html#omegaml.mixins.store.package.PythonPackageMixin.install">[docs]</a>
-<span class="linenos"> 5</span>    <span class="k">def</span><span class="w"> </span><span class="nf">install</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="linenos"> 6</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="linenos"> 7</span><span class="sd">        install and load packages</span>
-<span class="linenos"> 8</span>
-<span class="linenos"> 9</span><span class="sd">        This is a convenience function to install one or more packages at once.</span>
-<span class="linenos">10</span><span class="sd">        It is the equivalent of</span>
-<span class="linenos">11</span>
-<span class="linenos">12</span><span class="sd">            for pkg in [&#39;name1&#39;, &#39;name2&#39;]:</span>
-<span class="linenos">13</span><span class="sd">                om.scripts.get(pkg)</span>
-<span class="linenos">14</span>
-<span class="linenos">15</span><span class="sd">        Args:</span>
-<span class="linenos">16</span><span class="sd">            specs (str, list): optional, package name or list of names,</span>
-<span class="linenos">17</span><span class="sd">                defaults to self.list()</span>
-<span class="linenos">18</span><span class="sd">            keep (bool): optional, will keep any packages installed in sys.path,</span>
-<span class="linenos">19</span><span class="sd">                defaults to False</span>
-<span class="linenos">20</span><span class="sd">        &quot;&quot;&quot;</span>
-<span class="linenos">21</span>        <span class="n">specs</span> <span class="o">=</span> <span class="n">specs</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
-<span class="linenos">22</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">specs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-<span class="linenos">23</span>            <span class="n">specs</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-<span class="linenos">24</span>        <span class="k">for</span> <span class="n">pkgname</span> <span class="ow">in</span> <span class="n">specs</span><span class="p">:</span>
-<span class="linenos">25</span>            <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pkgname</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="n">keep</span><span class="p">)</span></div>
+<span class="linenos"> 6</span>    <span class="k">def</span><span class="w"> </span><span class="nf">install</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="linenos"> 7</span><span class="w">        </span><span class="sd">"""</span>
+<span class="linenos"> 8</span><span class="sd">        install and load packages</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="sd">        This is a convenience function to install one or more packages at once.</span>
+<span class="linenos">11</span><span class="sd">        It is the equivalent of</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="sd">            for pkg in ['name1', 'name2']:</span>
+<span class="linenos">14</span><span class="sd">                om.scripts.get(pkg)</span>
+<span class="linenos">15</span>
+<span class="linenos">16</span><span class="sd">        Args:</span>
+<span class="linenos">17</span><span class="sd">            specs (str, list): optional, package name or list of names,</span>
+<span class="linenos">18</span><span class="sd">                defaults to self.list()</span>
+<span class="linenos">19</span><span class="sd">            keep (bool): optional, will keep any packages installed in sys.path,</span>
+<span class="linenos">20</span><span class="sd">                defaults to False</span>
+<span class="linenos">21</span><span class="sd">        """</span>
+<span class="linenos">22</span>        <span class="n">specs</span> <span class="o">=</span> <span class="n">specs</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+<span class="linenos">23</span>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">specs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<span class="linenos">24</span>            <span class="n">specs</span> <span class="o">=</span> <span class="n">specs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">' '</span><span class="p">)</span>
+<span class="linenos">25</span>        <span class="k">for</span> <span class="n">pkgname</span> <span class="ow">in</span> <span class="n">specs</span><span class="p">:</span>
+<span class="linenos">26</span>            <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pkgname</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="n">keep</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

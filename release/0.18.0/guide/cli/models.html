@@ -15,8 +15,8 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -149,7 +149,7 @@ fitted model.</p>
 <span class="p">[]</span> <span class="kn">from</span><span class="w"> </span><span class="nn">mymodule</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_model</span>
 
    <span class="n">mdl</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">()</span>
-   <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mdl</span><span class="p">,</span> <span class="s1">&#39;regmodel&#39;</span><span class="p">)</span>
+   <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mdl</span><span class="p">,</span> <span class="s1">'regmodel'</span><span class="p">)</span>
    <span class="o">=&gt;</span> <span class="n">Metadata</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">regmodel</span><span class="p">,</span><span class="n">bucket</span><span class="o">=</span><span class="n">omegaml</span><span class="p">,</span><span class="n">prefix</span><span class="o">=</span><span class="n">models</span><span class="o">/</span><span class="p">,</span><span class="n">kind</span><span class="o">=</span><span class="n">sklearn</span><span class="o">.</span><span class="n">joblib</span><span class="p">,</span><span class="n">created</span><span class="o">=</span><span class="mi">2021</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">18</span> <span class="mi">20</span><span class="p">:</span><span class="mi">55</span><span class="p">:</span><span class="mf">07.161042</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -162,7 +162,7 @@ fitted model.</p>
 <p>Listing models follows the common pattern syntax. No pattern is equal to
 the generic pattern <code class="code docutils literal notranslate"><span class="pre">*</span></code>, which finds all contents</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>models<span class="w"> </span>list<span class="w"> </span>reg*
-<span class="o">[</span><span class="s1">&#39;regmodel&#39;</span><span class="o">]</span>
+<span class="o">[</span><span class="s1">'regmodel'</span><span class="o">]</span>
 </pre></div>
 </div>
 <p>Using the <code class="code docutils literal notranslate"><span class="pre">--raw</span></code> option prints the corresponding Metadata entries:</p>
@@ -193,41 +193,41 @@ True
 </div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>models<span class="w"> </span>metadata<span class="w"> </span>regmodel
 <span class="o">{</span>
-<span class="w">  </span><span class="s2">&quot;_id&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">    </span><span class="s2">&quot;</span><span class="nv">$oid</span><span class="s2">&quot;</span>:<span class="w"> </span><span class="s2">&quot;602ec61b0664b73eb299d1e5&quot;</span>
+<span class="w">  </span><span class="s2">"_id"</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="s2">"</span><span class="nv">$oid</span><span class="s2">"</span>:<span class="w"> </span><span class="s2">"602ec61b0664b73eb299d1e5"</span>
 <span class="w">  </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="s2">&quot;regmodel&quot;</span>,
-<span class="w">  </span><span class="s2">&quot;bucket&quot;</span>:<span class="w"> </span><span class="s2">&quot;omegaml&quot;</span>,
-<span class="w">  </span><span class="s2">&quot;prefix&quot;</span>:<span class="w"> </span><span class="s2">&quot;models/&quot;</span>,
-<span class="w">  </span><span class="s2">&quot;kind&quot;</span>:<span class="w"> </span><span class="s2">&quot;sklearn.joblib&quot;</span>,
-<span class="w">  </span><span class="s2">&quot;kind_meta&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">    </span><span class="s2">&quot;_om_backend_version&quot;</span>:<span class="w"> </span><span class="s2">&quot;1&quot;</span>
+<span class="w">  </span><span class="s2">"name"</span>:<span class="w"> </span><span class="s2">"regmodel"</span>,
+<span class="w">  </span><span class="s2">"bucket"</span>:<span class="w"> </span><span class="s2">"omegaml"</span>,
+<span class="w">  </span><span class="s2">"prefix"</span>:<span class="w"> </span><span class="s2">"models/"</span>,
+<span class="w">  </span><span class="s2">"kind"</span>:<span class="w"> </span><span class="s2">"sklearn.joblib"</span>,
+<span class="w">  </span><span class="s2">"kind_meta"</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="s2">"_om_backend_version"</span>:<span class="w"> </span><span class="s2">"1"</span>
 <span class="w">  </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;attributes&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">    </span><span class="s2">&quot;versions&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">&quot;tags&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">        </span><span class="s2">&quot;latest&quot;</span>:<span class="w"> </span><span class="s2">&quot;b434c293f03a925a3932895ca1f11a7144093db7&quot;</span>
+<span class="w">  </span><span class="s2">"attributes"</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="s2">"versions"</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">      </span><span class="s2">"tags"</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span><span class="s2">"latest"</span>:<span class="w"> </span><span class="s2">"b434c293f03a925a3932895ca1f11a7144093db7"</span>
 <span class="w">      </span><span class="o">}</span>,
-<span class="w">      </span><span class="s2">&quot;commits&quot;</span>:<span class="w"> </span><span class="o">[</span>
+<span class="w">      </span><span class="s2">"commits"</span>:<span class="w"> </span><span class="o">[</span>
 <span class="w">        </span><span class="o">{</span>
-<span class="w">          </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="s2">&quot;_versions/regmodel/b434c293f03a925a3932895ca1f11a7144093db7&quot;</span>,
-<span class="w">          </span><span class="s2">&quot;ref&quot;</span>:<span class="w"> </span><span class="s2">&quot;b434c293f03a925a3932895ca1f11a7144093db7&quot;</span>
+<span class="w">          </span><span class="s2">"name"</span>:<span class="w"> </span><span class="s2">"_versions/regmodel/b434c293f03a925a3932895ca1f11a7144093db7"</span>,
+<span class="w">          </span><span class="s2">"ref"</span>:<span class="w"> </span><span class="s2">"b434c293f03a925a3932895ca1f11a7144093db7"</span>
 <span class="w">        </span><span class="o">}</span>
 <span class="w">      </span><span class="o">]</span>,
-<span class="w">      </span><span class="s2">&quot;tree&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">        </span><span class="s2">&quot;b434c293f03a925a3932895ca1f11a7144093db7&quot;</span>:<span class="w"> </span><span class="s2">&quot;latest&quot;</span>
+<span class="w">      </span><span class="s2">"tree"</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span><span class="s2">"b434c293f03a925a3932895ca1f11a7144093db7"</span>:<span class="w"> </span><span class="s2">"latest"</span>
 <span class="w">      </span><span class="o">}</span>
 <span class="w">    </span><span class="o">}</span>
 <span class="w">  </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;s3file&quot;</span>:<span class="w"> </span><span class="o">{}</span>,
-<span class="w">  </span><span class="s2">&quot;created&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">    </span><span class="s2">&quot;</span><span class="nv">$date</span><span class="s2">&quot;</span>:<span class="w"> </span><span class="m">1613681707161</span>
+<span class="w">  </span><span class="s2">"s3file"</span>:<span class="w"> </span><span class="o">{}</span>,
+<span class="w">  </span><span class="s2">"created"</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="s2">"</span><span class="nv">$date</span><span class="s2">"</span>:<span class="w"> </span><span class="m">1613681707161</span>
 <span class="w">  </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;modified&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">    </span><span class="s2">&quot;</span><span class="nv">$date</span><span class="s2">&quot;</span>:<span class="w"> </span><span class="m">1613681707433</span>
+<span class="w">  </span><span class="s2">"modified"</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="s2">"</span><span class="nv">$date</span><span class="s2">"</span>:<span class="w"> </span><span class="m">1613681707433</span>
 <span class="w">  </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;gridfile&quot;</span>:<span class="w"> </span><span class="o">{</span>
-<span class="w">    </span><span class="s2">&quot;</span><span class="nv">$oid</span><span class="s2">&quot;</span>:<span class="w"> </span><span class="s2">&quot;602ec61b0664b73eb299d1e3&quot;</span>
+<span class="w">  </span><span class="s2">"gridfile"</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="s2">"</span><span class="nv">$oid</span><span class="s2">"</span>:<span class="w"> </span><span class="s2">"602ec61b0664b73eb299d1e3"</span>
 <span class="w">  </span><span class="o">}</span>
 <span class="o">}</span>
 </pre></div>

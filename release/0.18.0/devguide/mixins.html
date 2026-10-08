@@ -15,8 +15,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -120,7 +120,7 @@ convert the Yaml documents to Pyton dictionaries first, and then use
        <span class="k">except</span><span class="p">:</span>
           <span class="k">pass</span> <span class="c1"># assume obj was some other valid type</span>
        <span class="k">else</span><span class="p">:</span>
-          <span class="n">attributes</span><span class="p">[</span><span class="s1">&#39;as_yaml&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+          <span class="n">attributes</span><span class="p">[</span><span class="s1">'as_yaml'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
        <span class="c1"># call the default implementation</span>
        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">YamlDataMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="n">attributes</span><span class="p">,</span>
                                             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -128,7 +128,7 @@ convert the Yaml documents to Pyton dictionaries first, and then use
    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
        <span class="n">data</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">YamlDataMixin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-       <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;as_yaml&#39;</span><span class="p">):</span>
+       <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'as_yaml'</span><span class="p">):</span>
            <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">puts</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
        <span class="k">return</span> <span class="n">data</span>
 </pre></div>
@@ -160,7 +160,7 @@ convenience.</p>
 <span class="k">class</span><span class="w"> </span><span class="nc">CrossValidationMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cross_validate</span><span class="p">(</span><span class="n">modelName</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
          <span class="c1"># get the cross validation task</span>
-         <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="s1">&#39;custom.tasks.cross_validate&#39;</span><span class="p">)</span>
+         <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="s1">'custom.tasks.cross_validate'</span><span class="p">)</span>
          <span class="k">return</span> <span class="n">task</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">modelName</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
@@ -178,7 +178,7 @@ convenience.</p>
 </div>
 <p>To enable this mixin, add the class to <code class="code docutils literal notranslate"><span class="pre">om.defaults.OMEGA_RUNTIME_MIXINS</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OMEGA_STORE_MIXINS</span> <span class="o">=</span> <span class="p">[</span>
-  <span class="s1">&#39;crossvalidate.CrossValidationMixin&#39;</span><span class="p">,</span>
+  <span class="s1">'crossvalidate.CrossValidationMixin'</span><span class="p">,</span>
 <span class="p">]</span>
 </pre></div>
 </div>

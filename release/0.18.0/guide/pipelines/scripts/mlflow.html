@@ -15,8 +15,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -108,38 +108,38 @@ to form a cloud-agnostic runtime platform for easy remote pipeline execution.</p
 <section id="deploying-a-local-mlflow-project">
 <h2>Deploying a local mlflow project<a class="headerlink" href="#deploying-a-local-mlflow-project" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># deploy the mlflow project to omega-ml runtime</span>
-<span class="n">mlflow_path</span> <span class="o">=</span> <span class="s1">&#39;/path/to/mlflow/project&#39;</span>
-<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mlflow_path</span><span class="p">,</span> <span class="s1">&#39;myproject&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;mlflow.project&#39;</span><span class="p">)</span>
+<span class="n">mlflow_path</span> <span class="o">=</span> <span class="s1">'/path/to/mlflow/project'</span>
+<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mlflow_path</span><span class="p">,</span> <span class="s1">'myproject'</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">'mlflow.project'</span><span class="p">)</span>
 
 <span class="c1"># run the project in a remote runtime worker</span>
-<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">&#39;myproject&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">entry_point</span><span class="o">=</span><span class="s1">&#39;main.py&#39;</span><span class="p">,</span> <span class="n">conda</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">'myproject'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">entry_point</span><span class="o">=</span><span class="s1">'main.py'</span><span class="p">,</span> <span class="n">conda</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>As an alternative to specify <code class="code docutils literal notranslate"><span class="pre">kind=mlflow.project</span></code>, we can use
 the <code class="code docutils literal notranslate"><span class="pre">mlflow://</span></code> prefix:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlflow_path</span> <span class="o">=</span> <span class="s1">&#39;mlflow:///path/to/mlflow/project&#39;</span>
-<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mlflow_path</span><span class="p">,</span> <span class="s1">&#39;myproject&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;mlflow.project&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlflow_path</span> <span class="o">=</span> <span class="s1">'mlflow:///path/to/mlflow/project'</span>
+<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mlflow_path</span><span class="p">,</span> <span class="s1">'myproject'</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">'mlflow.project'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="deploying-a-git-based-mlflow-project">
 <h2>Deploying a git-based mlflow project<a class="headerlink" href="#deploying-a-git-based-mlflow-project" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># deploy the mlflow project to omega-ml runtime from github</span>
-<span class="n">project_path</span> <span class="o">=</span> <span class="s1">&#39;https://github.com/mlflow/mlflow#examples/quickstart&#39;</span>
-<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mlflow_path</span><span class="p">,</span> <span class="s1">&#39;myproject&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;mlflow.project&#39;</span><span class="p">)</span>
+<span class="n">project_path</span> <span class="o">=</span> <span class="s1">'https://github.com/mlflow/mlflow#examples/quickstart'</span>
+<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mlflow_path</span><span class="p">,</span> <span class="s1">'myproject'</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">'mlflow.project'</span><span class="p">)</span>
 
 <span class="c1"># run the project in a remote runtime worker</span>
-<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">&#39;myproject&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">entry_point</span><span class="o">=</span><span class="s1">&#39;mlflow_tracking.py&#39;</span><span class="p">,</span> <span class="n">conda</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">'myproject'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">entry_point</span><span class="o">=</span><span class="s1">'mlflow_tracking.py'</span><span class="p">,</span> <span class="n">conda</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>As an alternative to specify <code class="code docutils literal notranslate"><span class="pre">kind=mlflow.gitproject</span></code>, we can use
 the <code class="code docutils literal notranslate"><span class="pre">mlflow+ssh://</span></code> prefix:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># deploy the mlflow project to omega-ml runtime from github</span>
-<span class="n">project_path</span> <span class="o">=</span> <span class="s1">&#39;mlflow+ssh://git@github.com/mlflow/mlflow#examples/quickstart&#39;</span>
-<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mlflow_path</span><span class="p">,</span> <span class="s1">&#39;myproject&#39;</span><span class="p">)</span>
+<span class="n">project_path</span> <span class="o">=</span> <span class="s1">'mlflow+ssh://git@github.com/mlflow/mlflow#examples/quickstart'</span>
+<span class="n">meta</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mlflow_path</span><span class="p">,</span> <span class="s1">'myproject'</span><span class="p">)</span>
 
 <span class="c1"># run the project in a remote runtime worker</span>
-<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">&#39;myproject&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">entry_point</span><span class="o">=</span><span class="s1">&#39;mlflow_tracking.py&#39;</span><span class="p">,</span> <span class="n">conda</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">'myproject'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">entry_point</span><span class="o">=</span><span class="s1">'mlflow_tracking.py'</span><span class="p">,</span> <span class="n">conda</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

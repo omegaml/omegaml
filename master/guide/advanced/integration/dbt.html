@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deploying dbt projects &mdash; omega-ml 0.18.0 documentation</title>
+  <title>Deploying dbt projects &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
@@ -14,9 +14,9 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -83,13 +83,6 @@
       </nav>
 
       <div class="wy-nav-content">
-
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../../release/0.18.0/guide/advanced/integration/dbt.html">release/0.18.0</a>.
-    
-</div>
 
 
         <div class="rst-content">
@@ -162,23 +155,23 @@ in which the dbt project will run.</p>
 <p>The <cite>__init__.py</cite> file should look like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># /path/to/dbt/myproject/__init__.py</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">update_dbt_profile</span><span class="p">(</span><span class="n">fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">om</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    update dbt profiles.yaml with omegaml defaults</span>
 
 <span class="sd">    Usage:</span>
 <span class="sd">        import omegaml as om</span>
-<span class="sd">        mod = om.scripts.get(&#39;dbt/foo&#39;, install=True)</span>
+<span class="sd">        mod = om.scripts.get('dbt/foo', install=True)</span>
 <span class="sd">        update_dbt_profile(mod=mod, om=om)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-    <span class="n">default_fn</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;__file__&#39;</span><span class="p">,</span> <span class="vm">__file__</span><span class="p">))</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">&#39;profiles.yml&#39;</span>
+    <span class="n">default_fn</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">'__file__'</span><span class="p">,</span> <span class="vm">__file__</span><span class="p">))</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">'profiles.yml'</span>
     <span class="n">fn</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="k">if</span> <span class="n">fn</span> <span class="k">else</span> <span class="n">default_fn</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">fn</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;dbt profiles.yml not found at </span><span class="si">{</span><span class="n">fn</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'dbt profiles.yml not found at </span><span class="si">{</span><span class="n">fn</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
     <span class="nb">vars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span> <span class="k">if</span> <span class="n">om</span> <span class="k">else</span> <span class="kc">None</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">profiles</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">'w'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">profiles</span> <span class="o">=</span> <span class="n">profiles</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">vars</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">profiles</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">fn</span><span class="o">.</span><span class="n">parent</span>
@@ -195,7 +188,7 @@ in your omega-ml qualifier context):</p>
 <span class="w">    </span><span class="nt">outputs</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">prod</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sqlserver</span>
-<span class="w">        </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{OMEGA_SQL_SERVER_DRIVER}&#39;</span><span class="w"> </span><span class="c1"># (The ODBC Driver installed on your system)</span>
+<span class="w">        </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="s">'{OMEGA_SQL_SERVER_DRIVER}'</span><span class="w"> </span><span class="c1"># (The ODBC Driver installed on your system)</span>
 <span class="w">        </span><span class="nt">server</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">OMEGA_SQL_SERVER_HOST</span><span class="p p-Indicator">}</span>
 <span class="w">        </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1433</span>
 <span class="w">        </span><span class="nt">database</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">OMEGA_SQL_SERVER_DB</span><span class="p p-Indicator">}</span>
@@ -213,12 +206,12 @@ should look like this:</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">setuptools</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup</span><span class="p">,</span> <span class="n">find_packages</span>
 
 <span class="n">setup</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;myproject&#39;</span><span class="p">,</span>
-    <span class="n">version</span><span class="o">=</span><span class="s1">&#39;0.1&#39;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">'myproject'</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="s1">'0.1'</span><span class="p">,</span>
     <span class="n">packages</span><span class="o">=</span><span class="n">find_packages</span><span class="p">(),</span>
     <span class="n">include_package_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">install_requires</span><span class="o">=</span><span class="p">[</span>
-        <span class="s1">&#39;dbt-core&#39;</span><span class="p">,</span>
+        <span class="s1">'dbt-core'</span><span class="p">,</span>
     <span class="p">]</span>
 <span class="p">)</span>
 </pre></div>
@@ -254,9 +247,9 @@ serving via omegaml’s apphub</p></li>
     <span class="c1"># comment: run every Monday at midnight</span>
 <span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="c1"># (1) import dbt project and prepare dbt profile</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
-    <span class="n">project</span> <span class="o">=</span> <span class="s1">&#39;dbt/foo&#39;</span>
+    <span class="n">project</span> <span class="o">=</span> <span class="s1">'dbt/foo'</span>
     <span class="n">dbt_mod</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">install</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">project_dir</span> <span class="o">=</span> <span class="n">dbt_mod</span><span class="o">.</span><span class="n">update_dbt_profile</span><span class="p">(</span><span class="n">om</span><span class="o">=</span><span class="n">om</span><span class="p">,</span> <span class="n">OMEGA_BUCKET</span><span class="o">=</span><span class="s1">&#39;main&#39;</span><span class="p">)</span>
+    <span class="n">project_dir</span> <span class="o">=</span> <span class="n">dbt_mod</span><span class="o">.</span><span class="n">update_dbt_profile</span><span class="p">(</span><span class="n">om</span><span class="o">=</span><span class="n">om</span><span class="p">,</span> <span class="n">OMEGA_BUCKET</span><span class="o">=</span><span class="s1">'main'</span><span class="p">)</span>
 <span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="c1"># (2) run dbt project</span>
     <span class="err">!</span><span class="n">dbt</span> <span class="n">run</span> <span class="o">--</span><span class="n">profiles</span><span class="o">-</span><span class="nb">dir</span> <span class="err">$</span><span class="n">project_dir</span> <span class="o">--</span><span class="n">project</span><span class="o">-</span><span class="nb">dir</span> <span class="err">$</span><span class="n">project_dir</span>
 <span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="c1"># (3) generate docs and save to om.datasets as dbt/&lt;project&gt;/report.zip</span>
@@ -292,53 +285,53 @@ The app should look as follows:</p>
     <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 
     <span class="n">server</span> <span class="o">=</span> <span class="n">server</span> <span class="ow">or</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-    <span class="n">server</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SECRET_KEY&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">)</span>
+    <span class="n">server</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">'SECRET_KEY'</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'SECRET_KEY'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">)</span>
 
-    <span class="n">app</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span>
                     <span class="n">url_prefix</span><span class="o">=</span><span class="n">uri</span><span class="p">,</span>
-                    <span class="n">template_folder</span><span class="o">=</span><span class="s1">&#39;templates&#39;</span><span class="p">)</span>
+                    <span class="n">template_folder</span><span class="o">=</span><span class="s1">'templates'</span><span class="p">)</span>
 
     <span class="n">file_cache</span> <span class="o">=</span> <span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
     <span class="n">om</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
 
-    <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">():</span>
         <span class="c1"># present a list of project reports stored in om.datasets</span>
         <span class="c1"># -- each project report is stored as dbt/&lt;project&gt;/report.zip</span>
-        <span class="n">href</span> <span class="o">=</span> <span class="s2">&quot;&lt;a href=&#39;</span><span class="si">{uri}</span><span class="s2">/</span><span class="si">{project}</span><span class="s2">/index&#39;&gt;</span><span class="si">{project}</span><span class="s2">&lt;/a&gt;&lt;br&gt;&quot;</span>
+        <span class="n">href</span> <span class="o">=</span> <span class="s2">"&lt;a href='</span><span class="si">{uri}</span><span class="s2">/</span><span class="si">{project}</span><span class="s2">/index'&gt;</span><span class="si">{project}</span><span class="s2">&lt;/a&gt;&lt;br&gt;"</span>
         <span class="n">projects</span> <span class="o">=</span> <span class="p">[</span><span class="n">href</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">project</span><span class="p">)),</span>
-                                <span class="n">uri</span><span class="o">=</span><span class="n">uri</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s1">&#39;dbt/*&#39;</span><span class="p">)]</span>
-        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&lt;p&gt;select a project to view its dbt report&lt;/p&gt;&quot;</span>
-        <span class="k">return</span> <span class="n">text</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">projects</span><span class="p">)</span> <span class="k">if</span> <span class="n">projects</span> <span class="k">else</span> <span class="s2">&quot;No projects found&quot;</span>
+                                <span class="n">uri</span><span class="o">=</span><span class="n">uri</span> <span class="ow">or</span> <span class="s1">''</span><span class="p">)</span> <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="s1">'dbt/*'</span><span class="p">)]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">"&lt;p&gt;select a project to view its dbt report&lt;/p&gt;"</span>
+        <span class="k">return</span> <span class="n">text</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">projects</span><span class="p">)</span> <span class="k">if</span> <span class="n">projects</span> <span class="k">else</span> <span class="s2">"No projects found"</span>
 
-    <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&lt;project&gt;/index&#39;</span><span class="p">)</span>
+    <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">'/&lt;project&gt;/index'</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">project</span><span class="p">(</span><span class="n">project</span><span class="p">):</span>
-        <span class="c1"># open the project report&#39;s index.html</span>
+        <span class="c1"># open the project report's index.html</span>
         <span class="n">_send_report_file</span><span class="o">.</span><span class="n">cache_clear</span><span class="p">()</span>
-        <span class="n">project_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;dbt/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s1">&#39;</span>
-        <span class="k">return</span> <span class="n">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">)</span>
+        <span class="n">project_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'dbt/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s1">'</span>
+        <span class="k">return</span> <span class="n">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s1">'index.html'</span><span class="p">)</span>
 
-    <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&lt;project&gt;/&lt;path:path&gt;&#39;</span><span class="p">)</span>
+    <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">'/&lt;project&gt;/&lt;path:path&gt;'</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">static_file</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="c1"># open a static file from the project report</span>
-        <span class="n">project_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;dbt/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">project_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'dbt/</span><span class="si">{</span><span class="n">project</span><span class="si">}</span><span class="s1">'</span>
         <span class="k">return</span> <span class="n">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">handle_exception</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
-            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
-            <span class="s2">&quot;exception&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">"code"</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="s2">"exception"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
         <span class="p">},</span> <span class="mi">404</span>
 
     <span class="nd">@file_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_send_report_file</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-        <span class="n">report_fn</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">project_dir</span><span class="si">}</span><span class="s1">/report.zip&#39;</span>
+        <span class="n">report_fn</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">project_dir</span><span class="si">}</span><span class="s1">/report.zip'</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">report_fn</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">zipfile</span> <span class="o">=</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;report/</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="sa">f</span><span class="s1">'report/</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
                 <span class="n">zipfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
@@ -432,11 +425,11 @@ into a single dbtdeploy application.</p>
 [1] # cron: 0 0 * * 1
     # comment: run every Monday at midnight
 [2] # (1) import dbt project and prepare dbt profile
-    dbtdeploy = om.scripts.get(&#39;dbt/dbtdeploy&#39;, install=True)
+    dbtdeploy = om.scripts.get('dbt/dbtdeploy', install=True)
     dbt_dir = Path(dbtdeploy.__file__).parent
-    dbtdeploy.update_dbt_profile(f&quot;{dbt_dir}/profiles.yml&quot;, om=om)
+    dbtdeploy.update_dbt_profile(f"{dbt_dir}/profiles.yml", om=om)
 [3] # (2) run dbt projects (repeat (2) and (3) for each dbt project)
-    project_dir =  dbt_dir / &#39;foo`
+    project_dir =  dbt_dir / 'foo`
     !dbt run --profiles-dir $dbt_dir --project-dir $project_dir
 [4] # (3) generate docs and save to om.datasets as dbt/&lt;project&gt;/report.zip
     # generate docs

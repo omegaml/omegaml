@@ -15,8 +15,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -126,10 +126,10 @@ is properly initialized.</p>
 <p><code class="code docutils literal notranslate"><span class="pre">kwargs</span></code> will contain the key/value pair passed to the module on execution.</p>
 <p>The simplest <code class="code docutils literal notranslate"><span class="pre">setup.py</span></code> is as simple as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">distutils.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup</span>
-<span class="n">setup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;helloworld&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span>
-      <span class="n">description</span><span class="o">=</span><span class="s1">&#39;simple omegaml hello world script&#39;</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="s1">&#39;omegaml&#39;</span><span class="p">,</span>
-      <span class="n">author_email</span><span class="o">=</span><span class="s1">&#39;info@omegaml.io&#39;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s1">&#39;http://omegaml.io&#39;</span><span class="p">,</span>
-      <span class="n">packages</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;helloworld&#39;</span><span class="p">],)</span>
+<span class="n">setup</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'helloworld'</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">'1.0'</span><span class="p">,</span>
+      <span class="n">description</span><span class="o">=</span><span class="s1">'simple omegaml hello world script'</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="s1">'omegaml'</span><span class="p">,</span>
+      <span class="n">author_email</span><span class="o">=</span><span class="s1">'info@omegaml.io'</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s1">'http://omegaml.io'</span><span class="p">,</span>
+      <span class="n">packages</span><span class="o">=</span><span class="p">[</span><span class="s1">'helloworld'</span><span class="p">],)</span>
 </pre></div>
 </div>
 </section>
@@ -137,7 +137,7 @@ is properly initialized.</p>
 <h2>Deploying a module<a class="headerlink" href="#deploying-a-module" title="Link to this heading">¶</a></h2>
 <p>To deploy a script programmatically use <code class="code docutils literal notranslate"><span class="pre">om.scripts.put()</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># the pkg:// prefix triggers the python.package plugin</span>
-<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;pkg://path/to/helloworld`, &#39;</span><span class="n">helloworld</span><span class="s1">&#39;)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'pkg://path/to/helloworld`, '</span><span class="n">helloworld</span><span class="s1">')</span>
 </pre></div>
 </div>
 <p>Alternatively use the cli to achieve the same:</p>
@@ -172,11 +172,11 @@ following locations:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>POST /api/script/hellworld/?param=value
 =&gt;
 {
-    &#39;script&#39;: &#39;helloworld&#39;
-    &#39;kwargs&#39;: { &#39;param&#39;: value },
-    &#39;result&#39;: &lt;result&gt;,
-    &#39;runtime&#39;: &lt;microseconds&gt;,
-    &#39;started&#39;: &#39;datetime in iso 8601 format&#39;,
+    'script': 'helloworld'
+    'kwargs': { 'param': value },
+    'result': &lt;result&gt;,
+    'runtime': &lt;microseconds&gt;,
+    'started': 'datetime in iso 8601 format',
 }
 </pre></div>
 </div>
@@ -184,15 +184,15 @@ following locations:</p>
 <section id="using-the-runtime-api">
 <h3>Using the runtime API<a class="headerlink" href="#using-the-runtime-api" title="Link to this heading">¶</a></h3>
 <p>Use the <code class="code docutils literal notranslate"><span class="pre">om.runtime.script(&lt;name&gt;)</span></code> API to run a module on the cluster:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">&#39;helloworld&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">script</span><span class="p">(</span><span class="s1">'helloworld'</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">foo</span><span class="o">=</span><span class="s1">'bar'</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 <span class="o">=&gt;</span>
 <span class="p">{</span>
-    <span class="s1">&#39;script&#39;</span><span class="p">:</span> <span class="s1">&#39;helloworld&#39;</span>
-    <span class="s1">&#39;kwargs&#39;</span><span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;foo&#39;</span><span class="p">:</span> <span class="s1">&#39;bar&#39;</span> <span class="p">},</span>
-    <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">result</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="s1">&#39;runtime&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">microseconds</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="s1">&#39;started&#39;</span><span class="p">:</span> <span class="s1">&#39;datetime in iso 8601 format&#39;</span><span class="p">,</span>
+    <span class="s1">'script'</span><span class="p">:</span> <span class="s1">'helloworld'</span>
+    <span class="s1">'kwargs'</span><span class="p">:</span> <span class="p">{</span> <span class="s1">'foo'</span><span class="p">:</span> <span class="s1">'bar'</span> <span class="p">},</span>
+    <span class="s1">'result'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">result</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="s1">'runtime'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">microseconds</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="s1">'started'</span><span class="p">:</span> <span class="s1">'datetime in iso 8601 format'</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>

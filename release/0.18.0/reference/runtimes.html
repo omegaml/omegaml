@@ -15,8 +15,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -78,6 +78,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.stats"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.stats()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.status"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.status()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.task"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.task()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.tasks"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.tasks</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#omegaml.runtimes.OmegaRuntime.workers"><code class="docutils literal notranslate"><span class="pre">OmegaRuntime.workers()</span></code></a></li>
 </ul>
 </li>
@@ -143,7 +144,7 @@
 </nav>
 <dl class="py data">
 <dt class="sig sig-object py" id="omegaml.runtime">
-<span class="sig-prename descclassname"><span class="pre">omegaml.</span></span><span class="sig-name descname"><span class="pre">runtime</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">OmegaRuntime(Omega(bucket=None))</span></em><a class="headerlink" href="#omegaml.runtime" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">omegaml.</span></span><span class="sig-name descname"><span class="pre">runtime</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">OmegaRuntime(Omega(bucket=None))</span></span><a class="headerlink" href="#omegaml.runtime" title="Link to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="#omegaml.runtimes.OmegaRuntime" title="omegaml.runtimes.runtime.OmegaRuntime"><code class="xref py py-class docutils literal notranslate"><span class="pre">omegaml.runtimes.runtime.OmegaRuntime</span></code></a> runtime</p>
 <p>Methods to run models, scripts, jobs, experiments:</p>
 <blockquote>
@@ -192,7 +193,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.</span></span><span class="sig-name descname"><span class="pre">OmegaRuntime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">celeryconf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.</span></span><span class="sig-name descname"><span class="pre">OmegaRuntime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">celeryconf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime" title="Link to this definition">¶</a></dt>
 <dd><p>omegaml compute cluster gateway</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.callback">
@@ -202,8 +203,8 @@
 execution of the runtime tasks. The script syntax is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># script.py</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="c1"># state (str): &#39;SUCCESS&#39;|&#39;ERROR&#39;</span>
-    <span class="c1"># result (obj): the task&#39;s serialized result</span>
+    <span class="c1"># state (str): 'SUCCESS'|'ERROR'</span>
+    <span class="c1"># result (obj): the task's serialized result</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -287,23 +288,23 @@ be kept)</p></li>
 <p>Usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># run tasks async, in sequence</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">sequence</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="c1"># run tasks async, in parallel</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">parallel</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="c1"># run tasks async, in parallel with a final step</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">mapreduce</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
     <span class="c1"># map tasks</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="c1"># reduce results - combined is a virtualobj function</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;combined&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'combined'</span><span class="p">)</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="c1"># combined is a virtual obj function, e.g.</span>
@@ -352,7 +353,7 @@ CRITICAL, DEBUG</p></li>
 <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">logging</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># select a specific module and level)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">logging</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;sklearn&#39;</span><span class="p">,</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">))</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">logging</span><span class="o">=</span><span class="p">(</span><span class="s1">'sklearn'</span><span class="p">,</span> <span class="s1">'DEBUG'</span><span class="p">))</span>
 
 <span class="c1"># disable logging</span>
 <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">logging</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -384,23 +385,23 @@ CRITICAL, DEBUG</p></li>
 <p>Usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># run tasks async, in sequence</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">sequence</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="c1"># run tasks async, in parallel</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">parallel</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="c1"># run tasks async, in parallel with a final step</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">mapreduce</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
     <span class="c1"># map tasks</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="c1"># reduce results - combined is a virtualobj function</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;combined&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'combined'</span><span class="p">)</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="c1"># combined is a virtual obj function, e.g.</span>
@@ -527,23 +528,23 @@ call has been submitted.</p>
 <p>Usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># run tasks async, in sequence</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">sequence</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="c1"># run tasks async, in parallel</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">parallel</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="c1"># run tasks async, in parallel with a final step</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">mapreduce</span><span class="p">()</span> <span class="k">as</span> <span class="n">crt</span><span class="p">:</span>
     <span class="c1"># map tasks</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="c1"># reduce results - combined is a virtualobj function</span>
-    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;combined&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="n">crt</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'combined'</span><span class="p">)</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">crt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="c1"># combined is a virtual obj function, e.g.</span>
@@ -635,6 +636,15 @@ recently sent a heartbeat and may not be accurate across the cluster.</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.tasks">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tasks</span></span><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.tasks" title="Link to this definition">¶</a></dt>
+<dd><p>return registered task names</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 0.18.2.</span></p>
+</div>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.OmegaRuntime.workers">
 <span class="sig-name descname"><span class="pre">workers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/runtime.html#OmegaRuntime.workers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.OmegaRuntime.workers" title="Link to this definition">¶</a></dt>
@@ -656,7 +666,7 @@ recently sent a heartbeat and may not be accurate across the cluster.</p>
 <h2><a class="toc-backref" href="#id6" role="doc-backlink">Backends</a><a class="headerlink" href="#backends" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.loky.OmegaRuntimeBackend">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.loky.</span></span><span class="sig-name descname"><span class="pre">OmegaRuntimeBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/loky.html#OmegaRuntimeBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.loky.</span></span><span class="sig-name descname"><span class="pre">OmegaRuntimeBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/loky.html#OmegaRuntimeBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.loky.OmegaRuntimeBackend" title="Link to this definition">¶</a></dt>
 <dd><p>omega custom parallel backend to print progress</p>
 <p>TODO: extend for celery dispatching</p>
 <dl class="py method">
@@ -684,11 +694,11 @@ recently sent a heartbeat and may not be accurate across the cluster.</p>
 <h2><a class="toc-backref" href="#id7" role="doc-backlink">Mixins</a><a class="headerlink" href="#mixins" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.</span></span><span class="sig-name descname"><span class="pre">ModelMixin</span></span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.</span></span><span class="sig-name descname"><span class="pre">ModelMixin</span></span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin" title="Link to this definition">¶</a></dt>
 <dd><p>mixin methods to OmegaModelProxy</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.complete">
-<span class="sig-name descname"><span class="pre">complete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.complete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.complete" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">complete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.complete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.complete" title="Link to this definition">¶</a></dt>
 <dd><p>Calls <code class="code docutils literal notranslate"><span class="pre">.complete(X)</span></code>. If rName is given the result is
 stored as object rName</p>
 <dl class="field-list simple">
@@ -727,7 +737,7 @@ dataset if rName was given</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.embed">
-<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.embed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.embed" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.embed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.embed" title="Link to this definition">¶</a></dt>
 <dd><p>Calls <code class="code docutils literal notranslate"><span class="pre">.embed(X)</span></code>. If rName is given the result is
 stored as object rName</p>
 <dl class="field-list simple">
@@ -813,7 +823,7 @@ version used.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.ModelMixin.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xpath_or_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.predict" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/modelmixin.html#ModelMixin.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.ModelMixin.predict" title="Link to this definition">¶</a></dt>
 <dd><p>Calls <code class="code docutils literal notranslate"><span class="pre">.predict(X)</span></code>. If rName is given the result is
 stored as object rName</p>
 <dl class="field-list simple">
@@ -895,7 +905,7 @@ dataset if rName was given</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.GridSearchMixin">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.</span></span><span class="sig-name descname"><span class="pre">GridSearchMixin</span></span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/gridsearch.html#GridSearchMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.GridSearchMixin" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.</span></span><span class="sig-name descname"><span class="pre">GridSearchMixin</span></span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/gridsearch.html#GridSearchMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.GridSearchMixin" title="Link to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.GridSearchMixin.gridsearch">
 <span class="sig-name descname"><span class="pre">gridsearch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Xname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Yname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_python</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/gridsearch.html#GridSearchMixin.gridsearch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.GridSearchMixin.gridsearch" title="Link to this definition">¶</a></dt>
@@ -923,7 +933,7 @@ the data object</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="omegaml.runtimes.mixins.taskcanvas.CanvasTask">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.taskcanvas.</span></span><span class="sig-name descname"><span class="pre">CanvasTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canvasfn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/taskcanvas.html#CanvasTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.taskcanvas.CanvasTask" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">omegaml.runtimes.mixins.taskcanvas.</span></span><span class="sig-name descname"><span class="pre">CanvasTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">canvasfn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/omegaml/runtimes/mixins/taskcanvas.html#CanvasTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#omegaml.runtimes.mixins.taskcanvas.CanvasTask" title="Link to this definition">¶</a></dt>
 <dd><p>support for canvas tasks</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>omega-ml - snowflake demo &mdash; omega-ml 0.18.0 documentation</title>
+  <title>omega-ml - snowflake demo &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
@@ -15,12 +15,12 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -65,13 +65,6 @@
       </nav>
 
       <div class="wy-nav-content">
-
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../release/0.18.0/index.html">release/0.18.0</a>.
-    
-</div>
 
 
         <div class="rst-content">
@@ -120,7 +113,8 @@
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># install dependencies</span>
 <span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>-U<span class="w"> </span>snowflake-sqlalchemy
 <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.dialects</span><span class="w"> </span><span class="kn">import</span> <span class="n">registry</span>
-<span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;snowflake&#39;</span><span class="p">,</span> <span class="s1">&#39;snowflake.sqlalchemy&#39;</span><span class="p">,</span> <span class="s1">&#39;dialect&#39;</span><span class="p">)</span>
+
+<span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">'snowflake'</span><span class="p">,</span> <span class="s1">'snowflake.sqlalchemy'</span><span class="p">,</span> <span class="s1">'dialect'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -130,7 +124,7 @@
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 
-<span class="n">secrets</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;secrets&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">secrets</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'secrets'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -139,11 +133,11 @@
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># build connection string</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">getpass</span><span class="w"> </span><span class="kn">import</span> <span class="n">getpass</span>
-<span class="c1">#user = input(&#39;snowflake user name&gt; &#39;)</span>
-<span class="c1">#password = getpass(&#39;snowflake password&gt; &#39;)</span>
-<span class="c1">#account = input(&#39;snowflake account (remove .snowflake.com)&gt; &#39;)</span>
-<span class="n">snowflake_cxstr</span> <span class="o">=</span> <span class="s1">&#39;snowflake://</span><span class="si">{user}</span><span class="s1">:</span><span class="si">{password}</span><span class="s1">@</span><span class="si">{account}</span><span class="s1">/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">secrets</span><span class="p">)</span>
+
+<span class="c1"># user = input('snowflake user name&gt; ')</span>
+<span class="c1"># password = getpass('snowflake password&gt; ')</span>
+<span class="c1"># account = input('snowflake account (remove .snowflake.com)&gt; ')</span>
+<span class="n">snowflake_cxstr</span> <span class="o">=</span> <span class="s1">'snowflake://</span><span class="si">{user}</span><span class="s1">:</span><span class="si">{password}</span><span class="s1">@</span><span class="si">{account}</span><span class="s1">/'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">secrets</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -152,9 +146,9 @@
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># store just the connection</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">snowflake_cxstr</span><span class="p">,</span> <span class="s1">&#39;mysnowflake&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">snowflake_cxstr</span><span class="p">,</span> <span class="s1">'mysnowflake'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -172,10 +166,9 @@
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># store a connection reference with sql</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">snowflake_cxstr</span><span class="p">,</span> <span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span>
-                <span class="n">sql</span><span class="o">=</span><span class="s1">&#39;select count(*) from snowflake_sample_data.tpch_sf1.lineitem&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">snowflake_cxstr</span><span class="p">,</span> <span class="s1">'mysnowflake'</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="s1">'select count(*) from snowflake_sample_data.tpch_sf1.lineitem'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -219,10 +212,9 @@
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># query the connection with a specific sql, returning a pandas dataframe</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">snowflake_cxstr</span><span class="p">,</span> <span class="s1">&#39;mysnowflake&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span>
-                <span class="n">sql</span><span class="o">=</span><span class="s1">&#39;select count(*) from snowflake_sample_data.tpch_sf1.lineitem&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">snowflake_cxstr</span><span class="p">,</span> <span class="s1">'mysnowflake'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="s1">'select count(*) from snowflake_sample_data.tpch_sf1.lineitem'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -266,12 +258,11 @@
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># copy the dataset to a native omegaml dataset</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">snowflake_cxstr</span><span class="p">,</span>
-                <span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span>
-                <span class="n">sql</span><span class="o">=</span><span class="s1">&#39;select count(*) from snowflake_sample_data.tpch_sf1.lineitem&#39;</span><span class="p">,</span>
-                <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+    <span class="n">snowflake_cxstr</span><span class="p">,</span> <span class="s1">'mysnowflake'</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="s1">'select count(*) from snowflake_sample_data.tpch_sf1.lineitem'</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -323,15 +314,17 @@
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># copy the dataset to a native omegaml dataset</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">snowflake_cxstr</span><span class="p">,</span>
-                <span class="s1">&#39;mysnowflake&#39;</span><span class="p">,</span>
-                <span class="n">sql</span><span class="o">=</span><span class="s1">&#39;select * from snowflake_sample_data.tpch_sf1.lineitem limit 1000&#39;</span><span class="p">,</span>
-                <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;l_shipdate&#39;</span><span class="p">,</span> <span class="s1">&#39;l_receiptdate&#39;</span><span class="p">,</span> <span class="s1">&#39;l_commitdate&#39;</span><span class="p">],</span>
-                <span class="n">chunksize</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="nb">len</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;mysnowflake&#39;</span><span class="p">))</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+    <span class="n">snowflake_cxstr</span><span class="p">,</span>
+    <span class="s1">'mysnowflake'</span><span class="p">,</span>
+    <span class="n">sql</span><span class="o">=</span><span class="s1">'select * from snowflake_sample_data.tpch_sf1.lineitem limit 1000'</span><span class="p">,</span>
+    <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">'l_shipdate'</span><span class="p">,</span> <span class="s1">'l_receiptdate'</span><span class="p">,</span> <span class="s1">'l_commitdate'</span><span class="p">],</span>
+    <span class="n">chunksize</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">'mysnowflake'</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>

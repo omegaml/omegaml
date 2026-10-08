@@ -15,8 +15,8 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -134,10 +134,10 @@ Usage:
 <span class="w">  </span>om<span class="w"> </span>runtime<span class="w"> </span><span class="o">[</span>control<span class="p">|</span>inspect<span class="p">|</span>celery<span class="o">]</span><span class="w"> </span><span class="o">[</span>&lt;celery-command&gt;...<span class="o">]</span><span class="w"> </span><span class="o">[</span>--worker<span class="o">=</span>&lt;worker&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--queue<span class="o">=</span>&lt;queue&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--celery-help<span class="o">]</span><span class="w"> </span><span class="o">[</span>--flags<span class="w"> </span>&lt;celery-flags&gt;...<span class="o">]</span><span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
 
 Options:
-<span class="w">  </span>--async<span class="w">           </span>don<span class="s1">&#39;t wait for results, will print taskid</span>
+<span class="w">  </span>--async<span class="w">           </span>don<span class="s1">'t wait for results, will print taskid</span>
 <span class="s1">  -f                tail log</span>
 <span class="s1">  --require=VALUE   worker label</span>
-<span class="s1">  --flags=VALUE     celery flags, list as &quot;--flag VALUE&quot;</span>
+<span class="s1">  --flags=VALUE     celery flags, list as "--flag VALUE"</span>
 <span class="s1">  --worker=VALUE    celery worker</span>
 <span class="s1">  --queue=VALUE     celery queue</span>
 <span class="s1">  --celery-help     show celery help</span>
@@ -160,7 +160,7 @@ Options:
 <span class="s1">    om runtime model &lt;name&gt; predict &lt;X&gt;</span>
 <span class="s1">    om runtime job &lt;name&gt;</span>
 <span class="s1">    om runtime script &lt;name&gt;</span>
-<span class="s1">    om runtime script &lt;name&gt; run myparam=&quot;value&quot;</span>
+<span class="s1">    om runtime script &lt;name&gt; run myparam="value"</span>
 
 <span class="s1">  running asynchronously</span>
 <span class="s1">  ----------------------</span>
@@ -215,7 +215,7 @@ Options:
 <span class="s1">  env commands</span>
 <span class="s1">  ------------</span>
 
-<span class="s1">  This talks to an omegaml worker&#39;</span>s<span class="w"> </span>pip<span class="w"> </span>environment
+<span class="s1">  This talks to an omegaml worker'</span>s<span class="w"> </span>pip<span class="w"> </span>environment
 
 <span class="w">  </span>a<span class="o">)</span><span class="w"> </span>install<span class="w"> </span>a<span class="w"> </span>specific<span class="w"> </span>package
 
@@ -224,8 +224,8 @@ Options:
 
 <span class="w">     </span>&lt;package&gt;<span class="w"> </span>is<span class="w"> </span><span class="k">in</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>syntax,<span class="w"> </span>e.g.
 
-<span class="w">     </span>env<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;six==1.0.0&quot;</span>
-<span class="w">     </span>env<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/user/repo.git&quot;</span>
+<span class="w">     </span>env<span class="w"> </span>install<span class="w"> </span><span class="s2">"six==1.0.0"</span>
+<span class="w">     </span>env<span class="w"> </span>install<span class="w"> </span><span class="s2">"git+https://github.com/user/repo.git"</span>
 
 <span class="w">  </span>b<span class="o">)</span><span class="w"> </span>use<span class="w"> </span>a<span class="w"> </span>requirements<span class="w"> </span>file
 
@@ -280,7 +280,7 @@ $<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </spa
 <section id="ping-the-worker">
 <h2>Ping the worker<a class="headerlink" href="#ping-the-worker" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>ping
-<span class="o">{</span><span class="s1">&#39;message&#39;</span>:<span class="w"> </span><span class="s1">&#39;ping return message&#39;</span>,<span class="w"> </span><span class="s1">&#39;time&#39;</span>:<span class="w"> </span><span class="s1">&#39;2021-02-22T13:27:49.723657&#39;</span>,<span class="w"> </span><span class="s1">&#39;args&#39;</span>:<span class="w"> </span><span class="o">()</span>,<span class="w"> </span><span class="s1">&#39;kwargs&#39;</span>:<span class="w"> </span><span class="o">{}</span>,<span class="w"> </span><span class="s1">&#39;worker&#39;</span>:<span class="w"> </span><span class="s1">&#39;celery@worker-worker-omdemo&#39;</span><span class="o">}</span>
+<span class="o">{</span><span class="s1">'message'</span>:<span class="w"> </span><span class="s1">'ping return message'</span>,<span class="w"> </span><span class="s1">'time'</span>:<span class="w"> </span><span class="s1">'2021-02-22T13:27:49.723657'</span>,<span class="w"> </span><span class="s1">'args'</span>:<span class="w"> </span><span class="o">()</span>,<span class="w"> </span><span class="s1">'kwargs'</span>:<span class="w"> </span><span class="o">{}</span>,<span class="w"> </span><span class="s1">'worker'</span>:<span class="w"> </span><span class="s1">'celery@worker-worker-omdemo'</span><span class="o">}</span>
 </pre></div>
 </div>
 </section>
@@ -292,7 +292,7 @@ $<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </spa
 </section>
 <section id="install-new-packages">
 <h2>Install new packages<a class="headerlink" href="#install-new-packages" title="Link to this heading">¶</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>env<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/omegaml/omegaml.git@enable-long-dataset-names&quot;</span><span class="w"> </span>--require<span class="w"> </span>default
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>env<span class="w"> </span>install<span class="w"> </span><span class="s2">"git+https://github.com/omegaml/omegaml.git@enable-long-dataset-names"</span><span class="w"> </span>--require<span class="w"> </span>default
 </pre></div>
 </div>
 <p>Note it is best to restart the worker to make sure the newest package versions

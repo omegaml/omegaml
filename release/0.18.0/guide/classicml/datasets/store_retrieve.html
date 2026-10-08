@@ -15,8 +15,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -123,30 +123,30 @@
 <h2>Native Python objects<a class="headerlink" href="#native-python-objects" title="Link to this heading">¶</a></h2>
 <p>Any Python native <code class="code docutils literal notranslate"><span class="pre">list</span></code> or <code class="code docutils literal notranslate"><span class="pre">dict</span></code> object can be stored and
 read back directly:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myvar</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myvar</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myvar</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'data'</span><span class="p">]</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myvar</span><span class="p">,</span> <span class="s1">'foo'</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">)</span>
 <span class="o">=&gt;</span>
-<span class="p">[[</span><span class="s1">&#39;data&#39;</span><span class="p">]]</span>
+<span class="p">[[</span><span class="s1">'data'</span><span class="p">]]</span>
 </pre></div>
 </div>
 <p>Note the result is now a list of the objects stored. This is because any
 object is stored as a document in a monogodb collection. What you get back
 is a list of all the documents in the collection. By default <code class="code docutils literal notranslate"><span class="pre">put</span></code> will
 append an existing collection with new documents.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myvar</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myvar</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myvar</span><span class="p">,</span> <span class="s1">'foo'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myvar</span><span class="p">,</span> <span class="s1">'foo'</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">)</span>
 <span class="o">=&gt;</span>
-<span class="p">[[</span><span class="s1">&#39;data&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]]</span>
+<span class="p">[[</span><span class="s1">'data'</span><span class="p">],</span> <span class="p">[</span><span class="s1">'data'</span><span class="p">],</span> <span class="p">[</span><span class="s1">'data'</span><span class="p">]]</span>
 </pre></div>
 </div>
 <p>To replace all documents in a collection use the <code class="code docutils literal notranslate"><span class="pre">append=False</span></code> kwarg.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myvar</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myvar</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myvar</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'data'</span><span class="p">]</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">myvar</span><span class="p">,</span> <span class="s1">'foo'</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">)</span>
 <span class="o">=&gt;</span>
-<span class="p">[[</span><span class="s1">&#39;data&#39;</span><span class="p">]]</span>
+<span class="p">[[</span><span class="s1">'data'</span><span class="p">]]</span>
 </pre></div>
 </div>
 </section>
@@ -155,9 +155,9 @@ append an existing collection with new documents.</p>
 <p>Pandas Dataframes are stored in much the same way. Note however that DataFrames
 provide additional support on querying, as shown in the next section</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)})</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;foodf&#39;</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;foodf&#39;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)})</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">'foodf'</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'foodf'</span><span class="p">)</span>
 <span class="o">=&gt;</span>
    <span class="n">x</span>
 <span class="mi">0</span>  <span class="mi">0</span>
@@ -180,23 +180,23 @@ For example, you could use the Pandas’ library <code class="code docutils lite
 it into <code class="code docutils literal notranslate"><span class="pre">om.datasets</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># small datasets</span>
 <span class="c1"># -- note pandas will read all of the dataset into memory, limiting the size of the dataset</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;http://example.com/data.csv&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;example_data&#39;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'http://example.com/data.csv'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">'example_data'</span><span class="p">)</span>
 
 <span class="c1"># larger then memory datasets</span>
 <span class="c1"># this will load the dataset in chunks, limitting the amount of memory pandas uses</span>
-<span class="k">for</span> <span class="n">chunk_df</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;http://example.com/data.csv&#39;</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
-    <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">chunk_df</span><span class="p">,</span> <span class="s1">&#39;example_data&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">chunk_df</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'http://example.com/data.csv'</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">chunk_df</span><span class="p">,</span> <span class="s1">'example_data'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Alternatively, omega-ml provides a convenience function, <cite>om.datasets.read_csv</cite> to ingest data
 from a wide range sources (e.g. S3, HTTPS, SFTP, HDFS, Azure Blob, GCS, etc.).</p>
 <div class="highlight-pyton notranslate"><div class="highlight"><pre><span></span># retrieve the data and store in the example_data dataset
-om.datasets.read_csv(&#39;http://example.com/data.csv&#39;, &#39;example_data&#39;)
+om.datasets.read_csv('http://example.com/data.csv', 'example_data')
 </pre></div>
 </div>
 <p>Similarly, <code class="code docutils literal notranslate"><span class="pre">om.datasets.to_csv</span></code> supports writing directly to remote locations:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;example_data&#39;</span><span class="p">,</span> <span class="s1">&#39;s3://my_bucket/example_data.csv&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'example_data'</span><span class="p">,</span> <span class="s1">'s3://my_bucket/example_data.csv'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -204,18 +204,18 @@ om.datasets.read_csv(&#39;http://example.com/data.csv&#39;, &#39;example_data&#3
 <h2>Accessing DBMS via SQL<a class="headerlink" href="#accessing-dbms-via-sql" title="Link to this heading">¶</a></h2>
 <p>If the data resides in an SQL database, <cite>om.datasets</cite> can store the connection to the database:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># one time, e.g. one person in the team can set this up</span>
-<span class="n">mydb_cxs</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;mysql://user:pass@dbhost/db&#39;</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mydb_cxs</span><span class="p">,</span> <span class="s1">&#39;mysqldb&#39;</span><span class="p">)</span>
+<span class="n">mydb_cxs</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'mysql://user:pass@dbhost/db'</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mydb_cxs</span><span class="p">,</span> <span class="s1">'mysqldb'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Once the connection is stored like this, dataframes can be stored and retrieved using the
 connection without knowing the connection string:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># store</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)})</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;mysqldb&#39;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)})</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">'mysqldb'</span><span class="p">)</span>
 
 <span class="c1"># retrieve</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mysqldb&#39;</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'mysqldb'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note by default the dataset name is used as the table name, prefixed by the bucket name (defaults to <code class="code docutils literal notranslate"><span class="pre">omegaml</span></code>).
@@ -223,21 +223,21 @@ In the previous example, the actual table is the <code class="code docutils lite
 <p>To change the table name, specify the <code class="code docutils literal notranslate"><span class="pre">table=</span></code> keyword when storing the connection. In the following example,
 the actual table is <code class="code docutils literal notranslate"><span class="pre">omegaml_mytable</span></code>,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># store data in a given table</span>
-<span class="n">mydb_cxs</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;mysql://user:pass@dbhost/db&#39;</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mydb_cxs</span><span class="p">,</span> <span class="s1">&#39;mysql-table&#39;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s1">&#39;mytable&#39;</span><span class="p">)</span>
+<span class="n">mydb_cxs</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'mysql://user:pass@dbhost/db'</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mydb_cxs</span><span class="p">,</span> <span class="s1">'mysql-table'</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s1">'mytable'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To specify an existing table, without the bucket name, prefix the table name with a colon, as follows. This will
 store the data in table <code class="code docutils literal notranslate"><span class="pre">mytable</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># store data in a given table</span>
-<span class="n">mydb_cxs</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;mysql://user:pass@dbhost/db&#39;</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mydb_cxs</span><span class="p">,</span> <span class="s1">&#39;mysql-table&#39;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s1">&#39;:mytable&#39;</span><span class="p">)</span>
+<span class="n">mydb_cxs</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'mysql://user:pass@dbhost/db'</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mydb_cxs</span><span class="p">,</span> <span class="s1">'mysql-table'</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s1">':mytable'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To specify a query to be run on retrieving the dataset, specify the <code class="code docutils literal notranslate"><span class="pre">sql=</span></code> keyword:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># store data in a given table</span>
-<span class="n">mydb_cxs</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;mysql://user:pass@dbhost/db&#39;</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mydb_cxs</span><span class="p">,</span> <span class="s1">&#39;mysql-table&#39;</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s1">&#39;:mytable&#39;</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="s2">&quot;select * from mytable&quot;</span><span class="p">)</span>
+<span class="n">mydb_cxs</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'mysql://user:pass@dbhost/db'</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mydb_cxs</span><span class="p">,</span> <span class="s1">'mysql-table'</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s1">':mytable'</span><span class="p">,</span> <span class="n">sql</span><span class="o">=</span><span class="s2">"select * from mytable"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Further possibilites include specifying variables for the connection string (e.g. userid, password) or
@@ -250,19 +250,19 @@ the sql statement. Details see <a class="reference internal" href="../../../refe
 <li><p>Use a Python file-like object as input and output:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># .put() will call file_in.read()</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;myfile.bin&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_in</span><span class="p">:</span>
-    <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">file_in</span><span class="p">,</span> <span class="s1">&#39;myfile.bin&#39;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">'myfile.bin'</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_in</span><span class="p">:</span>
+    <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">file_in</span><span class="p">,</span> <span class="s1">'myfile.bin'</span><span class="p">)</span>
 
 <span class="c1"># .get() returns a file-like object</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;myfile.bin&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'myfile.bin'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p>Directly use a local path:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;myfile.bin&#39;</span><span class="p">,</span> <span class="s1">&#39;testfile&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;testfile&#39;</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="s1">&#39;myfile.bin&#39;</span><span class="p">)</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'myfile.bin'</span><span class="p">,</span> <span class="s1">'testfile'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'testfile'</span><span class="p">,</span> <span class="n">local</span><span class="o">=</span><span class="s1">'myfile.bin'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Automated Drift Monitoring &mdash; omega-ml 0.18.0 documentation</title>
+  <title>Automated Drift Monitoring &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7ca4e891" />
@@ -14,9 +14,9 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -88,13 +88,6 @@
 
       <div class="wy-nav-content">
 
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../../../release/0.18.0/guide/classicml/models/tracking/automonitoring.html">release/0.18.0</a>.
-    
-</div>
-
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -148,7 +141,7 @@ housing prices, using the California Housing dataset provided by scikit-learn.</
 <span class="n">california</span> <span class="o">=</span> <span class="n">fetch_california_housing</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">reg</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
 <span class="n">reg</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">california</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="s1">&#39;california&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="s1">'california'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -156,8 +149,8 @@ housing prices, using the California Housing dataset provided by scikit-learn.</
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">Attaching a monitor to a model</a><a class="headerlink" href="#attaching-a-monitor-to-a-model" title="Link to this heading">¶</a></h2>
 <p>Once a model is stored, we can attach a DriftMonitor to the model, and schedule it to run daily.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># setup the drift monitor</span>
-<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;housing&#39;</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
-    <span class="n">exp</span><span class="o">.</span><span class="n">track</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">schedule</span><span class="o">=</span><span class="s1">&#39;daily&#39;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">'housing'</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">exp</span><span class="o">.</span><span class="n">track</span><span class="p">(</span><span class="s1">'california'</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">schedule</span><span class="o">=</span><span class="s1">'daily'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The DriftMonitor will take snapshots of the input and target features of the model, and compare them to a baseline
@@ -176,27 +169,27 @@ send send a custom message to a third-party application.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># configure</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 <span class="c1"># -- the name of the experiment</span>
-<span class="n">experiment</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{experiment}</span><span class="s1">&#39;</span>
+<span class="n">experiment</span> <span class="o">=</span> <span class="s1">'</span><span class="si">{experiment}</span><span class="s1">'</span>
 <span class="c1"># -- the name of the model</span>
-<span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{meta.name}</span><span class="s1">&#39;</span>
+<span class="n">name</span> <span class="o">=</span> <span class="s1">'</span><span class="si">{meta.name}</span><span class="s1">'</span>
 <span class="c1"># -- the name of the monitoring provider</span>
-<span class="n">provider</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{provider}</span><span class="s1">&#39;</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="s1">'</span><span class="si">{provider}</span><span class="s1">'</span>
 <span class="c1"># -- the alert rules</span>
 <span class="n">alerts</span> <span class="o">=</span> <span class="p">{</span><span class="n">alerts</span><span class="p">}</span>
 <span class="c1"># snapshot recent state and capture drift</span>
 <span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
     <span class="n">mon</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">as_monitor</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">)</span>
-    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">,</span> <span class="n">ignore_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">mon</span><span class="o">.</span><span class="n">capture</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="n">alerts</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s1">&#39;last&#39;</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="s1">'last'</span><span class="p">,</span> <span class="n">ignore_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">capture</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="n">alerts</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="s1">'last'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="creating-a-baseline-snapshot">
 <h2><a class="toc-backref" href="#id4" role="doc-backlink">Creating a baseline snapshot</a><a class="headerlink" href="#creating-a-baseline-snapshot" title="Link to this heading">¶</a></h2>
 <p>First, let’s create a baseline snapshot of the model’s input and target features.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;housing&#39;</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
-    <span class="n">mon</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">as_monitor</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">)</span>
-    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">california</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">'housing'</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">mon</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">as_monitor</span><span class="p">(</span><span class="s1">'california'</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="s1">'california'</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">california</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Let’s say the model has been running for a few days, and we want to check if there is a concept or model
@@ -206,13 +199,13 @@ drift, that is P(Y|X) has changed.</p>
 <h2><a class="toc-backref" href="#id5" role="doc-backlink">Run predictions</a><a class="headerlink" href="#run-predictions" title="Link to this heading">¶</a></h2>
 <p>Now, let’s simulate a change in the target predictions, relative to the input features. We can do this by
 simulating a number of predictions, however using only a fraction of the input.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'california'</span><span class="p">)</span>
 <span class="n">yhat</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">frac</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Since we have defined the experiment to be autotracking, the <cite>predict()</cite> method’s input (X) and output (Y)
 are automatically logged. To investigate, we can check the experiment’s data as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">&#39;predict&#39;</span><span class="p">,</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">'predict'</span><span class="p">,</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_autotrack_0.png" src="../../../../_images/mon_autotrack_0.png" />
@@ -222,14 +215,14 @@ are automatically logged. To investigate, we can check the experiment’s data a
 <p>The DriftMonitor will regularily take snapshots of all predictions the current snapshot
 to the baseline snapshot, and log an alert. For illustration, let’s do this manually.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mon</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span> <span class="c1"># take a snapshot of the most recent predictions</span>
-<span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;drift&#39;</span><span class="p">,</span> <span class="s1">&#39;alert&#39;</span><span class="p">],</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="p">[</span><span class="s1">'drift'</span><span class="p">,</span> <span class="s1">'alert'</span><span class="p">],</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_autotrack_1.png" src="../../../../_images/mon_autotrack_1.png" />
 <p>The alert indicates that the target predictions have changed significantly relative to the input features.
 To see this, we can get back the alert’s data and plot the drift statistics. These are the same DriftStatistics
 that <cite>mon.compare()</cite> returns.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">events</span><span class="p">(</span><span class="s1">&#39;alert&#39;</span><span class="p">,</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">events</span><span class="p">(</span><span class="s1">'alert'</span><span class="p">,</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -243,9 +236,9 @@ to the attached experiment. The requirement is that the <cite>predict()</cite> m
 i.e. either using the REST API or by calling <cite>om.runtime.model(‘california’).predict(X)</cite>.</p>
 <p>For example, when we call <cite>model.predict(X)</cite>, the input (X) and output (Y) are logged to the experiment’s data
 store. The data is logged with the event name <cite>predict</cite> and the run number incremented by one.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'california'</span><span class="p">)</span>
 <span class="n">yhat</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-<span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">&#39;predict&#39;</span><span class="p">,</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">event</span><span class="o">=</span><span class="s1">'predict'</span><span class="p">,</span> <span class="n">run</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_autotrack_0.png" src="../../../../_images/mon_autotrack_0.png" />
@@ -253,8 +246,8 @@ store. The data is logged with the event name <cite>predict</cite> and the run n
 the tracking system for the most recent data with the event name <cite>predict</cite>. The most recent data is assumed
 to be all data logged since the last snapshot was taken. Alternatively, we can use the <cite>since=</cite> parameter to
 specify a different time range.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">()</span> <span class="c1"># take a snapshot of the most recent predictions, this is the same as specifying `since=&#39;last&#39;`</span>
-<span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="s1">&#39;&lt;datetime&gt;`) # take a snapshot of the predictions since a specific datetime</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">()</span> <span class="c1"># take a snapshot of the most recent predictions, this is the same as specifying `since='last'`</span>
+<span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">since</span><span class="o">=</span><span class="s1">'&lt;datetime&gt;`) # take a snapshot of the predictions since a specific datetime</span>
 </pre></div>
 </div>
 </section>
@@ -264,9 +257,9 @@ specify a different time range.</p>
 and specifying the input (X) and output (Y) data. In this case, instead of querying the tracking system for the
 most recent data, we provide the data directly.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">california_noisy</span> <span class="o">=</span> <span class="n">california</span><span class="o">.</span><span class="n">data</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">california</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;housing&#39;</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
-    <span class="n">mon</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">as_monitor</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">)</span>
-    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="s1">&#39;california&#39;</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">california_noisy</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">california</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">'housing'</span><span class="p">,</span> <span class="n">autotrack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+    <span class="n">mon</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">as_monitor</span><span class="p">(</span><span class="s1">'california'</span><span class="p">)</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="s1">'california'</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="n">california_noisy</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">california</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
     <span class="n">mon</span><span class="o">.</span><span class="n">capture</span><span class="p">()</span>
 </pre></div>
 </div>

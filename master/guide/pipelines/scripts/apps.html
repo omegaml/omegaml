@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deploying web applications &mdash; omega-ml 0.18.0 documentation</title>
+  <title>Deploying web applications &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
@@ -14,9 +14,9 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -63,13 +63,6 @@
 
       <div class="wy-nav-content">
 
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../../release/0.18.0/guide/pipelines/scripts/apps.html">release/0.18.0</a>.
-    
-</div>
-
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -115,7 +108,7 @@ $<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </spa
 </section>
 <section id="deploying-a-git-based-flask-app">
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">Deploying a git-based flask app</a><a class="headerlink" href="#deploying-a-git-based-flask-app" title="Link to this heading">¶</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">GITURL</span><span class="o">=</span><span class="s2">&quot;git+https://github.com/omegaml/apps/tree/master/helloflask&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">GITURL</span><span class="o">=</span><span class="s2">"git+https://github.com/omegaml/apps/tree/master/helloflask"</span>
 $<span class="w"> </span>om<span class="w"> </span>scripts<span class="w"> </span>put<span class="w"> </span><span class="nv">$GITURL</span><span class="w"> </span>apps/helloflask
 $<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </span>restart<span class="w"> </span>apps/helloflask
 </pre></div>
@@ -129,12 +122,12 @@ $<span class="w"> </span>om<span class="w"> </span>runtime<span class="w"> </spa
 pod serves a http-based web application at a well-defined port
 (defaults to port 80). This is only supported via the Python API.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">appdef</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;appdef&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="s1">&#39;nginx&#39;</span>
+    <span class="s1">'appdef'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'image'</span><span class="p">:</span> <span class="s1">'nginx'</span>
     <span class="p">}</span>
 <span class="p">}</span>
-<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;https://github.com/omegaml/apps/tree/master/helloworld&#39;</span><span class="p">,</span>
-               <span class="s1">&#39;apps/myapp&#39;</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="n">appdef</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'https://github.com/omegaml/apps/tree/master/helloworld'</span><span class="p">,</span>
+               <span class="s1">'apps/myapp'</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="n">appdef</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>When saved, launch the application:</p>
@@ -145,13 +138,13 @@ pod serves a http-based web application at a well-defined port
 <a class="reference external" href="https://omegaml.io/apps/account/myapp">https://omegaml.io/apps/account/myapp</a></p>
 <p><code class="code docutils literal notranslate"><span class="pre">appdef</span></code> can contain the following keys. See apphub.OmegaCloudRegistry
 for details.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">the</span> <span class="n">image</span> <span class="n">to</span> <span class="n">be</span> <span class="n">used</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">env</span><span class="p">:</span><span class="n">APPHUB_POD_IMAGE</span> <span class="ow">or</span> <span class="n">omegaml</span><span class="o">/</span><span class="n">apphub</span><span class="p">:</span><span class="n">latest</span>
-<span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="n">the</span> <span class="n">port</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="mi">80</span>
-<span class="s1">&#39;pullPolicy&#39;</span><span class="p">:</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">env</span><span class="p">:</span><span class="n">APPHUB_POD_PULLPOLICY</span> <span class="ow">or</span> <span class="n">IfNotPresent</span>
-<span class="s1">&#39;pullSecret&#39;</span><span class="p">:</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">env</span><span class="p">:</span><span class="n">APPHUB_POD_PULLSECRET</span> <span class="ow">or</span> <span class="n">omegamlee</span><span class="o">-</span><span class="n">secreg</span>
-<span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">the</span> <span class="n">deployment</span> <span class="ow">and</span> <span class="n">pod</span> <span class="n">name</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="s1">&#39;apphub&#39;</span>
-<span class="s1">&#39;configmap&#39;</span><span class="p">:</span> <span class="n">the</span> <span class="n">name</span> <span class="n">of</span> <span class="n">a</span> <span class="n">k8s</span> <span class="n">configmap</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span>
-<span class="s1">&#39;deployment_file&#39;</span><span class="p">:</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">apphub</span><span class="o">/</span><span class="n">resources</span><span class="o">/</span><span class="n">deployment</span><span class="o">.</span><span class="n">yml</span><span class="p">,</span> <span class="n">must</span> <span class="n">exist</span> <span class="ow">in</span> <span class="n">the</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">'image'</span><span class="p">:</span> <span class="n">the</span> <span class="n">image</span> <span class="n">to</span> <span class="n">be</span> <span class="n">used</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">env</span><span class="p">:</span><span class="n">APPHUB_POD_IMAGE</span> <span class="ow">or</span> <span class="n">omegaml</span><span class="o">/</span><span class="n">apphub</span><span class="p">:</span><span class="n">latest</span>
+<span class="s1">'port'</span><span class="p">:</span> <span class="n">the</span> <span class="n">port</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="mi">80</span>
+<span class="s1">'pullPolicy'</span><span class="p">:</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">env</span><span class="p">:</span><span class="n">APPHUB_POD_PULLPOLICY</span> <span class="ow">or</span> <span class="n">IfNotPresent</span>
+<span class="s1">'pullSecret'</span><span class="p">:</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">env</span><span class="p">:</span><span class="n">APPHUB_POD_PULLSECRET</span> <span class="ow">or</span> <span class="n">omegamlee</span><span class="o">-</span><span class="n">secreg</span>
+<span class="s1">'name'</span><span class="p">:</span> <span class="n">the</span> <span class="n">deployment</span> <span class="ow">and</span> <span class="n">pod</span> <span class="n">name</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="s1">'apphub'</span>
+<span class="s1">'configmap'</span><span class="p">:</span> <span class="n">the</span> <span class="n">name</span> <span class="n">of</span> <span class="n">a</span> <span class="n">k8s</span> <span class="n">configmap</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span>
+<span class="s1">'deployment_file'</span><span class="p">:</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">apphub</span><span class="o">/</span><span class="n">resources</span><span class="o">/</span><span class="n">deployment</span><span class="o">.</span><span class="n">yml</span><span class="p">,</span> <span class="n">must</span> <span class="n">exist</span> <span class="ow">in</span> <span class="n">the</span>
     <span class="n">file</span> <span class="n">system</span> <span class="n">of</span> <span class="n">the</span> <span class="n">pod</span> <span class="n">running</span> <span class="n">apphub</span>
 </pre></div>
 </div>

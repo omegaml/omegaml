@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Adding business logic to models &mdash; omega-ml 0.18.0 documentation</title>
+  <title>Adding business logic to models &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7ca4e891" />
@@ -14,9 +14,9 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -88,13 +88,6 @@
 
       <div class="wy-nav-content">
 
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../../../release/0.18.0/guide/classicml/models/businessmodels/index.html">release/0.18.0</a>.
-    
-</div>
-
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -137,7 +130,7 @@ the code requires structure beyond a single function.</p></li>
     <span class="k">return</span> <span class="n">data</span> <span class="c1"># a json-serializable response (dict or list)</span>
 
 <span class="c1"># store the function</span>
-<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mymodel</span><span class="p">,</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">mymodel</span><span class="p">,</span> <span class="s1">'mymodel'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Alternatively we can create a sub-class to a <code class="code docutils literal notranslate"><span class="pre">VirtualObjectHandler</span></code>:</p>
@@ -149,7 +142,7 @@ the code requires structure beyond a single function.</p></li>
         <span class="k">return</span> <span class="n">data</span> <span class="c1"># a json-serializable response (dict or list)</span>
 
 <span class="c1"># store the class</span>
-<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">MyModel</span><span class="p">,</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">MyModel</span><span class="p">,</span> <span class="s1">'mymodel'</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -168,13 +161,13 @@ be returned by function that you call inside of another module. For example:</p>
         <span class="k">return</span> <span class="n">data</span>
     <span class="k">return</span> <span class="n">mymodel</span>
 
-<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">create_mymodel</span><span class="p">(),</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">create_mymodel</span><span class="p">(),</span> <span class="s1">'mymodel'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Alternatively we can mark the module as <code class="code docutils literal notranslate"><span class="pre">'__main__'</span></code> so that it
 is no longer referenced by its package name and path.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># mymodule.py</span>
-<span class="vm">__name__</span> <span class="o">=</span> <span class="s1">&#39;__main__&#39;</span> <span class="k">if</span> <span class="vm">__name__</span> <span class="o">!=</span> <span class="s1">&#39;__main__&#39;</span> <span class="k">else</span> <span class="vm">__name__</span>
+<span class="vm">__name__</span> <span class="o">=</span> <span class="s1">'__main__'</span> <span class="k">if</span> <span class="vm">__name__</span> <span class="o">!=</span> <span class="s1">'__main__'</span> <span class="k">else</span> <span class="vm">__name__</span>
 
 <span class="o">...</span>
 </pre></div>

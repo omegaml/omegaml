@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data Drift &mdash; omega-ml 0.18.0 documentation</title>
+  <title>Data Drift &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=7ca4e891" />
@@ -14,9 +14,9 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -88,13 +88,6 @@
 
       <div class="wy-nav-content">
 
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../../../release/0.18.0/guide/classicml/models/tracking/datadrift.html">release/0.18.0</a>.
-    
-</div>
-
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -130,13 +123,13 @@ take snapshots of <cite>d1</cite> and <cite>d2</cite>. Finally, we compare the t
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.monitoring</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataDriftMonitor</span>
 
-<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="n">recreate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">,</span> <span class="n">recreate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
  <span class="n">mon</span> <span class="o">=</span> <span class="n">DataDriftMonitor</span><span class="p">(</span><span class="n">tracking</span><span class="o">=</span><span class="n">exp</span><span class="p">)</span>
  <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span>
  <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
 
 <span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">()</span>
-<span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+<span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">'0'</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_0hist_drift.png" src="../../../../_images/mon_0hist_drift.png" />
@@ -193,7 +186,7 @@ sequence numbers, e.g. to compare the first and last snapshots:</p>
 
 <span class="c1"># compare the first and last snapshots</span>
 <span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-<span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+<span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">'0'</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_2hist_drift.png" src="../../../../_images/mon_2hist_drift.png" />
@@ -202,33 +195,33 @@ We can get this comparison by specifying the baseline sequence number or the bas
 snapshot is the first snapshot taken, i.e. the one with sequence number 0. We can also specify the baseline
 by sequence number, using the <cite>baseline=</cite> kwarg.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># compare all snapshots to the baseline</span>
-<span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="s1">&#39;baseline&#39;</span><span class="p">)</span> <span class="c1"># compare all snapshots to the baseline</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="s1">'baseline'</span><span class="p">)</span> <span class="c1"># compare all snapshots to the baseline</span>
 </pre></div>
 </div>
 <p>An alternative to comparing all snapshots to the baseline is to compare all snapshots to their immediate
 predecessor. This is useful to see how the data drifts over time, assuming that each snapshots represents
 a new baseline. We can do this by specifying <cite>seq=’series’</cite>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># compare all snapshots to their immediate predecessor</span>
-<span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="s1">&#39;series&#39;</span><span class="p">)</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">seq</span><span class="o">=</span><span class="s1">'series'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="plotting-drift-over-time">
 <h2>Plotting drift over time<a class="headerlink" href="#plotting-drift-over-time" title="Link to this heading">¶</a></h2>
 <p>To plot the drift score over time, we can use the <cite>plot()</cite> method with <cite>kind=’time’</cite>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">'0'</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">'time'</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_0time_drift.png" src="../../../../_images/mon_0time_drift.png" />
 <p>This plot shows the drift score between the first snapshot and all subsequent snapshots. The drift score is
 normalized to -1 .. +1 where 0 means no drift and 1 means maximum drift.</p>
 <p>To analyze drift with respect to a specific statistic, specify <cite>statistic=&lt;metric&gt;</cite>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;ks&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">'0'</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">'ks'</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">'time'</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_0hist_drift_ks.png" src="../../../../_images/mon_0hist_drift_ks.png" />
 <p>To see the statistic’s specific values, we can directly filter the drift statistics dataframe:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;ks&#39;</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s1">'0'</span><span class="p">,</span> <span class="s1">'ks'</span><span class="p">]</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_0hist_drift_ks_df.png" src="../../../../_images/mon_0hist_drift_ks_df.png" />

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&lt;no title&gt; &mdash; omega-ml 0.18.0 documentation</title>
+  <title>&lt;no title&gt; &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
@@ -15,12 +15,12 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -66,13 +66,6 @@
 
       <div class="wy-nav-content">
 
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../release/0.18.0/index.html">release/0.18.0</a>.
-    
-</div>
-
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -95,6 +88,7 @@
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># sample using an Estimator model</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow.compat.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+
 <span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -102,117 +96,93 @@
 <span class="c1"># load mnist dataset</span>
 <span class="p">((</span><span class="n">train_data</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">),</span> <span class="p">(</span><span class="n">eval_data</span><span class="p">,</span> <span class="n">eval_labels</span><span class="p">))</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">mnist</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
 
-<span class="n">train_data</span> <span class="o">=</span> <span class="n">train_data</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">train_data</span> <span class="o">=</span> <span class="n">train_data</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
 <span class="n">train_labels</span> <span class="o">=</span> <span class="n">train_labels</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>  <span class="c1"># not required</span>
 
-<span class="n">eval_data</span> <span class="o">=</span> <span class="n">eval_data</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">eval_data</span> <span class="o">=</span> <span class="n">eval_data</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
 <span class="n">eval_labels</span> <span class="o">=</span> <span class="n">eval_labels</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>  <span class="c1"># not required</span>
+
 
 <span class="c1"># Create the Estimator</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_classifier</span><span class="p">(</span><span class="n">model_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow.compat.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+
     <span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">cnn_model_fn</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
-      <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow.compat.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
-      <span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow.compat.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 
-      <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="w">      </span><span class="sd">&quot;&quot;&quot;Model function for CNN.&quot;&quot;&quot;</span>
-      <span class="c1"># Input Layer</span>
-      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
-      <span class="n">input_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
 
+<span class="w">        </span><span class="sd">"""Model function for CNN."""</span>
+        <span class="c1"># Input Layer</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="s1">'x'</span><span class="p">]</span>
+        <span class="n">input_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 
-      <span class="c1"># Convolutional Layer #1</span>
-      <span class="n">conv1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span>
-          <span class="n">inputs</span><span class="o">=</span><span class="n">input_layer</span><span class="p">,</span>
-          <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-          <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
-          <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
-          <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
+        <span class="c1"># Convolutional Layer #1</span>
+        <span class="n">conv1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="s2">"same"</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span>
+        <span class="p">)</span>
 
-      <span class="c1"># Pooling Layer #1</span>
-      <span class="n">pool1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">max_pooling2d</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">conv1</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Pooling Layer #1</span>
+        <span class="n">pool1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">max_pooling2d</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">conv1</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
-      <span class="c1"># Convolutional Layer #2 and Pooling Layer #2</span>
-      <span class="n">conv2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span>
-          <span class="n">inputs</span><span class="o">=</span><span class="n">pool1</span><span class="p">,</span>
-          <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-          <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
-          <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
-          <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
-      <span class="n">pool2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">max_pooling2d</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">conv2</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Convolutional Layer #2 and Pooling Layer #2</span>
+        <span class="n">conv2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">pool1</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="s2">"same"</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
+        <span class="n">pool2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">max_pooling2d</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">conv2</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
-      <span class="c1"># Dense Layer</span>
-      <span class="n">pool2_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pool2</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">64</span><span class="p">])</span>
-      <span class="n">dense</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">pool2_flat</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
-      <span class="n">dropout</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span>
-          <span class="n">inputs</span><span class="o">=</span><span class="n">dense</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">)</span>
+        <span class="c1"># Dense Layer</span>
+        <span class="n">pool2_flat</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pool2</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">64</span><span class="p">])</span>
+        <span class="n">dense</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">pool2_flat</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">)</span>
+        <span class="n">dropout</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">dense</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">)</span>
 
-      <span class="c1"># Logits Layer</span>
-      <span class="n">logits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="c1"># Logits Layer</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">dense</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
-      <span class="n">predictions</span> <span class="o">=</span> <span class="p">{</span>
-          <span class="c1"># Generate predictions (for PREDICT and EVAL mode)</span>
-          <span class="s2">&quot;classes&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-          <span class="c1"># Add `softmax_tensor` to the graph. It is used for PREDICT and by the</span>
-          <span class="c1"># `logging_hook`.</span>
-          <span class="s2">&quot;probabilities&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;softmax_tensor&quot;</span><span class="p">)</span>
-      <span class="p">}</span>
+        <span class="n">predictions</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="c1"># Generate predictions (for PREDICT and EVAL mode)</span>
+            <span class="s2">"classes"</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="c1"># Add `softmax_tensor` to the graph. It is used for PREDICT and by the</span>
+            <span class="c1"># `logging_hook`.</span>
+            <span class="s2">"probabilities"</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"softmax_tensor"</span><span class="p">),</span>
+        <span class="p">}</span>
 
-      <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">EstimatorSpec</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">EstimatorSpec</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span><span class="p">)</span>
 
-      <span class="c1"># Calculate Loss (for both TRAIN and EVAL modes)</span>
-      <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">sparse_softmax_cross_entropy</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">)</span>
+        <span class="c1"># Calculate Loss (for both TRAIN and EVAL modes)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">sparse_softmax_cross_entropy</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">)</span>
 
-      <span class="c1"># Configure the Training Op (for TRAIN mode)</span>
-      <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span>
-        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">GradientDescentOptimizer</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
-        <span class="n">train_op</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
-            <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
-            <span class="n">global_step</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">get_global_step</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">EstimatorSpec</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">train_op</span><span class="o">=</span><span class="n">train_op</span><span class="p">)</span>
+        <span class="c1"># Configure the Training Op (for TRAIN mode)</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">ModeKeys</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">GradientDescentOptimizer</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+            <span class="n">train_op</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">global_step</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">get_global_step</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">EstimatorSpec</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">train_op</span><span class="o">=</span><span class="n">train_op</span><span class="p">)</span>
 
-      <span class="c1"># Add evaluation metrics (for EVAL mode)</span>
-      <span class="n">eval_metric_ops</span> <span class="o">=</span> <span class="p">{</span>
-          <span class="s2">&quot;accuracy&quot;</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">accuracy</span><span class="p">(</span>
-              <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span><span class="p">[</span><span class="s2">&quot;classes&quot;</span><span class="p">])</span>
-      <span class="p">}</span>
-      <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">EstimatorSpec</span><span class="p">(</span>
-          <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">eval_metric_ops</span><span class="o">=</span><span class="n">eval_metric_ops</span><span class="p">)</span>
+        <span class="c1"># Add evaluation metrics (for EVAL mode)</span>
+        <span class="n">eval_metric_ops</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"accuracy"</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">accuracy</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">predictions</span><span class="o">=</span><span class="n">predictions</span><span class="p">[</span><span class="s2">"classes"</span><span class="p">])}</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">EstimatorSpec</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">eval_metric_ops</span><span class="o">=</span><span class="n">eval_metric_ops</span><span class="p">)</span>
 
     <span class="n">mnist_classifier</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">Estimator</span><span class="p">(</span><span class="n">model_fn</span><span class="o">=</span><span class="n">cnn_model_fn</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="n">model_dir</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mnist_classifier</span>
 
-<span class="n">mnist_classifier</span> <span class="o">=</span> <span class="n">make_classifier</span><span class="p">(</span><span class="n">model_dir</span><span class="o">=</span><span class="s2">&quot;/tmp/mnist_convnet_model&quot;</span><span class="p">)</span>
-<span class="c1"># Set up logging for predictions</span>
-<span class="n">tensors_to_log</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;probabilities&quot;</span><span class="p">:</span> <span class="s2">&quot;softmax_tensor&quot;</span><span class="p">}</span>
 
-<span class="n">logging_hook</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">LoggingTensorHook</span><span class="p">(</span>
-    <span class="n">tensors</span><span class="o">=</span><span class="n">tensors_to_log</span><span class="p">,</span> <span class="n">every_n_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">mnist_classifier</span> <span class="o">=</span> <span class="n">make_classifier</span><span class="p">(</span><span class="n">model_dir</span><span class="o">=</span><span class="s2">"/tmp/mnist_convnet_model"</span><span class="p">)</span>
+<span class="c1"># Set up logging for predictions</span>
+<span class="n">tensors_to_log</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"probabilities"</span><span class="p">:</span> <span class="s2">"softmax_tensor"</span><span class="p">}</span>
+
+<span class="n">logging_hook</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">LoggingTensorHook</span><span class="p">(</span><span class="n">tensors</span><span class="o">=</span><span class="n">tensors_to_log</span><span class="p">,</span> <span class="n">every_n_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 
 <span class="c1"># Train the model</span>
 <span class="n">train_input_fn</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">numpy_input_fn</span><span class="p">(</span>
-    <span class="n">x</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">train_data</span><span class="p">},</span>
-    <span class="n">y</span><span class="o">=</span><span class="n">train_labels</span><span class="p">,</span>
-    <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-    <span class="n">num_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x</span><span class="o">=</span><span class="p">{</span><span class="s2">"x"</span><span class="p">:</span> <span class="n">train_data</span><span class="p">},</span> <span class="n">y</span><span class="o">=</span><span class="n">train_labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
 
 <span class="c1"># train one step and display the probabilties</span>
-<span class="n">mnist_classifier</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
-    <span class="n">input_fn</span><span class="o">=</span><span class="n">train_input_fn</span><span class="p">,</span>
-    <span class="n">steps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">hooks</span><span class="o">=</span><span class="p">[</span><span class="n">logging_hook</span><span class="p">])</span>
+<span class="n">mnist_classifier</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">input_fn</span><span class="o">=</span><span class="n">train_input_fn</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="p">[</span><span class="n">logging_hook</span><span class="p">])</span>
 <span class="c1"># evaluate</span>
-<span class="n">eval_input_fn</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">numpy_input_fn</span><span class="p">(</span>
-    <span class="n">x</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">eval_data</span><span class="p">},</span>
-    <span class="n">y</span><span class="o">=</span><span class="n">eval_labels</span><span class="p">,</span>
-    <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">eval_input_fn</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">numpy_input_fn</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">{</span><span class="s2">"x"</span><span class="p">:</span> <span class="n">eval_data</span><span class="p">},</span> <span class="n">y</span><span class="o">=</span><span class="n">eval_labels</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">eval_results</span> <span class="o">=</span> <span class="n">mnist_classifier</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">input_fn</span><span class="o">=</span><span class="n">eval_input_fn</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">eval_results</span><span class="p">)</span>
 </pre></div>
@@ -610,11 +580,12 @@ dill==0.3.5.1
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;OMEGA_FRAMEWORKS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;scikit-learn,tensorflow,keras&quot;</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">'OMEGA_FRAMEWORKS'</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"scikit-learn,tensorflow,keras"</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 
-<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'tf-model-mnist-fn'</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -638,12 +609,12 @@ but Django isn&#39;t installed.  Won&#39;t apply Django fix-ups!
 <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.tensorflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">TFEstimatorModel</span>
 
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">train_data</span><span class="p">,</span> <span class="s1">&#39;mnist-X&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">train_labels</span><span class="p">,</span> <span class="s1">&#39;mnist-Y&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">train_data</span><span class="p">,</span> <span class="s1">'mnist-X'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">train_labels</span><span class="p">,</span> <span class="s1">'mnist-Y'</span><span class="p">)</span>
 
 <span class="n">saveable_model</span> <span class="o">=</span> <span class="n">TFEstimatorModel</span><span class="p">(</span><span class="n">estimator_fn</span><span class="o">=</span><span class="n">make_classifier</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">mnist_classifier</span><span class="p">,</span> <span class="n">v1_compat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">saveable_model</span><span class="p">,</span> <span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span>
-<br/></pre></div>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">saveable_model</span><span class="p">,</span> <span class="s1">'tf-model-mnist-fn'</span><span class="p">)</span>
+</pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -660,7 +631,7 @@ but Django isn&#39;t installed.  Won&#39;t apply Django fix-ups!
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># fit on the cluster. this may take a while</span>
-<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">&#39;mnist-X&#39;</span><span class="p">,</span> <span class="s1">&#39;mnist-Y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'tf-model-mnist-fn'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="s1">'mnist-X'</span><span class="p">,</span> <span class="s1">'mnist-Y'</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -678,11 +649,11 @@ but Django isn&#39;t installed.  Won&#39;t apply Django fix-ups!
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># re-load the model and predict from a numpy array</span>
-<span class="n">train_data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mnist-X&#39;</span><span class="p">)</span>
+<span class="n">train_data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'mnist-X'</span><span class="p">)</span>
 
 <span class="n">X</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>
 
-<span class="n">model_</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span>
+<span class="n">model_</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'tf-model-mnist-fn'</span><span class="p">)</span>
 <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">model_</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)]</span>
 </pre></div>
 </div>
@@ -729,13 +700,13 @@ but Django isn&#39;t installed.  Won&#39;t apply Django fix-ups!
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># predict on the cluster via direct input as numpy, or the numpy array stored as a dataset</span>
-<span class="n">train_data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mnist-X&#39;</span><span class="p">)</span>
+<span class="n">train_data</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'mnist-X'</span><span class="p">)</span>
 
-<span class="c1">#we can save the data as stacked images</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="s1">&#39;mnist-sample&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">&#39;mnist-sample&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="c1"># we can save the data as stacked images</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="s1">'mnist-sample'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'tf-model-mnist-fn'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">'mnist-sample'</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 <span class="c1"># or just pass the data as is</span>
-<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;tf-model-mnist-fn&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'tf-model-mnist-fn'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -787,13 +758,14 @@ but Django isn&#39;t installed.  Won&#39;t apply Django fix-ups!
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># or use the model REST API</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.client.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthenticationEnv</span>
 
-<span class="n">url</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="p">,</span> <span class="s1">&#39;OMEGA_RESTAPI_URL&#39;</span><span class="p">,</span> <span class="s1">&#39;http://localhost:5000&#39;</span><span class="p">)</span>
+<span class="n">url</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="p">,</span> <span class="s1">'OMEGA_RESTAPI_URL'</span><span class="p">,</span> <span class="s1">'http://localhost:5000'</span><span class="p">)</span>
 <span class="n">auth</span> <span class="o">=</span> <span class="n">AuthenticationEnv</span><span class="o">.</span><span class="n">get_restapi_auth</span><span class="p">(</span><span class="n">om</span><span class="o">=</span><span class="n">om</span><span class="p">)</span>
-<span class="n">dataset</span> <span class="o">=</span> <span class="s1">&#39;mnist-sample&#39;</span>
-<span class="n">modelname</span> <span class="o">=</span> <span class="s1">&#39;tf-model-mnist-fn&#39;</span>
-<span class="n">predict_url</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{url}</span><span class="s1">/api/v1/model/</span><span class="si">{modelname}</span><span class="s1">/predict?datax=</span><span class="si">{dataset}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">())</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="s1">'mnist-sample'</span>
+<span class="n">modelname</span> <span class="o">=</span> <span class="s1">'tf-model-mnist-fn'</span>
+<span class="n">predict_url</span> <span class="o">=</span> <span class="s1">'</span><span class="si">{url}</span><span class="s1">/api/v1/model/</span><span class="si">{modelname}</span><span class="s1">/predict?datax=</span><span class="si">{dataset}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="nb">locals</span><span class="p">())</span>
 <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">predict_url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{})</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">predict_url</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>

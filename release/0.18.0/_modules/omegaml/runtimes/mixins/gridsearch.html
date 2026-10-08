@@ -14,8 +14,8 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -80,11 +80,11 @@
   <h1>Source code for omegaml.runtimes.mixins.gridsearch</h1><div class="highlight"><pre>
 <div class="viewcode-block" id="GridSearchMixin">
 <a class="viewcode-back" href="../../../../reference/runtimes.html#omegaml.runtimes.mixins.GridSearchMixin">[docs]</a>
-<span></span><span class="linenos"> 1</span><span class="k">class</span><span class="w"> </span><span class="nc">GridSearchMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span></span><span class="linenos"> 1</span><span class="k">class</span><span class="w"> </span><span class="nc">GridSearchMixin</span><span class="p">:</span>
 <div class="viewcode-block" id="GridSearchMixin.gridsearch">
 <a class="viewcode-back" href="../../../../reference/runtimes.html#omegaml.runtimes.mixins.GridSearchMixin.gridsearch">[docs]</a>
 <span class="linenos"> 2</span>    <span class="k">def</span><span class="w"> </span><span class="nf">gridsearch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pure_python</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="linenos"> 3</span><span class="w">        </span><span class="sd">&quot;&quot;&quot; run gridsearch on model</span>
+<span class="linenos"> 3</span><span class="w">        </span><span class="sd">"""run gridsearch on model</span>
 <span class="linenos"> 4</span>
 <span class="linenos"> 5</span><span class="sd">        Args:</span>
 <span class="linenos"> 6</span><span class="sd">            Xname (str|obj): the name of the X dataset in om.datasets, or</span>
@@ -95,11 +95,11 @@
 <span class="linenos">11</span>
 <span class="linenos">12</span><span class="sd">        See Also:</span>
 <span class="linenos">13</span><span class="sd">            * sklearn.model_selection.GridSearchCV</span>
-<span class="linenos">14</span><span class="sd">        &quot;&quot;&quot;</span>
-<span class="linenos">15</span>        <span class="n">gs_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="s1">&#39;omegaml.tasks.omega_gridsearch&#39;</span><span class="p">)</span>
-<span class="linenos">16</span>        <span class="n">Xname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_data_is_stored</span><span class="p">(</span><span class="n">Xname</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;_fitX&#39;</span><span class="p">)</span>
+<span class="linenos">14</span><span class="sd">        """</span>
+<span class="linenos">15</span>        <span class="n">gs_task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="s1">'omegaml.tasks.omega_gridsearch'</span><span class="p">)</span>
+<span class="linenos">16</span>        <span class="n">Xname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_data_is_stored</span><span class="p">(</span><span class="n">Xname</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">'_fitX'</span><span class="p">)</span>
 <span class="linenos">17</span>        <span class="k">if</span> <span class="n">Yname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<span class="linenos">18</span>            <span class="n">Yname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_data_is_stored</span><span class="p">(</span><span class="n">Yname</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;_fitY&#39;</span><span class="p">)</span>
+<span class="linenos">18</span>            <span class="n">Yname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_data_is_stored</span><span class="p">(</span><span class="n">Yname</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">'_fitY'</span><span class="p">)</span>
 <span class="linenos">19</span>        <span class="k">return</span> <span class="n">gs_task</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modelname</span><span class="p">,</span> <span class="n">Xname</span><span class="p">,</span> <span class="n">Yname</span><span class="o">=</span><span class="n">Yname</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>
 

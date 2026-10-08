@@ -1,0 +1,150 @@
+Release notes release/0.15.5
+============================
+
+Released 2023-04-13
+
+What’s Changed
+--------------
+
+-  use sqlalchemy prepared statements for pd.read_sql by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/294
+-  sanitize mongodb query filters by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/293
+-  streamline extdmetadata handling resp. X, Y, result by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/291
+-  upgrade mongodb 5.x by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/232
+-  enable using mongodb as a result backend by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/300
+-  Upgrade celery 5 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/234
+-  Om logger python logging optional by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/311
+-  Enable restapi buckets by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/309
+-  Arbitrary virtualobj loading by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/310
+-  Improve sql cnx caching by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/308
+-  enable small datasets to be passed as part of the message by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/312
+-  release build 0.15.5 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/313
+
+Security fixes \* [Snyk] Fix for 4 vulnerabilities by @snyk-bot in
+https://github.com/omegaml/omegaml/pull/299 \* [Snyk] Security upgrade
+tensorflow/tensorflow from 2.10.0rc3-gpu-jupyter to
+2.11.0rc1-gpu-jupyter by @omegaml in
+https://github.com/omegaml/omegaml/pull/290 \* [Snyk] Security upgrade
+tensorflow/tensorflow from 2.10.0rc3-gpu-jupyter to
+2.11.0rc0-gpu-jupyter by @snyk-bot in
+https://github.com/omegaml/omegaml/pull/289
+
+**Full Changelog**:
+https://github.com/omegaml/omegaml/compare/release/0.15.3…release/0.15.5
+
+Changes
+~~~~~~~
+
+-  Merge pull request #313 from omegaml/0.15.5-release-build
+   `d981a32 <https://github.com/omegaml/omegaml/commit/d981a32>`__
+-  Bump version: 0.15.5-rc1 → 0.15.5
+   `8d3dcf1 <https://github.com/omegaml/omegaml/commit/8d3dcf1>`__
+-  Bump version: 0.15.5-dev2 → 0.15.5-rc1
+   `70619c9 <https://github.com/omegaml/omegaml/commit/70619c9>`__
+-  Bump version: 0.15.5-dev1 → 0.15.5-dev2
+   `7dcfba8 <https://github.com/omegaml/omegaml/commit/7dcfba8>`__
+-  trigger release-build
+   `636506b <https://github.com/omegaml/omegaml/commit/636506b>`__
+-  automatic release build
+   `1f68b40 <https://github.com/omegaml/omegaml/commit/1f68b40>`__
+-  update task tracking semantics from inside runtime
+   `17e293e <https://github.com/omegaml/omegaml/commit/17e293e>`__
+-  celery 5 renaming of task default expiration
+   `a35f7ff <https://github.com/omegaml/omegaml/commit/a35f7ff>`__
+-  buffer tracking-log entries
+   `9e58c8a <https://github.com/omegaml/omegaml/commit/9e58c8a>`__
+-  add request cache for metadata objects
+   `2c07ddc <https://github.com/omegaml/omegaml/commit/2c07ddc>`__
+-  fail gracefully
+   `9bc4fef <https://github.com/omegaml/omegaml/commit/9bc4fef>`__
+-  use test mode deterministically
+   `c2b2d3e <https://github.com/omegaml/omegaml/commit/c2b2d3e>`__
+-  rest api auth apikey must be passed as a string
+   `227d1d2 <https://github.com/omegaml/omegaml/commit/227d1d2>`__
+-  forward upstream updates 0.15.4-release-build
+   `ac29d49 <https://github.com/omegaml/omegaml/commit/ac29d49>`__
+-  bump version
+   `82ccab9 <https://github.com/omegaml/omegaml/commit/82ccab9>`__
+-  Merge pull request #312 from omegaml/enable-passthrough-dataset
+   `e6515cf <https://github.com/omegaml/omegaml/commit/e6515cf>`__
+-  enable small datasets to be passed as part of the message
+   `48eefea <https://github.com/omegaml/omegaml/commit/48eefea>`__
+-  Merge pull request #308 from omegaml/improve-sql-cnx-caching
+   `c1fcd51 <https://github.com/omegaml/omegaml/commit/c1fcd51>`__
+-  improve sql connection caching
+   `3f5bd2f <https://github.com/omegaml/omegaml/commit/3f5bd2f>`__
+-  Merge pull request #310 from omegaml/arbitrary-virtualobj-loading
+   `c9bf188 <https://github.com/omegaml/omegaml/commit/c9bf188>`__
+-  virtualobj loading supported from arbitrary packages
+   `e9d192a <https://github.com/omegaml/omegaml/commit/e9d192a>`__
+-  Merge pull request #311 from
+   omegaml/om-logger-python-logging-optional
+   `d90d1d7 <https://github.com/omegaml/omegaml/commit/d90d1d7>`__
+-  om.logger routing to python logger is optional
+   `5e96e49 <https://github.com/omegaml/omegaml/commit/5e96e49>`__
+-  restapi auth includes bucket
+   `df1bc69 <https://github.com/omegaml/omegaml/commit/df1bc69>`__
+-  Merge pull request #289 from
+   omegaml/snyk-fix-aee13402678d30bdd0189504da4519fb
+   `5e755e5 <https://github.com/omegaml/omegaml/commit/5e755e5>`__
+-  Merge branch ‘master’ into snyk-fix-aee13402678d30bdd0189504da4519fb
+   `31eafcc <https://github.com/omegaml/omegaml/commit/31eafcc>`__
+-  Merge pull request #290 from
+   omegaml/snyk-fix-3661c05ef4b989f5742e3a960202399a
+   `95d9360 <https://github.com/omegaml/omegaml/commit/95d9360>`__
+-  Merge pull request #299 from
+   omegaml/snyk-fix-b57fac54f8ee15ec7cc02c0990e24d4f
+   `8ea679b <https://github.com/omegaml/omegaml/commit/8ea679b>`__
+-  update pygments via nbconvert
+   `12a687c <https://github.com/omegaml/omegaml/commit/12a687c>`__
+-  Merge pull request #234 from omegaml/upgrade-celery-5
+   `84caaa6 <https://github.com/omegaml/omegaml/commit/84caaa6>`__
+-  upgrade celery to 5.x
+   `229838e <https://github.com/omegaml/omegaml/commit/229838e>`__
+-  Merge pull request #300 from omegaml/allow-mongodb-for-task-results
+   `f9ed803 <https://github.com/omegaml/omegaml/commit/f9ed803>`__
+-  enable using mongodb as a result backend
+   `cfdf720 <https://github.com/omegaml/omegaml/commit/cfdf720>`__
+-  Merge pull request #232 from omegaml/wip
+   `09d56a9 <https://github.com/omegaml/omegaml/commit/09d56a9>`__
+-  upgrade mongodb 5.x
+   `d11c370 <https://github.com/omegaml/omegaml/commit/d11c370>`__
+-  Merge pull request #291 from omegaml/update-extdmetadata
+   `1a552aa <https://github.com/omegaml/omegaml/commit/1a552aa>`__
+-  update extdmetadata
+   `b5cd0fb <https://github.com/omegaml/omegaml/commit/b5cd0fb>`__
+-  Merge pull request #293 from omegaml/mongodb-sanitize-filters
+   `cbd74a9 <https://github.com/omegaml/omegaml/commit/cbd74a9>`__
+-  sanitize mongo query filters
+   `b18aa05 <https://github.com/omegaml/omegaml/commit/b18aa05>`__
+-  Merge pull request #294 from omegaml/sqlalchemy-prepared-stmts
+   `6d4f13a <https://github.com/omegaml/omegaml/commit/6d4f13a>`__
+-  use sqlalchemy prepared statements for pd.read_sql
+   `597087b <https://github.com/omegaml/omegaml/commit/597087b>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fix dependencies
+   `2449b1f <https://github.com/omegaml/omegaml/commit/2449b1f>`__
+-  fix dependency issues
+   `3a55ea5 <https://github.com/omegaml/omegaml/commit/3a55ea5>`__
+-  fix: scripts/docker/omegaml-tensorflow/Dockerfile to reduce
+   vulnerabilities
+   `16a8553 <https://github.com/omegaml/omegaml/commit/16a8553>`__
+-  fix: docs/requirements.txt to reduce vulnerabilities
+   `2a45377 <https://github.com/omegaml/omegaml/commit/2a45377>`__
+-  fix: scripts/docker/omegaml-tensorflow/Dockerfile to reduce
+   vulnerabilities
+   `22126ad <https://github.com/omegaml/omegaml/commit/22126ad>`__

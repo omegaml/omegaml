@@ -15,8 +15,8 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -156,7 +156,7 @@
 <section id="column-projection">
 <h3><a class="toc-backref" href="#id3" role="doc-backlink">Column projection</a><a class="headerlink" href="#column-projection" title="Link to this heading">¶</a></h3>
 <p>Specify the list of columns to be accessed:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)[[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)[[</span><span class="s1">'x'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
     <span class="n">x</span>  <span class="n">y</span>
  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
@@ -170,8 +170,8 @@
 <section id="masked-style-selection">
 <h3><a class="toc-backref" href="#id4" role="doc-backlink">Masked-style selection</a><a class="headerlink" href="#masked-style-selection" title="Link to this heading">¶</a></h3>
 <p>As with Pandas DataFrames, omega-ml MDataFrames can be subset using filter masks:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">)</span>
-<span class="n">flt</span> <span class="o">=</span> <span class="p">(</span><span class="n">mdf</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">mdf</span><span class="p">[</span><span class="s1">&#39;x] &lt; 4)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">)</span>
+<span class="n">flt</span> <span class="o">=</span> <span class="p">(</span><span class="n">mdf</span><span class="p">[</span><span class="s1">'x'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">mdf</span><span class="p">[</span><span class="s1">'x] &lt; 4)</span>
 <span class="n">mdf</span><span class="p">[</span><span class="n">flt</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
     <span class="n">x</span>  <span class="n">y</span>
@@ -190,7 +190,7 @@ it easy to transform code for a Pandas DataFrame to an MDataFrame.</p>
 <h3><a class="toc-backref" href="#id5" role="doc-backlink">Index-Row selection</a><a class="headerlink" href="#index-row-selection" title="Link to this heading">¶</a></h3>
 <p>Specify the index of the rows to be accessed:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># numeric index</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
     <span class="n">x</span>  <span class="n">y</span>
  <span class="mi">2</span>  <span class="mi">2</span>  <span class="mi">2</span>
@@ -199,7 +199,7 @@ it easy to transform code for a Pandas DataFrame to an MDataFrame.</p>
  <span class="mi">5</span>  <span class="mi">5</span>  <span class="mi">5</span>
 
 <span class="c1"># alphanumeric index</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;abc&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">'abc'</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
       <span class="n">x</span>  <span class="n">y</span>
  <span class="n">abc</span>  <span class="mi">2</span>  <span class="mi">2</span>
@@ -211,7 +211,7 @@ it easy to transform code for a Pandas DataFrame to an MDataFrame.</p>
 <p>Specify the numeric row id. Note this requires that the dataset was created with a continuous row id
 (automatically created when using <code class="code docutils literal notranslate"><span class="pre">datasets.put</span></code>)</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># numeric index</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
     <span class="n">x</span>  <span class="n">y</span>
  <span class="mi">2</span>  <span class="mi">2</span>  <span class="mi">2</span>
@@ -234,7 +234,7 @@ cannot.</p>
 <h2><a class="toc-backref" href="#id7" role="doc-backlink">Filtering data</a><a class="headerlink" href="#filtering-data" title="Link to this heading">¶</a></h2>
 <p>Filtering works the same on an MDataFrame as with the eager <code class="code docutils literal notranslate"><span class="pre">get</span></code>
 method, by specifying the filter as the keyword arguments:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;foodf&#39;</span><span class="p">,</span> <span class="n">x__gt</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'foodf'</span><span class="p">,</span> <span class="n">x__gt</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
     <span class="n">x</span>
  <span class="mi">6</span>  <span class="mi">6</span>
@@ -248,8 +248,8 @@ method, by specifying the filter as the keyword arguments:</p>
 <p><code class="code docutils literal notranslate"><span class="pre">MDataFrame</span></code> supports filtering on geodesic proximity by specifying
 the <code class="code docutils literal notranslate"><span class="pre">__near</span></code> operator and a pair of (lat, lon) coordinates. The result
 is the list of matching locations sorted by distance from the given coordinates.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;geosample&#39;</span><span class="p">,</span>
-<span class="n">location__near</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="p">(</span><span class="mf">7.4474468</span><span class="p">,</span> <span class="mf">46.9479739</span><span class="p">)))</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;place&#39;</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">'geosample'</span><span class="p">,</span>
+<span class="n">location__near</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="p">(</span><span class="mf">7.4474468</span><span class="p">,</span> <span class="mf">46.9479739</span><span class="p">)))</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="s1">'place'</span><span class="p">]</span>
 <span class="o">=&gt;</span>
 <span class="mi">2</span>        <span class="n">Bern</span>
 <span class="mi">3</span>      <span class="n">Zurich</span>
@@ -265,7 +265,7 @@ is the list of matching locations sorted by distance from the given coordinates.
 with the filter applied.  To set a permanent filter for any subsequent
 operations on a specific <code class="code docutils literal notranslate"><span class="pre">MDataFrame</span></code> instance, use the
 <code class="code docutils literal notranslate"><span class="pre">query_inplace</span></code> method:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nb">id</span><span class="p">(</span><span class="n">mdf</span><span class="p">)</span>
 <span class="o">=&gt;</span> <span class="mi">140341971534792</span>
 
@@ -279,7 +279,7 @@ operations on a specific <code class="code docutils literal notranslate"><span c
 <span class="nb">id</span><span class="p">(</span><span class="n">mdf3</span><span class="p">)</span>
 <span class="o">=&gt;</span> <span class="mi">140341971523792</span>
 
-<span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">query_inplace</span><span class="p">(</span><span class="n">x__gt</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">x__lt</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">query_inplace</span><span class="p">(</span><span class="n">x__gt</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">x__lt</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">mdf</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
     <span class="n">x</span>  <span class="n">y</span>
@@ -306,7 +306,7 @@ work on the subset of the data returned by the filter.</p>
 <p>Sorting works by specifying the sort columns. Use <code class="code docutils literal notranslate"><span class="pre">-</span></code> and <code class="code docutils literal notranslate"><span class="pre">+</span></code>
 before any column name to specify the sort order as descending or ascending,
 respectively (ascending is the default).</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="s1">&#39;-x&#39;</span><span class="p">,</span> <span class="s1">&#39;+y&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="s1">'-x'</span><span class="p">,</span> <span class="s1">'+y'</span><span class="p">])</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
       <span class="n">x</span>    <span class="n">y</span>
  <span class="mi">999</span>  <span class="mi">999</span>  <span class="mi">999</span>
@@ -321,7 +321,7 @@ respectively (ascending is the default).</p>
 <h3><a class="toc-backref" href="#id12" role="doc-backlink">Limiting and skipping rows</a><a class="headerlink" href="#limiting-and-skipping-rows" title="Link to this heading">¶</a></h3>
 <p>The <code class="code docutils literal notranslate"><span class="pre">head(n)</span></code> and <code class="code docutils literal notranslate"><span class="pre">skip(n)</span></code> methods return and skip the top _n_
 rows, respectively:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
    <span class="n">x</span>  <span class="n">y</span>
 <span class="mi">5</span>  <span class="mi">5</span>  <span class="mi">5</span>
@@ -338,14 +338,14 @@ are executed by MongoDB. The result of the <code class="code docutils literal no
 <code class="code docutils literal notranslate"><span class="pre">MDataFrame</span></code> on the result</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="c1"># create two dataframes and store in omega-ml</span>
-<span class="n">dfl</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)})</span>
-<span class="n">dfr</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)})</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">dfl</span><span class="p">,</span> <span class="s1">&#39;dfxl&#39;</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">dfr</span><span class="p">,</span> <span class="s1">&#39;dfxr&#39;</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">dfl</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)})</span>
+<span class="n">dfr</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="s1">'y'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)})</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">dfl</span><span class="p">,</span> <span class="s1">'dfxl'</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">dfr</span><span class="p">,</span> <span class="s1">'dfxr'</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="c1"># merge the dataframes</span>
-<span class="n">mdfl</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfxl&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">mdfr</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dfxr&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">mdfl</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">mdfr</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+<span class="n">mdfl</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfxl'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">mdfr</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dfxr'</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">mdfl</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">mdfr</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s1">'x'</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
 <span class="o">=&gt;</span>
    <span class="n">x</span>  <span class="n">y</span>
 <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
@@ -366,9 +366,9 @@ aggregation operations are executed by MongoDB.</p>
 <li><p><code class="code docutils literal notranslate"><span class="pre">correlation</span></code> - returns the pearson correlation matrix</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">covariance</span></code> - returns the covariance matrix</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
-<span class="n">mdf</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y].correlation().value</span>
-<span class="n">mdf</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y].covariance().value</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">)</span>
+<span class="n">mdf</span><span class="p">[</span><span class="s1">'x'</span><span class="p">,</span> <span class="s1">'y].correlation().value</span>
+<span class="n">mdf</span><span class="p">[</span><span class="s1">'x'</span><span class="p">,</span> <span class="s1">'y].covariance().value</span>
 </pre></div>
 </div>
 <p>The following statisics can be computed on all numeric columns:</p>
@@ -379,17 +379,17 @@ aggregation operations are executed by MongoDB.</p>
 <li><p><code class="code docutils literal notranslate"><span class="pre">std</span></code></p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">quantile</span></code> - by defaults calculates the .5 quantile, specify a list of percentiles</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
-<span class="n">mdf</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y].mean()</span>
-<span class="n">mdf</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y].min()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">)</span>
+<span class="n">mdf</span><span class="p">[</span><span class="s1">'x'</span><span class="p">,</span> <span class="s1">'y].mean()</span>
+<span class="n">mdf</span><span class="p">[</span><span class="s1">'x'</span><span class="p">,</span> <span class="s1">'y].min()</span>
 <span class="o">...</span>
 </pre></div>
 </div>
 </section>
 <section id="grouping-data">
 <h3><a class="toc-backref" href="#id16" role="doc-backlink">Grouping data</a><a class="headerlink" href="#grouping-data" title="Link to this heading">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">)</span>
-<span class="n">mdf</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">)</span>
+<span class="n">mdf</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'x'</span><span class="p">)</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="o">=&gt;</span>
      <span class="n">x_mean</span>
 <span class="n">x</span>
@@ -401,8 +401,8 @@ aggregation operations are executed by MongoDB.</p>
 </pre></div>
 </div>
 <p>Multiple aggregations can be applied at once by the <code class="code docutils literal notranslate"><span class="pre">agg()</span></code> method:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;dfx&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">mdf</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">'dfx'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mdf</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'x'</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">'sum'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">'mean'</span><span class="p">))</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>The following aggregations are currently supported:</p>

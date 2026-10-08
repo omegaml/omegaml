@@ -15,8 +15,8 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -96,7 +96,7 @@ or provided as a pre-trained model by some third party.</p>
 <section id="preparing-an-oci-repository">
 <h2>Preparing an OCI repository<a class="headerlink" href="#preparing-an-oci-repository" title="Link to this heading">¶</a></h2>
 <p>To use an OCI registry we first add it the <cite>om.models</cite> store:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;oci://ghcr.io/userid&#39;</span><span class="p">,</span> <span class="s1">&#39;ocireg&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'oci://ghcr.io/userid'</span><span class="p">,</span> <span class="s1">'ocireg'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -106,7 +106,7 @@ or provided as a pre-trained model by some third party.</p>
 This creates a new image in the registry, named as the model, and remembers its name
 in the stored object’s Metadata.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="o">...</span> <span class="c1"># some supported model</span>
-<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="s1">&#39;ocireg&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">'mymodel'</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="s1">'ocireg'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -114,7 +114,7 @@ in the stored object’s Metadata.</p>
 <h2>Loading a model<a class="headerlink" href="#loading-a-model" title="Link to this heading">¶</a></h2>
 <p>Loading a model from a registry works the same as with any other model. The name of the
 OCI repository is inferred from the object’s Metadata.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span>
 <span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>

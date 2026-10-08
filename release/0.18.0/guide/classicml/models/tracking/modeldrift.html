@@ -15,8 +15,8 @@
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -124,10 +124,10 @@ and plot the results.</p>
 
 <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">load_iris</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="n">recreate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">experiment</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">,</span> <span class="n">recreate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>
     <span class="n">mon</span> <span class="o">=</span> <span class="n">ModelDriftMonitor</span><span class="p">(</span><span class="n">tracking</span><span class="o">=</span><span class="n">exp</span><span class="p">)</span>
-    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">catcols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">])</span>
-    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">Y</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span> <span class="n">catcols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">])</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">catcols</span><span class="o">=</span><span class="p">[</span><span class="s1">'target'</span><span class="p">])</span>
+    <span class="n">mon</span><span class="o">.</span><span class="n">snapshot</span><span class="p">(</span><span class="n">Y</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span> <span class="n">catcols</span><span class="o">=</span><span class="p">[</span><span class="s1">'target'</span><span class="p">])</span>
 
 <span class="n">stats</span> <span class="o">=</span> <span class="n">mon</span><span class="o">.</span><span class="n">compare</span><span class="p">()</span>
 <span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
@@ -139,7 +139,7 @@ and plot the results.</p>
 shows the relative frequency of each unique value in both the baseline and the target snapshot.
 The relative frequency means that the same number of values are sampled from the distribution of
 the <cite>Y_target</cite> column in both snapshots.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Y_target&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">'Y_target'</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_1hist_drift.png" src="../../../../_images/mon_1hist_drift.png" />
@@ -147,7 +147,7 @@ the <cite>Y_target</cite> column in both snapshots.</p>
 of each unique value in <cite>Y_target</cite>, specify <cite>sample=False</cite>. In this example, the target snapshot
 contained only the first 5 rows of the original data, while the baseline contained all rows.
 Therefore each value is less frequent in the target snapshot.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">&#39;Y_target&#39;</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">stats</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="s1">'Y_target'</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="../../../../_images/mon_1hist_drift_actual.png" src="../../../../_images/mon_1hist_drift_actual.png" />

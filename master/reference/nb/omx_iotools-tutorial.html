@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&lt;no title&gt; &mdash; omega-ml 0.18.0 documentation</title>
+  <title>&lt;no title&gt; &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
@@ -15,12 +15,12 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -66,13 +66,6 @@
 
       <div class="wy-nav-content">
 
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../release/0.18.0/index.html">release/0.18.0</a>.
-    
-</div>
-
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -88,33 +81,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+  <div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># avoid issues with onnxruntime</span>
+<span class="o">!</span>pip<span class="w"> </span>uninstall<span class="w"> </span>-y<span class="w"> </span>markitdown<span class="w"> </span>onnxruntime
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 
-<span class="n">url_tripdata</span> <span class="o">=</span> <span class="s1">&#39;https://raw.githubusercontent.com/tejaykodali/taxiTrips/master/tripData.csv&#39;</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">url_tripdata</span><span class="p">,</span> <span class="s1">&#39;tripdata&#39;</span><span class="p">)</span>
+<span class="n">url_tripdata</span> <span class="o">=</span> <span class="s1">'https://raw.githubusercontent.com/tejaykodali/taxiTrips/master/tripData.csv'</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">url_tripdata</span><span class="p">,</span> <span class="s1">'tripdata'</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-13it [00:13,  1.06s/it]
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-MDataFrame(collection=omegaml.data_.tripdata.datastore, columns=[&#39;Unnamed: 0&#39;, &#39;X&#39;, &#39;VendorID&#39;, &#39;tpep_pickup_datetime&#39;, &#39;tpep_dropoff_datetime&#39;, &#39;passenger_count&#39;, &#39;trip_distance&#39;, &#39;pickup_longitude&#39;, &#39;pickup_latitude&#39;, &#39;RateCodeID&#39;, &#39;store_and_fwd_flag&#39;, &#39;dropoff_longitude&#39;, &#39;dropoff_latitude&#39;, &#39;payment_type&#39;, &#39;fare_amount&#39;, &#39;extra&#39;, &#39;mta_tax&#39;, &#39;tip_amount&#39;, &#39;tolls_amount&#39;, &#39;total_amount&#39;], sort_order=None, limit=None, skip=None, from_loc_indexer=False, immediate_loc=False, query={}, auto_inspect=False, preparefn=None, is_from_facet=False, index_columns=[], cache=&lt;omegaml.mixins.mdf.apply.ApplyCache object at 0x7f2b1016b860&gt;, apply_fn=None)
-</pre></div></div>
 </div>
 
 

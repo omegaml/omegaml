@@ -15,8 +15,8 @@
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -133,18 +133,18 @@ are “first-class citizens” in omega-ml, mapping to corresponding functionali
 <p>These concepts make up the very modules and APIs that omega-ml provides. For example, in
 your Python code (these is an excerpt of the full capabilities):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># store a pandas dataframe</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;mydataframe&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">'mydataframe'</span><span class="p">)</span>
 
 <span class="c1"># store a scikit learn model and fit in the cloud</span>
-<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="s1">&#39;mymodel&#39;</span><span class="p">)</span>
-<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">&#39;mymodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="s1">'mymodel'</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'mymodel'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
 
 <span class="c1"># retrieve any size dataset and store as a dataframe</span>
-<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;http://..../largedata.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;largedata&#39;</span><span class="p">)</span>
+<span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'http://..../largedata.csv'</span><span class="p">,</span> <span class="s1">'largedata'</span><span class="p">)</span>
 
 <span class="c1"># query the dataset as if it was an in-memory dataframe</span>
-<span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">&#39;largedata&#39;</span><span class="p">)</span>
-<span class="n">mdf</span><span class="p">[</span><span class="n">mdf</span><span class="p">[</span><span class="s1">&#39;city&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;New York&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;borough&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="n">mdf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">getl</span><span class="p">(</span><span class="s1">'largedata'</span><span class="p">)</span>
+<span class="n">mdf</span><span class="p">[</span><span class="n">mdf</span><span class="p">[</span><span class="s1">'city'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'New York'</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'borough'</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The command line client works similarly:</p>

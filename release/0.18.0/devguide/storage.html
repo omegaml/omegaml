@@ -15,8 +15,8 @@
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -150,7 +150,7 @@ may be well suited to store the data.</p>
    <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
    <span class="n">collection</span><span class="o">.</span><span class="n">insert_many</span><span class="p">([</span><span class="nb">dict</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">])</span>
    <span class="c1"># create meta data</span>
-   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo.rows&#39;</span><span class="p">)</span>
+   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">'foo.rows'</span><span class="p">)</span>
    <span class="n">meta</span><span class="o">.</span><span class="n">collection</span> <span class="o">=</span> <span class="n">collection</span>
    <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </pre></div>
@@ -165,11 +165,11 @@ the tutorial on <cite>MongoDB documents</cite> and <a class="reference external"
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
    <span class="c1"># store obj in gridfs</span>
-   <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">object_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+   <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">object_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">'foo'</span><span class="p">)</span>
    <span class="n">buf</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
    <span class="n">fileid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
    <span class="c1"># create meta data</span>
-   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo.file&#39;</span><span class="p">)</span>
+   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">'foo.file'</span><span class="p">)</span>
    <span class="n">meta</span><span class="o">.</span><span class="n">gridfile</span> <span class="o">=</span> <span class="n">GridFSProxy</span><span class="p">(</span><span class="n">grid_id</span><span class="o">=</span><span class="n">fileid</span><span class="p">)</span>
    <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </pre></div>
@@ -196,16 +196,16 @@ an arbitrary URI that a backend can set (on <code class="code docutils literal n
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># some class FooDataBackend(BaseDataBackend):</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
    <span class="c1"># store obj in some external file system</span>
-   <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date_store</span><span class="o">.</span><span class="n">object_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+   <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">date_store</span><span class="o">.</span><span class="n">object_store_key</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">'foo'</span><span class="p">)</span>
    <span class="n">buf</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
    <span class="c1"># get instance of external file system and create file URI</span>
    <span class="c1"># note the URI can be anything as long as your get method knows how</span>
    <span class="c1"># to dereference</span>
    <span class="n">foofs</span> <span class="o">=</span> <span class="o">...</span>
    <span class="n">fileid</span> <span class="o">=</span> <span class="n">foofs</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
-   <span class="n">uri</span> <span class="o">=</span> <span class="s1">&#39;foofs://</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fileid</span><span class="p">)</span>
+   <span class="n">uri</span> <span class="o">=</span> <span class="s1">'foofs://</span><span class="si">{}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fileid</span><span class="p">)</span>
    <span class="c1"># create meta data</span>
-   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;foo.file&#39;</span><span class="p">)</span>
+   <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">make_metadata</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">'foo.file'</span><span class="p">)</span>
    <span class="n">meta</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="n">uri</span>
    <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 

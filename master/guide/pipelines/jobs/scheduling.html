@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scheduling notebooks &mdash; omega-ml 0.18.0 documentation</title>
+  <title>Scheduling notebooks &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=7ca4e891" />
@@ -14,9 +14,9 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/documentation_options.js?v=7a80b789"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -85,13 +85,6 @@
 
       <div class="wy-nav-content">
 
-<div class="version-warning-banner">
-    
-    You're reading the documentation for a development version.
-    For the latest released version, please have a look at <a href="../../../../release/0.18.0/guide/pipelines/jobs/scheduling.html">release/0.18.0</a>.
-    
-</div>
-
 
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
@@ -119,7 +112,7 @@ run a notebook on a schedule? Say you have a notebook that produces a nice repor
 and it should run every Friday morning.</p>
 <p>With omega-ml, scheduling a notebook to run in the cloud is straight forward:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># make it run every Friday morning</span>
-$<span class="w"> </span>om<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>schedule<span class="w"> </span>mynotebook<span class="w"> </span><span class="s2">&quot;Fridays, at 06:00&quot;</span>
+$<span class="w"> </span>om<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>schedule<span class="w"> </span>mynotebook<span class="w"> </span><span class="s2">"Fridays, at 06:00"</span>
 </pre></div>
 </div>
 <p>We can verify the next times this notebook will be run:</p>
@@ -142,9 +135,9 @@ mynotebook<span class="w"> </span>is<span class="w"> </span>scheduled<span class
 <p>For each run the notebook, including all output, will be stored in <cite>jobs/results</cite>, and
 we can get it back:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>om<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>list<span class="w"> </span>results
-<span class="o">[</span><span class="s1">&#39;mynotebook.ipynb&#39;</span>,<span class="w"> </span><span class="s1">&#39;mynotebook2.ipynb&#39;</span>,<span class="w"> </span><span class="s1">&#39;results/mynotebook_2020-09-18 13:37:56.885840.ipynb&#39;</span><span class="o">]</span>
+<span class="o">[</span><span class="s1">'mynotebook.ipynb'</span>,<span class="w"> </span><span class="s1">'mynotebook2.ipynb'</span>,<span class="w"> </span><span class="s1">'results/mynotebook_2020-09-18 13:37:56.885840.ipynb'</span><span class="o">]</span>
 
-$<span class="w"> </span>om<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>get<span class="w"> </span><span class="s1">&#39;results/mynotebook_2020-09-18 13:37:56.885840.ipynb&#39;</span><span class="w"> </span>mynotebook_results.ipynb
+$<span class="w"> </span>om<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>get<span class="w"> </span><span class="s1">'results/mynotebook_2020-09-18 13:37:56.885840.ipynb'</span><span class="w"> </span>mynotebook_results.ipynb
 </pre></div>
 </div>
 </section>

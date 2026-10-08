@@ -14,8 +14,8 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=ba2e7b09"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="#" />
@@ -153,8 +153,6 @@
 </li>
       <li><a href="reference/core.html#omegaml.documents.Metadata.attributes">attributes (omegaml.documents.Metadata attribute)</a>
 </li>
-      <li><a href="reference/datasets.html#omegaml.backends.genai.mongovector.MongoDBVectorStore.attributes">attributes() (omegaml.backends.genai.mongovector.MongoDBVectorStore method)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -242,21 +240,13 @@
       <li><a href="devguide/storage.html#omegaml.backends.basemodel.BaseModelBackend.fit">fit() (omegaml.backends.basemodel.BaseModelBackend method)</a>
 
       <ul>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowKerasBackend.fit">(omegaml.backends.tensorflow.TensorflowKerasBackend method)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.fit">(omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend method)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowSavedModelBackend.fit">(omegaml.backends.tensorflow.TensorflowSavedModelBackend method)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TFEstimatorModelBackend.fit">(omegaml.backends.tensorflow.TFEstimatorModelBackend method)</a>
-</li>
         <li><a href="reference/runtimes.html#omegaml.runtimes.mixins.ModelMixin.fit">(omegaml.runtimes.mixins.ModelMixin method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/runtimes.html#omegaml.runtimes.mixins.ModelMixin.fit_transform">fit_transform() (omegaml.runtimes.mixins.ModelMixin method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/jobs.html#omegaml.notebook.jobschedule.JobSchedule.from_cron">from_cron() (omegaml.notebook.jobschedule.JobSchedule class method)</a>
 </li>
       <li><a href="reference/jobs.html#omegaml.notebook.jobschedule.JobSchedule.from_text">from_text() (omegaml.notebook.jobschedule.JobSchedule class method)</a>
@@ -269,11 +259,11 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/models.html#omegaml.backends.genai.GenAIBaseBackend">GenAIBaseBackend (class in omegaml.backends.genai)</a>
+</li>
       <li><a href="reference/models.html#omegaml.backends.experiment.ExperimentBackend.get">get() (omegaml.backends.experiment.ExperimentBackend method)</a>, <a href="reference/tracking.html#omegaml.backends.experiment.ExperimentBackend.get">[1]</a>
 
       <ul>
-        <li><a href="reference/models.html#omegaml.backends.genai.textmodel.TextModelBackend.get">(omegaml.backends.genai.textmodel.TextModelBackend method)</a>
-</li>
         <li><a href="reference/scripts.html#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.get">(omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend method)</a>
 </li>
         <li><a href="reference/scripts.html#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.get">(omegaml.backends.mlflow.localprojects.MLFlowProjectBackend method)</a>
@@ -386,9 +376,7 @@
       <li><a href="reference/models.html#omegaml.backends.experiment.ExperimentBackend.KIND">KIND (omegaml.backends.experiment.ExperimentBackend attribute)</a>, <a href="reference/tracking.html#omegaml.backends.experiment.ExperimentBackend.KIND">[1]</a>
 
       <ul>
-        <li><a href="reference/datasets.html#omegaml.backends.genai.mongovector.MongoDBVectorStore.KIND">(omegaml.backends.genai.mongovector.MongoDBVectorStore attribute)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.genai.textmodel.TextModelBackend.KIND">(omegaml.backends.genai.textmodel.TextModelBackend attribute)</a>
+        <li><a href="reference/models.html#omegaml.backends.genai.GenAIBaseBackend.KIND">(omegaml.backends.genai.GenAIBaseBackend attribute)</a>
 </li>
         <li><a href="reference/scripts.html#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.KIND">(omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend attribute)</a>
 </li>
@@ -412,14 +400,6 @@
 </li>
         <li><a href="reference/datasets.html#omegaml.backends.sqlalchemy.SQLAlchemyBackend.KIND">(omegaml.backends.sqlalchemy.SQLAlchemyBackend attribute)</a>
 </li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowKerasBackend.KIND">(omegaml.backends.tensorflow.TensorflowKerasBackend attribute)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.KIND">(omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend attribute)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowSavedModelBackend.KIND">(omegaml.backends.tensorflow.TensorflowSavedModelBackend attribute)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TFEstimatorModelBackend.KIND">(omegaml.backends.tensorflow.TFEstimatorModelBackend attribute)</a>
-</li>
         <li><a href="reference/datasets.html#omegaml.backends.virtualobj.VirtualObjectBackend.KIND">(omegaml.backends.virtualobj.VirtualObjectBackend attribute)</a>
 </li>
       </ul></li>
@@ -441,11 +421,9 @@
 </li>
       <li><a href="reference/models.html#omegaml.mixins.store.extdmeta.ModelSignatureMixin.link_dataset">link_dataset() (omegaml.mixins.store.extdmeta.ModelSignatureMixin method)</a>
 </li>
-      <li><a href="reference/datasets.html#omegaml.backends.genai.mongovector.MongoDBVectorStore.list">list() (omegaml.backends.genai.mongovector.MongoDBVectorStore method)</a>
+      <li><a href="reference/jobs.html#omegaml.runtimes.mixins.nbtasks.JobTasks.list">list() (omegaml.runtimes.mixins.nbtasks.JobTasks method)</a>
 
       <ul>
-        <li><a href="reference/jobs.html#omegaml.runtimes.mixins.nbtasks.JobTasks.list">(omegaml.runtimes.mixins.nbtasks.JobTasks method)</a>
-</li>
         <li><a href="reference/core.html#omegaml.store.base.OmegaStore.list">(omegaml.store.base.OmegaStore method)</a>
 </li>
       </ul></li>
@@ -462,6 +440,8 @@
       <li><a href="reference/tracking.html#omegaml.backends.experiment.OmegaSimpleTracker.log_artifact">log_artifact() (omegaml.backends.experiment.OmegaSimpleTracker method)</a>
 </li>
       <li><a href="reference/tracking.html#omegaml.backends.experiment.OmegaSimpleTracker.log_data">log_data() (omegaml.backends.experiment.OmegaSimpleTracker method)</a>
+</li>
+      <li><a href="reference/tracking.html#omegaml.backends.experiment.OmegaSimpleTracker.log_event">log_event() (omegaml.backends.experiment.OmegaSimpleTracker method)</a>
 </li>
       <li><a href="reference/tracking.html#omegaml.backends.experiment.OmegaSimpleTracker.log_events">log_events() (omegaml.backends.experiment.OmegaSimpleTracker method)</a>
 </li>
@@ -503,10 +483,10 @@
 </li>
       <li><a href="reference/scripts.html#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend">MLFlowGitProjectBackend (class in omegaml.backends.mlflow.gitprojects)</a>
 </li>
-      <li><a href="reference/scripts.html#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend">MLFlowProjectBackend (class in omegaml.backends.mlflow.localprojects)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/scripts.html#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend">MLFlowProjectBackend (class in omegaml.backends.mlflow.localprojects)</a>
+</li>
       <li><a href="reference/mdataframe.html#omegaml.mdataframe.MLocIndexer">MLocIndexer (class in omegaml.mdataframe)</a>
 </li>
       <li><a href="reference/runtimes.html#omegaml.runtimes.OmegaRuntime.mode">mode() (omegaml.runtimes.OmegaRuntime method)</a>
@@ -522,8 +502,6 @@
       <li><a href="reference/core.html#omegaml.documents.Metadata.modified">modified (omegaml.documents.Metadata attribute)</a>
 </li>
       <li><a href="reference/core.html#omegaml.store.base.OmegaStore.mongodb">mongodb (omegaml.store.base.OmegaStore property)</a>
-</li>
-      <li><a href="reference/datasets.html#omegaml.backends.genai.mongovector.MongoDBVectorStore">MongoDBVectorStore (class in omegaml.backends.genai.mongovector)</a>
 </li>
       <li><a href="reference/mdataframe.html#omegaml.mdataframe.MPosIndexer">MPosIndexer (class in omegaml.mdataframe)</a>
 </li>
@@ -597,8 +575,6 @@
 </li>
       <li><a href="reference/runtimes.html#omegaml.runtimes.mixins.ModelMixin.partial_fit">partial_fit() (omegaml.runtimes.mixins.ModelMixin method)</a>
 </li>
-      <li><a href="reference/datasets.html#omegaml.backends.genai.pgvector.PGVectorBackend">PGVectorBackend (class in omegaml.backends.genai.pgvector)</a>
-</li>
       <li><a href="reference/runtimes.html#omegaml.runtimes.OmegaRuntime.ping">ping() (omegaml.runtimes.OmegaRuntime method)</a>
 </li>
       <li><a href="devguide/storage.html#omegaml.backends.basemodel.BaseModelBackend.predict">predict() (omegaml.backends.basemodel.BaseModelBackend method)</a>
@@ -607,10 +583,6 @@
         <li><a href="reference/models.html#omegaml.backends.rsystem.rmodels.RModelBackend.predict">(omegaml.backends.rsystem.rmodels.RModelBackend method)</a>
 </li>
         <li><a href="reference/models.html#omegaml.backends.rsystem.rmodels.RModelProxy.predict">(omegaml.backends.rsystem.rmodels.RModelProxy method)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowSavedModelBackend.predict">(omegaml.backends.tensorflow.TensorflowSavedModelBackend method)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TFEstimatorModelBackend.predict">(omegaml.backends.tensorflow.TFEstimatorModelBackend method)</a>
 </li>
         <li><a href="reference/runtimes.html#omegaml.runtimes.mixins.ModelMixin.predict">(omegaml.runtimes.mixins.ModelMixin method)</a>
 </li>
@@ -625,13 +597,9 @@
 </li>
       <li><a href="reference/datasets.html#omegaml.mixins.store.promotion.PromotionMixin">PromotionMixin (class in omegaml.mixins.store.promotion)</a>, <a href="reference/models.html#omegaml.mixins.store.promotion.PromotionMixin">[1]</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/models.html#omegaml.backends.experiment.ExperimentBackend.put">put() (omegaml.backends.experiment.ExperimentBackend method)</a>, <a href="reference/tracking.html#omegaml.backends.experiment.ExperimentBackend.put">[1]</a>
 
       <ul>
-        <li><a href="reference/models.html#omegaml.backends.genai.textmodel.TextModelBackend.put">(omegaml.backends.genai.textmodel.TextModelBackend method)</a>
-</li>
         <li><a href="reference/scripts.html#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.put">(omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend method)</a>
 </li>
         <li><a href="reference/scripts.html#omegaml.backends.mlflow.localprojects.MLFlowProjectBackend.put">(omegaml.backends.mlflow.localprojects.MLFlowProjectBackend method)</a>
@@ -655,6 +623,8 @@
         <li><a href="reference/core.html#omegaml.store.base.OmegaStore.put">(omegaml.store.base.OmegaStore method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/scripts.html#omegaml.backends.package.PythonPackageData">PythonPackageData (class in omegaml.backends.package)</a>
 </li>
       <li><a href="reference/scripts.html#omegaml.mixins.store.package.PythonPackageMixin">PythonPackageMixin (class in omegaml.mixins.store.package)</a>
@@ -745,12 +715,8 @@
 </li>
       <li><a href="reference/models.html#omegaml.backends.scikitlearn.ScikitLearnBackend">ScikitLearnBackend (class in omegaml.backends.scikitlearn)</a>
 </li>
-      <li><a href="reference/models.html#omegaml.backends.tensorflow.TFEstimatorModelBackend.score">score() (omegaml.backends.tensorflow.TFEstimatorModelBackend method)</a>
-
-      <ul>
-        <li><a href="reference/runtimes.html#omegaml.runtimes.mixins.ModelMixin.score">(omegaml.runtimes.mixins.ModelMixin method)</a>
+      <li><a href="reference/runtimes.html#omegaml.runtimes.mixins.ModelMixin.score">score() (omegaml.runtimes.mixins.ModelMixin method)</a>
 </li>
-      </ul></li>
       <li><a href="reference/runtimes.html#omegaml.runtimes.OmegaRuntime.script">script() (omegaml.runtimes.OmegaRuntime method)</a>
 </li>
       <li><a href="reference/scripts.html#omegaml.scripts">scripts (in module omegaml)</a>
@@ -781,6 +747,8 @@
 </li>
       <li><a href="reference/runtimes.html#omegaml.runtimes.OmegaRuntime.stats">stats() (omegaml.runtimes.OmegaRuntime method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/tracking.html#omegaml.backends.experiment.OmegaSimpleTracker.status">status() (omegaml.backends.experiment.OmegaSimpleTracker method)</a>
 
       <ul>
@@ -789,8 +757,6 @@
         <li><a href="reference/runtimes.html#omegaml.runtimes.OmegaRuntime.status">(omegaml.runtimes.OmegaRuntime method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/tracking.html#omegaml.backends.experiment.OmegaSimpleTracker.stop">stop() (omegaml.backends.experiment.OmegaSimpleTracker method)</a>
 </li>
       <li><a href="reference/runtimes.html#omegaml.runtimes.loky.OmegaRuntimeBackend.stop_call">stop_call() (omegaml.runtimes.loky.OmegaRuntimeBackend method)</a>
@@ -798,9 +764,7 @@
       <li><a href="reference/models.html#omegaml.backends.experiment.ExperimentBackend.supports">supports() (omegaml.backends.experiment.ExperimentBackend class method)</a>, <a href="reference/tracking.html#omegaml.backends.experiment.ExperimentBackend.supports">[1]</a>
 
       <ul>
-        <li><a href="reference/datasets.html#omegaml.backends.genai.mongovector.MongoDBVectorStore.supports">(omegaml.backends.genai.mongovector.MongoDBVectorStore class method)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.genai.textmodel.TextModelBackend.supports">(omegaml.backends.genai.textmodel.TextModelBackend class method)</a>
+        <li><a href="reference/models.html#omegaml.backends.genai.GenAIBaseBackend.supports">(omegaml.backends.genai.GenAIBaseBackend class method)</a>
 </li>
         <li><a href="reference/scripts.html#omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend.supports">(omegaml.backends.mlflow.gitprojects.MLFlowGitProjectBackend class method)</a>
 </li>
@@ -822,14 +786,6 @@
 </li>
         <li><a href="reference/datasets.html#omegaml.backends.sqlalchemy.SQLAlchemyBackend.supports">(omegaml.backends.sqlalchemy.SQLAlchemyBackend class method)</a>
 </li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowKerasBackend.supports">(omegaml.backends.tensorflow.TensorflowKerasBackend class method)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend.supports">(omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend class method)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowSavedModelBackend.supports">(omegaml.backends.tensorflow.TensorflowSavedModelBackend class method)</a>
-</li>
-        <li><a href="reference/models.html#omegaml.backends.tensorflow.TFEstimatorModelBackend.supports">(omegaml.backends.tensorflow.TFEstimatorModelBackend class method)</a>
-</li>
         <li><a href="reference/datasets.html#omegaml.backends.virtualobj.VirtualObjectBackend.supports">(omegaml.backends.virtualobj.VirtualObjectBackend class method)</a>
 </li>
       </ul></li>
@@ -843,11 +799,7 @@
 </li>
       <li><a href="reference/runtimes.html#omegaml.runtimes.OmegaRuntime.task">task() (omegaml.runtimes.OmegaRuntime method)</a>
 </li>
-      <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowKerasBackend">TensorflowKerasBackend (class in omegaml.backends.tensorflow)</a>
-</li>
-      <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowKerasSavedModelBackend">TensorflowKerasSavedModelBackend (class in omegaml.backends.tensorflow)</a>
-</li>
-      <li><a href="reference/models.html#omegaml.backends.tensorflow.TensorflowSavedModelBackend">TensorflowSavedModelBackend (class in omegaml.backends.tensorflow)</a>
+      <li><a href="reference/runtimes.html#omegaml.runtimes.OmegaRuntime.tasks">tasks (omegaml.runtimes.OmegaRuntime property)</a>
 </li>
       <li><a href="reference/runtimes.html#omegaml.runtimes.loky.OmegaRuntimeBackend.terminate">terminate() (omegaml.runtimes.loky.OmegaRuntimeBackend method)</a>
 </li>
@@ -855,10 +807,6 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/models.html#omegaml.backends.genai.textmodel.TextModelBackend">TextModelBackend (class in omegaml.backends.genai.textmodel)</a>
-</li>
-      <li><a href="reference/models.html#omegaml.backends.tensorflow.TFEstimatorModelBackend">TFEstimatorModelBackend (class in omegaml.backends.tensorflow)</a>
-</li>
       <li><a href="reference/core.html#omegaml.store.base.OmegaStore.tmppath">tmppath (omegaml.store.base.OmegaStore property)</a>
 </li>
       <li><a href="reference/datasets.html#omegaml.mixins.mdf.iotools.IOToolsStoreMixin.to_csv">to_csv() (omegaml.mixins.mdf.iotools.IOToolsStoreMixin method)</a>
