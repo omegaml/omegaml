@@ -9,5 +9,9 @@ sphinx-autobuild
 sphinx-rtd-theme                                                                                                                                                             
 pygments    
 sphinxcontrib-jquery
-sphinx-multiversion
+#sphinx-multiversion
+# due to https://github.com/sphinx-contrib/multiversion/pull/202
+git+https://github.com/sphinx-contrib/multiversion@450b00deb621ac24f6cc110961ded4c48d35ba5f#egg=sphinx-multiversion
 sphinx-toolbox
+
+
