@@ -5,7 +5,7 @@ from omegaml.backends.genai.models.conversation import ConversationModel, Conver
 
 class TextModel(ConversationModel):
     """
-    .. deprecated:: NEXT
+    .. deprecated:: 0.18.2
        Use ConversationModel instead. TextModel will be removed in the next release.
     """
 

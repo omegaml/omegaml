@@ -20,7 +20,7 @@ class ModelsCommandBase(StoresCommandMixin, CommandBase):
     .. versionchanged:: 0.18.0
          om models put <spec> <name> now supports arbitrary model specifications
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.2
         om models get <name> <path> is the same as om.models.get(name, local='<path>')
     """
 

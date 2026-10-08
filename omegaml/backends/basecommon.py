@@ -65,7 +65,7 @@ class BackendBaseCommon:
         Returns:
             gridfile (GridFSProxy|None): assignable to Metadata.gridfile, None if uri= was specified for compatibility
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.2
             if obj is a directory, it will be zipped-up before storing to the file. See also PythonRawFileBackend.get()
         """
         if replace:

@@ -26,7 +26,7 @@ class SessionizeMixin:
 
         The placeholders can be combined, e.g. mymodel/:userid/:sessionid. The order of the placeholders is arbitrary.
 
-    .. versionadded: NEXT
+    .. versionadded: 0.18.2
         all stores support implicitly and explicitly sessionized objects. This is useful in AI agentic runs.
     """
 

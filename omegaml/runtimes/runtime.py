@@ -361,7 +361,7 @@ class OmegaRuntime:
     def tasks(self):
         """return registered task names
 
-        .. versionadded:: NEXT
+        .. versionadded:: 0.18.2
         """
         return list(self.celeryapp.tasks.keys())
 

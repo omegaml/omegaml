@@ -140,7 +140,7 @@ class BaseModelBackend(BackendBaseCommon):
         .. versionchanged:: 0.18.0
             enable custom serializer
 
-        .. versionchanged: NEXT
+        .. versionchanged: 0.18.2
             enable multi-file serialized models
         """
         serializer = serializer or self.serializer.__func__  # __func__ is the unbound method
@@ -177,7 +177,7 @@ class BaseModelBackend(BackendBaseCommon):
         .. versionchanged:: 0.18.0
             enable custom loader
 
-        .. versionchanged: NEXT
+        .. versionchanged: 0.18.2
             enable multi-file serialized models
         """
         loader = loader or self.loader.__func__  # __func__ is the unbound method

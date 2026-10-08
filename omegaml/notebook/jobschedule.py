@@ -52,7 +52,7 @@ class JobSchedule:
     Raises:
         ValueError if the given specification is not correct
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.2
         the .text property returns times in 24-hour format. Use JobSchedule.cron_descriptor_options to change format.
     """
 
@@ -120,7 +120,7 @@ class JobSchedule:
     def text(self):
         """return the human readable representation of the schedule
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.2
             use JobSchedule.cron_descriptor_options to change format, see https://pypi.org/project/cron-descriptor/
         """
         return cron_descriptor.get_description(self.cron, self.cron_descriptor_options)
