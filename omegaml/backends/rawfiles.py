@@ -86,7 +86,7 @@ class PythonRawFileBackend(BaseDataBackend):
             https://docs.python.org/3/glossary.html#term-file-object
             https://docs.python.org/3/glossary.html#term-binary-file
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.2
             specify extracxt=True to retrieve the contents of a zipped-up file, see also BackendBaseCommon._store_to_file()
         """
         meta = self.data_store.metadata(name, **kwargs)

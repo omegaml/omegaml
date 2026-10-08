@@ -57,7 +57,7 @@ class CompletionsMixin:
             response (dict|iterator): if stream==False, returns a dict of all model responses, if stream==True
               returns an iterator of streamed responses.
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.2
             ConversationModel.complete(..., agentic=True) will recursively resolve calls until no further tools are
             called by the model. This implies tools=True if tools are present. Tool calls are not streamed. This
             can also be set permanently by saving a model with models.put(..., strategy={'agentic': True})

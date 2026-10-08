@@ -67,7 +67,7 @@ def omega_indexdocuments(self, documents=None, index=None, force=False):
     Returns:
         indexed (list): the list of document names in om.datasets that were indexed
 
-    .. versionadded:: NEXT
+    .. versionadded:: 0.18.2
     """
     om = self.om
 

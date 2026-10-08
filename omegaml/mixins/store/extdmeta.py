@@ -534,7 +534,7 @@ class DatasetIndexesMixin:
     Metadata:
         * ``.attributes['indexes']`` => ``{'<key>': <sort order>}``
 
-    .. versionadded:: NEXT
+    .. versionadded:: 0.18.2
         Enable consistent indexes specification in metadata.
     """
 

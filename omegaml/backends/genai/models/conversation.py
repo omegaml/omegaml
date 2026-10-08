@@ -115,17 +115,17 @@ class ConversationModelBackend(GenAIBaseBackend):
         Returns:
             metadata (Metadata): the Conversation's metadata object
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.2
             strategy=dict(agentic=True) causes model.complete() to recursively resolve tool calls until no
             further tools are called by the model. See model.complete() for details
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.2
             during prompt augmentation, the pipeline is now called as fn(method='retrieve', docs=[...]) for all
             documents retrieved from the documents db, or an empty list. Return the list of documents to retrain
             as a list[str|dict], where each dict is {'text': '...'}, or each string is the text, one per document.
             Use this to modify or limit the documents.
 
-        .. versionchanged:: NEXT
+        .. versionchanged:: 0.18.2
             the guardrails= parameter provides a list of guardrail functions stored in om.models('policy/*').
             guardrail functions are called in the sequence specified as fn(messages, **kwargs), where messages
             is the list of messages in the conversation, including any responses by the model. The kwargs include
@@ -423,21 +423,21 @@ class ConversationModel(
         the ./openai/messages dataset has been replaced by standard experiment tracking
         (use om.datasets to access prior conversations)
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.2
         Specify guardrails=list[str] as the name of guardrail functions or GuardrailPolicy objects stored
         in om.models as 'policy/<name>'. Guardrails are evaluated for steps 'prompt', 'input', 'output', 'action',
         'response' and output steps. See GuardrailPolicy for details. Guardrails are evaluated after pipeline hooks
         have completed.
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.2
         pipeline functions are now consistently called for all phases of either chat() or complete(), including
         method='retrieve' for document retrieval.
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.2
         tool calls are now executed at the end of the core loop, enabling basic agentic behavior,
         see ConversationModel.complete() for details.
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.2
         all logged events are equivalent for .chat() and .complete(). Previously only .chat() logged all conversations.
 
     """

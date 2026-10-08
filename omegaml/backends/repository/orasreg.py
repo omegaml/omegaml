@@ -33,7 +33,7 @@ class OrasOciRegistry(ArtifactRepository):
         reg.add(['/path/to/file1', '/path/to/file2'])
         reg.add('/path/to/dir')
 
-    .. versionchanged:: NEXT
+    .. versionchanged:: 0.18.2
         reg.url now includes the protocol oci:// or ocidir://, if specified. use reg.uri
         to get back the path without protocol
     """
