@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&lt;no title&gt; &mdash; omega-ml 0.18.0 documentation</title>
+  <title>&lt;no title&gt; &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
+      <script src="../../_static/documentation_options.js?v=7a80b789"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -85,10 +85,12 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="p">;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
 <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">getdefaultencoding</span><span class="p">())</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">'/home/patrick/projects/omegaml'</span><span class="p">)</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
+
 <span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">OMEGA_USERID</span>
 </pre></div>
 </div>
@@ -314,6 +316,7 @@ utf-8
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
 <span class="n">dfl</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)})</span>
 <span class="n">dfr</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="s1">'y'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)})</span>
 <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">dfl</span><span class="p">,</span> <span class="s1">'dfxl'</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -432,18 +435,13 @@ x
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.store.queryops</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoJSON</span>
-<span class="n">locations</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">'location'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'coordinates'</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">74.0059413</span><span class="p">,</span> <span class="mf">40.7127837</span><span class="p">],</span>
-                           <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Point'</span><span class="p">},</span>
-              <span class="s1">'place'</span><span class="p">:</span> <span class="s1">'New York'</span><span class="p">},</span>
-             <span class="p">{</span><span class="s1">'location'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'coordinates'</span><span class="p">:</span> <span class="p">[</span><span class="mf">6.1431577</span><span class="p">,</span> <span class="mf">46.2043907</span><span class="p">],</span>
-                           <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Point'</span><span class="p">},</span>
-              <span class="s1">'place'</span><span class="p">:</span> <span class="s1">'Geneva'</span><span class="p">},</span>
-             <span class="p">{</span><span class="s1">'location'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'coordinates'</span><span class="p">:</span> <span class="p">[</span><span class="mf">7.4474468</span><span class="p">,</span> <span class="mf">46.9479739</span><span class="p">],</span>
-                           <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Point'</span><span class="p">},</span>
-              <span class="s1">'place'</span><span class="p">:</span> <span class="s1">'Bern'</span><span class="p">},</span>
-             <span class="p">{</span><span class="s1">'location'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'coordinates'</span><span class="p">:</span> <span class="p">[</span><span class="mf">8.541694</span><span class="p">,</span> <span class="mf">47.3768866</span><span class="p">],</span>
-                           <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Point'</span><span class="p">},</span>
-              <span class="s1">'place'</span><span class="p">:</span> <span class="s1">'Zurich'</span><span class="p">}]</span>
+
+<span class="n">locations</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s1">'location'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'coordinates'</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">74.0059413</span><span class="p">,</span> <span class="mf">40.7127837</span><span class="p">],</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Point'</span><span class="p">},</span> <span class="s1">'place'</span><span class="p">:</span> <span class="s1">'New York'</span><span class="p">},</span>
+    <span class="p">{</span><span class="s1">'location'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'coordinates'</span><span class="p">:</span> <span class="p">[</span><span class="mf">6.1431577</span><span class="p">,</span> <span class="mf">46.2043907</span><span class="p">],</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Point'</span><span class="p">},</span> <span class="s1">'place'</span><span class="p">:</span> <span class="s1">'Geneva'</span><span class="p">},</span>
+    <span class="p">{</span><span class="s1">'location'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'coordinates'</span><span class="p">:</span> <span class="p">[</span><span class="mf">7.4474468</span><span class="p">,</span> <span class="mf">46.9479739</span><span class="p">],</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Point'</span><span class="p">},</span> <span class="s1">'place'</span><span class="p">:</span> <span class="s1">'Bern'</span><span class="p">},</span>
+    <span class="p">{</span><span class="s1">'location'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'coordinates'</span><span class="p">:</span> <span class="p">[</span><span class="mf">8.541694</span><span class="p">,</span> <span class="mf">47.3768866</span><span class="p">],</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'Point'</span><span class="p">},</span> <span class="s1">'place'</span><span class="p">:</span> <span class="s1">'Zurich'</span><span class="p">},</span>
+<span class="p">]</span>
 <span class="n">geodf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">locations</span><span class="p">)</span>
 <span class="n">geodf</span><span class="p">[</span><span class="s1">'location'</span><span class="p">]</span> <span class="o">=</span> <span class="n">geodf</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">GeoJSON</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
 <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">geodf</span><span class="p">,</span> <span class="s1">'geosample'</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="s1">'@location'</span><span class="p">)</span>
@@ -468,17 +466,18 @@ Name: place, dtype: object
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">30</span><span class="p">)))</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">)))</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
 <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">'x'</span><span class="p">]],</span> <span class="n">df</span><span class="p">[[</span><span class="s1">'y'</span><span class="p">]])</span>
 <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">'x'</span><span class="p">]])</span>
 
 <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="s1">'lrmodel'</span><span class="p">)</span>
-<br/></pre></div>
+</pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -512,9 +511,9 @@ LinearRegression(copy_X=True, fit_intercept=True, n_jobs=1, normalize=False)
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'lrmodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">'x'</span><span class="p">]])</span>
-<span class="c1">#result.get()</span>
+<span class="c1"># result.get()</span>
 <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-<br/></pre></div>
+</pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -599,16 +598,18 @@ LinearRegression(copy_X=True, fit_intercept=True, n_jobs=1, normalize=False)
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="p">;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">'/home/patrick/projects/omegaml'</span><span class="p">)</span>
 
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 
 <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'lrmodel'</span><span class="p">)</span>
 
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span><span class="mi">80</span><span class="p">)))</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span> <span class="mi">80</span><span class="p">)))</span>
 <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">'lrmodelX'</span><span class="p">)</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="s1">'lrmodel'</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">'lrmodelX'</span><span class="p">)</span>
@@ -904,12 +905,15 @@ False
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="p">;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">'/home/patrick/projects/omegaml'</span><span class="p">)</span>
 
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
+
 <span class="n">om</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">settings</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -927,10 +931,9 @@ False
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">userid</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="p">,</span> <span class="s1">'OMEGA_USERID'</span><span class="p">),</span>
-                              <span class="n">apikey</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="p">,</span> <span class="s1">'OMEGA_APIKIEY'</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">userid</span><span class="o">=</span><span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">OMEGA_USERID</span><span class="p">,</span> <span class="n">apikey</span><span class="o">=</span><span class="n">om</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">OMEGA_APIKIEY</span><span class="p">)</span>
 <span class="n">OmegaRuntimeAuthentication</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<br/></pre></div>
+</pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -973,7 +976,7 @@ LinearRegression(copy_X=True, fit_intercept=True, n_jobs=1, normalize=False)
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">clf</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'lrmodel'</span><span class="p">)</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span><span class="mi">80</span><span class="p">)))</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span> <span class="mi">80</span><span class="p">)))</span>
 <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">'x'</span><span class="p">]])</span>
 </pre></div>
 </div>
@@ -1821,16 +1824,19 @@ Wall time: 52.5 s
 
 <span class="n">collection</span> <span class="o">=</span> <span class="n">om</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="s1">'largeX'</span><span class="p">)</span>
 
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">500000</span><span class="p">))})</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">500000</span><span class="p">)})</span>
 <span class="n">df</span><span class="p">[</span><span class="s1">'y'</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">'x'</span><span class="p">]</span>
 
+
 <span class="k">def</span><span class="w"> </span><span class="nf">dfchunker</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">size</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">pos</span> <span class="p">:</span> <span class="n">pos</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">size</span><span class="p">))</span>
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">insert_as_chunks</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">sdf</span> <span class="ow">in</span> <span class="n">dfchunker</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
         <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'O'</span><span class="p">)</span>
         <span class="n">collection</span><span class="o">.</span><span class="n">insert_many</span><span class="p">(</span><span class="n">sdf</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s1">'records'</span><span class="p">))</span>
+
 
 <span class="o">%</span><span class="k">time</span> insert_as_chunks(df)
 </pre></div>
@@ -1859,15 +1865,19 @@ Wall time: 25 s
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing.dummy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
 
+
 <span class="k">def</span><span class="w"> </span><span class="nf">dfchunker</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">size</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">pos</span> <span class="p">:</span> <span class="n">pos</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">size</span><span class="p">))</span>
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">insert_chunk</span><span class="p">(</span><span class="n">sdf</span><span class="p">):</span>
     <span class="n">collection</span><span class="o">.</span><span class="n">insert_many</span><span class="p">(</span><span class="n">sdf</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s1">'records'</span><span class="p">))</span>
 
+
 <span class="k">def</span><span class="w"> </span><span class="nf">insert_threaded</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
     <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
     <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">insert_chunk</span><span class="p">,</span> <span class="n">dfchunker</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
+
 
 <span class="o">%</span><span class="k">time</span> insert_threaded(df.astype('O'))
 </pre></div>
@@ -1912,24 +1922,29 @@ Wall time: 2min 41s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="p">;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
 <span class="nb">print</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">getdefaultencoding</span><span class="p">())</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">'/home/patrick/projects/omegaml'</span><span class="p">)</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">repeat</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pymongo</span><span class="w"> </span><span class="kn">import</span> <span class="n">MongoClient</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">omegaml</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">om</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">dfchunker</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">size</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">pos</span> <span class="p">:</span> <span class="n">pos</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">size</span><span class="p">))</span>
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">insert_chunk</span><span class="p">(</span><span class="n">job</span><span class="p">):</span>
     <span class="n">sdf</span><span class="p">,</span> <span class="n">mongo_url</span><span class="p">,</span> <span class="n">collection_name</span> <span class="o">=</span> <span class="n">job</span>
     <span class="n">collection</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="n">mongo_url</span><span class="p">)</span><span class="o">.</span><span class="n">get_database</span><span class="p">()[</span><span class="n">collection_name</span><span class="p">]</span>
     <span class="n">collection</span><span class="o">.</span><span class="n">insert_many</span><span class="p">(</span><span class="n">sdf</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s1">'records'</span><span class="p">))</span>
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">fast_insert</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">omstore</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
@@ -1953,7 +1968,7 @@ Wall time: 2min 41s
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">5000000</span><span class="p">))})</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">'x'</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5000000</span><span class="p">)})</span>
     <span class="o">%</span><span class="k">time</span> fast_insert(df.astype('O'), om.datasets, 'superLargeX')
 </pre></div>
 </div>

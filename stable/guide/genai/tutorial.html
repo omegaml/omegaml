@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tutorial for Generative AI &mdash; omega-ml 0.18.0 documentation</title>
+  <title>Tutorial for Generative AI &mdash; omega-ml 0.18.2-dev1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7ca4e891" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=ba2e7b09"></script>
+      <script src="../../_static/documentation_options.js?v=7a80b789"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -237,15 +237,18 @@ call custom code to adjust the processing of each step. For example, we can add 
 the user’s prompt before processing, or add guardrails to check the output of the model, and if necessary,
 modify the output or return any other response.</p>
 <p>A pipeline is a specific type of virtual function:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.genai.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">virtual_genai</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaml.backends.virtualobj</span><span class="w"> </span><span class="kn">import</span> <span class="n">virtualobj</span>
 
-<span class="nd">@virtual_genai</span>
+<span class="nd">@virtualobj</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">pipeline</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"calling method=</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"   args=</span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">, kwargs=</span><span class="si">{</span><span class="n">kwargs</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="n">om</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="s1">'pipeline'</span><span class="p">)</span>
 </pre></div>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.18: </span>Use &#64;virtualobj instead of &#64;virtual_genai to decorate the pipeline.</p>
 </div>
 <p>Add the pipeline to the model</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'openai+https://</span><span class="si">{</span><span class="n">APIKEY</span><span class="si">}</span><span class="s1">@openrouter.ai/api/v1;model=google/gemini-2.0-flash-exp:free'</span>
