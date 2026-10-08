@@ -78,7 +78,7 @@ all_deps = (
     + ai_dev_deps
 )
 test_deps = all_deps + ai_dev_deps
-client_deps = tables + dashserve_deps + graph_deps
+client_deps = tables + dashserve_deps + graph_deps + jupyter_deps
 install_deps = [
     'celery>5,<6.0',
     'joblib>=0.9.4',
@@ -156,11 +156,11 @@ setup(
     ],
     install_requires=install_deps + sec_deps,
     extras_require={
-        'all': all_deps,
-        'client': client_deps,
-        'ai': ai_inf_deps + ai_dev_deps,
-        'dev': dev_deps,
-        'test': dev_deps + test_deps,
+        'all': all_deps, # all dependencies, excluding dev
+        'client': client_deps, # client-only, bare minimum, good for basic ds work in jupyter lab
+        'ai': ai_inf_deps + ai_dev_deps, # ai development, includes transformers, pytorch 
+        'dev': dev_deps + ai_inf_deps, # omegaml development, includes python dev tools
+        'test': dev_deps + test_deps, # testing, same as all + dev
     },
     entry_points={'console_scripts': ['om=omegaml.client.cli:climain']},
 )
