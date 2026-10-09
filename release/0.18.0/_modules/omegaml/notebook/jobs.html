@@ -569,7 +569,7 @@
 <span class="linenos">489</span><span class="sd">            run_at (str|dict|JobSchedule): the schedule specified in a format</span>
 <span class="linenos">490</span><span class="sd">               suitable for JobSchedule. If not specified, this value is</span>
 <span class="linenos">491</span><span class="sd">               extracted from the first cell of the notebook</span>
-<span class="linenos">492</span><span class="sd">            last_run (datetime): the last time this job was run, use this to</span>
+<span class="linenos">492</span><span class="sd">            last_run (datetime|None): the last time this job was run, use this to</span>
 <span class="linenos">493</span><span class="sd">               reschedule the job for the next run. Defaults to the last</span>
 <span class="linenos">494</span><span class="sd">               timestamp listed in ``attributes['job_runs']``, or datetime.utcnow()</span>
 <span class="linenos">495</span><span class="sd">               if no previous run exists.</span>
