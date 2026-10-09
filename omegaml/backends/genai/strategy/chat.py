@@ -2,8 +2,10 @@ from uuid import uuid4
 
 import pandas as pd
 
+from omegaml.backends.genai.strategy.mixinbase import ConversationModelMixinBase
 
-class ChatMixin:
+
+class ChatMixin(ConversationModelMixinBase):
     def chat(self, prompt, conversation_id=None, raw=False, stream=False, use_tools=True, **kwargs):
         """chat completions
 

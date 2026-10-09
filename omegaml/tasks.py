@@ -3,11 +3,9 @@ omega runtime model tasks
 """
 
 import datetime
-import inspect
 import os
 from itertools import chain
 from pathlib import Path
-from traceback import format_exc
 
 from celery import shared_task
 from celery.signals import worker_process_init
@@ -24,26 +22,8 @@ def omega_predict(self, modelname, Xname, rName=None, pure_python=True, **kwargs
 
 @shared_task(base=OmegamlTask, bind=True)
 def omega_complete(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
-    task_logger = self.app.log.get_default_logger()
     result = self.get_delegate(modelname).perform('complete', *self.delegate_args, **self.delegate_kwargs)
-    if stream and (inspect.isgenerator(result) or isinstance(result, list)):
-        stream = self.om.streams.get(f'.system/complete/{self.request.id}')
-        chunk = None
-        try:
-            for chunk in result:
-                task_logger.debug('streaming chunk %s in %s', chunk, self.request.id)
-                stream.append(chunk)
-        except Exception as e:
-            task_logger.error('error streaming %s due to %s', self.request.id, format_exc())
-            chunk = {'message': repr(e), 'stream_complete': 'error'}
-            stream.append(chunk)
-        else:
-            task_logger.debug('finalized streaming %s', self.request.id)
-            stream.append(
-                {'stream_complete': 'stop'},
-            )
-        result = {'result': chunk}
-    return sanitized(result)
+    return sanitized(self.maybe_stream(result, stream=stream))
 
 
 @shared_task(base=OmegamlTask, bind=True)
