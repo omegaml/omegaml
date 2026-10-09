@@ -8,6 +8,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from omegaml.backends.genai import GenAIBaseBackend, GenAIModel
 from omegaml.backends.genai.providers import PROVIDERS
+from omegaml.backends.genai.strategy.audio import AudioMixin
 from omegaml.backends.genai.strategy.augment import AugmentationMixin
 from omegaml.backends.genai.strategy.chat import ChatMixin
 from omegaml.backends.genai.strategy.completions import CompletionsMixin
@@ -358,6 +359,7 @@ class ConversationModel(
     TracingMixin,
     ToolCallingMixin,
     AugmentationMixin,
+    AudioMixin,
     EmbeddingsMixin,
     ProviderMixin,
     ChatMixin,
