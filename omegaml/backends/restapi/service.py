@@ -1,9 +1,10 @@
 from omegaml.backends.restapi.job import GenericJobResource
 from omegaml.backends.restapi.model import GenericModelResource
+from omegaml.backends.restapi.resource import GenericResourceMixin
 from omegaml.backends.restapi.script import GenericScriptResource
 
 
-class GenericServiceResource:
+class GenericServiceResource(GenericResourceMixin):
     """backend for /api/service/ resources
 
     Acts as an adapter to a concrete resource, returning only its bare result.
@@ -19,10 +20,6 @@ class GenericServiceResource:
         'scripts/': GenericScriptResource,
         'jobs/': GenericJobResource,
     }
-
-    def __init__(self, om, is_async=False):
-        self.om = om
-        self.is_async = is_async
 
     def doc(self, resource_id, query, payload):
         om = self.om

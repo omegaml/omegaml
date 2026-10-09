@@ -156,11 +156,11 @@ setup(
     ],
     install_requires=install_deps + sec_deps,
     extras_require={
-        'all': all_deps, # all dependencies, excluding dev
-        'client': client_deps, # client-only, bare minimum, good for basic ds work in jupyter lab
-        'ai': ai_inf_deps + ai_dev_deps, # ai development, includes transformers, pytorch 
-        'dev': dev_deps + ai_inf_deps, # omegaml development, includes python dev tools
-        'test': dev_deps + test_deps, # testing, same as all + dev
+        'all': all_deps,  # all dependencies, excluding dev
+        'client': client_deps,  # client-only, bare minimum, good for basic ds work in jupyter lab
+        'ai': ai_inf_deps + ai_dev_deps,  # ai development, includes transformers, pytorch
+        'dev': dev_deps + ai_inf_deps,  # omegaml development, includes python dev tools
+        'test': dev_deps + test_deps,  # testing, same as all + dev
     },
     entry_points={'console_scripts': ['om=omegaml.client.cli:climain']},
 )
