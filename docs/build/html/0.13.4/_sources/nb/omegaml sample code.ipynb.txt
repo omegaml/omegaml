@@ -1,0 +1,2122 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "utf-8\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "'testing3'"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import sys;\n",
+    "print(sys.getdefaultencoding())\n",
+    "sys.path.insert(0, '/home/patrick/projects/omegaml')\n",
+    "import omegaml as om\n",
+    "om.defaults.OMEGA_USERID"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "om.datasets.list()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<Metadata: Metadata(attributes={},gridfile=<GridFSProxy: (no file)>,objid=None,created=2018-01-16 20:07:33.481106,bucket=store,s3file={},collection=store.data_.sample.datastore,name=sample,id=5a5e5b85de39d13b8b0a42a6,kind=pandas.dfrows,uri=None,kind_meta={'columns': {'_idx#0_0': '_idx#0_0', 'x': 'x'}, 'idx_meta': {'names': [None]}, 'dtypes': {'_idx#0_0': 'int64', 'x': 'int64'}},prefix=data/)>"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "\n",
+    "df = pd.DataFrame({'x': range(10)})\n",
+    "om.datasets.put(df, 'sample')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   x  y\n",
+      "2  2  2\n",
+      "3  3  3\n",
+      "4  4  4\n",
+      "5  5  5\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(om.datasets.get('dfx', lazy=True).loc[2:5].value.drop_duplicates())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'explain': 'specify explain=True',\n",
+       " 'projection': ['x', 'y'],\n",
+       " 'query': {'$and': [{'x': {'$lt': 5}}, {'x': {'$gt': 2}}]}}"
+      ]
+     },
+     "execution_count": 50,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "om.datasets.get('dfx', lazy=True).query(x__gt=2, x__lt=5).inspect()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'explain': {'executionStats': {'allPlansExecution': [],\n",
+       "   'executionStages': {'advanced': 4,\n",
+       "    'executionTimeMillisEstimate': 0,\n",
+       "    'inputStage': {'advanced': 4,\n",
+       "     'direction': 'forward',\n",
+       "     'docsExamined': 1100,\n",
+       "     'executionTimeMillisEstimate': 0,\n",
+       "     'filter': {'$and': [{'x': {'$lt': 5}}, {'x': {'$gt': 2}}]},\n",
+       "     'invalidates': 0,\n",
+       "     'isEOF': 1,\n",
+       "     'nReturned': 4,\n",
+       "     'needTime': 1097,\n",
+       "     'needYield': 0,\n",
+       "     'restoreState': 8,\n",
+       "     'saveState': 8,\n",
+       "     'stage': 'COLLSCAN',\n",
+       "     'works': 1102},\n",
+       "    'invalidates': 0,\n",
+       "    'isEOF': 1,\n",
+       "    'nReturned': 4,\n",
+       "    'needTime': 1097,\n",
+       "    'needYield': 0,\n",
+       "    'restoreState': 8,\n",
+       "    'saveState': 8,\n",
+       "    'stage': 'PROJECTION',\n",
+       "    'transformBy': {'_idx#0_0': 1, 'x': 1, 'y': 1},\n",
+       "    'works': 1102},\n",
+       "   'executionSuccess': True,\n",
+       "   'executionTimeMillis': 1,\n",
+       "   'nReturned': 4,\n",
+       "   'totalDocsExamined': 1100,\n",
+       "   'totalKeysExamined': 0},\n",
+       "  'ok': 1.0,\n",
+       "  'queryPlanner': {'indexFilterSet': False,\n",
+       "   'namespace': 'testing3.omegaml.data_.dfx.datastore',\n",
+       "   'parsedQuery': {'$and': [{'x': {'$lt': 5}}, {'x': {'$gt': 2}}]},\n",
+       "   'plannerVersion': 1,\n",
+       "   'rejectedPlans': [],\n",
+       "   'winningPlan': {'inputStage': {'direction': 'forward',\n",
+       "     'filter': {'$and': [{'x': {'$lt': 5}}, {'x': {'$gt': 2}}]},\n",
+       "     'stage': 'COLLSCAN'},\n",
+       "    'stage': 'PROJECTION',\n",
+       "    'transformBy': {'_idx#0_0': 1, 'x': 1, 'y': 1}}},\n",
+       "  'serverInfo': {'gitVersion': '22ec9e93b40c85fc7cae7d56e7d6a02fd811088c',\n",
+       "   'host': 'c24ade3fa980',\n",
+       "   'port': 27017,\n",
+       "   'version': '3.2.9'}},\n",
+       " 'projection': ['x', 'y'],\n",
+       " 'query': {'$and': [{'x': {'$lt': 5}}, {'x': {'$gt': 2}}]}}"
+      ]
+     },
+     "execution_count": 51,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "om.datasets.get('dfx', lazy=True).query(x__gt=2, x__lt=5).inspect(explain=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 64,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "       x    y\n",
+      "999  999  999\n",
+      "998  998  998\n",
+      "997  997  997\n",
+      "996  996  996\n",
+      "995  995  995\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(om.datasets.get('dfx', lazy=True).sort(['-x', '+y']).head(5).value)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 70,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   x  y\n",
+      "5  5  5\n",
+      "6  6  6\n",
+      "7  7  7\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(om.datasets.get('dfx', lazy=True).skip(5).head(3).value)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 84,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "140341971523792\n",
+      "140341971587648\n",
+      "140341971523792\n",
+      "   x  y\n",
+      "3  3  3\n",
+      "4  4  4\n",
+      "3  3  3\n",
+      "4  4  4\n"
+     ]
+    }
+   ],
+   "source": [
+    "mdf = om.datasets.get('dfx', lazy=True)\n",
+    "print(id(mdf))\n",
+    "print(id(mdf.query(x__gt=2, x__lt=5)))\n",
+    "print(id(mdf.query_inplace(x__gt=2, x__lt=5)))\n",
+    "print(mdf.value)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 99,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   x  y\n",
+      "0  0  0\n",
+      "1  1  1\n",
+      "2  2  2\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "dfl = pd.DataFrame({'x': range(3)})\n",
+    "dfr = pd.DataFrame({'x': range(3), 'y': range(3)})\n",
+    "om.datasets.put(dfl, 'dfxl', append=False)\n",
+    "om.datasets.put(dfr, 'dfxr', append=False)\n",
+    "mdfl = om.datasets.get('dfxl', lazy=True)\n",
+    "mdfr = om.datasets.get('dfxr', lazy=True)\n",
+    "print(mdfl.merge(mdfr, on='x').value)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 111,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'x' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-111-159f11da3db3>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[0mmdf\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mom\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdatasets\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mgetl\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m'dfx'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 2\u001b[0;31m \u001b[0mprint\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mmdf\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mgroupby\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m'x'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mx\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0magg\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdict\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0msum\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mx\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mhead\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;36m5\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[0;31mNameError\u001b[0m: name 'x' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "mdf = om.datasets.getl('dfx')\n",
+    "print(mdf.groupby('x').x.mean().head(5))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 120,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   x_sum  y_mean\n",
+      "x               \n",
+      "0      0     0.0\n",
+      "1      2     1.0\n",
+      "2      4     2.0\n",
+      "3      6     3.0\n",
+      "4      8     4.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "mdf = om.datasets.getl('dfx')\n",
+    "print(mdf.groupby('x').agg(dict(x='sum', y='mean')).head(5))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 122,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   x_std  y_avg\n",
+      "x              \n",
+      "0    0.0    0.0\n",
+      "1    0.0    1.0\n",
+      "2    0.0    2.0\n",
+      "3    0.0    3.0\n",
+      "4    0.0    4.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "mdf = om.datasets.getl('dfx')\n",
+    "print(mdf.groupby('x').agg(dict(x='std', y='avg')).head(5))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 125,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   x_first  y_avg\n",
+      "x                \n",
+      "0        0    0.0\n",
+      "1        1    1.0\n",
+      "2        2    2.0\n",
+      "3        3    3.0\n",
+      "4        4    4.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "mdf = om.datasets.getl('dfx')\n",
+    "print(mdf.groupby('x').agg(dict(x='first', y='avg')).head(5))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 143,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "2        Bern\n",
+      "3      Zurich\n",
+      "1      Geneva\n",
+      "0    New York\n",
+      "Name: place, dtype: object\n"
+     ]
+    }
+   ],
+   "source": [
+    "from omegaml.store.queryops import GeoJSON\n",
+    "locations = [{'location': {'coordinates': [-74.0059413, 40.7127837],\n",
+    "                           'type': 'Point'},\n",
+    "              'place': 'New York'},\n",
+    "             {'location': {'coordinates': [6.1431577, 46.2043907],\n",
+    "                           'type': 'Point'},\n",
+    "              'place': 'Geneva'},\n",
+    "             {'location': {'coordinates': [7.4474468, 46.9479739],\n",
+    "                           'type': 'Point'},\n",
+    "              'place': 'Bern'},\n",
+    "             {'location': {'coordinates': [8.541694, 47.3768866],\n",
+    "                           'type': 'Point'},\n",
+    "              'place': 'Zurich'}]\n",
+    "geodf = pd.DataFrame(locations)\n",
+    "geodf['location'] = geodf.location.apply(lambda v: GeoJSON(v))\n",
+    "om.datasets.put(geodf, 'geosample', append=False, index='@location')\n",
+    "r = om.datasets.getl('geosample', location__near=dict(location=(7.4474468, 46.9479739))).value\n",
+    "print(r['place'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<Metadata: Metadata(id=5a5a4e17de39d176ba6b986c,name=lrmodel,attributes={},created=2018-01-13 18:21:11.008000,s3file={},uri=None,kind=sklearn.joblib,gridfile=<GridFSProxy: omegaml.models_.lrmodel.omm>,kind_meta={},prefix=models/,collection=None,objid=None,bucket=omegaml)>"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "from sklearn.linear_model import LinearRegression\n",
+    "import pandas as pd\n",
+    "import omegaml as om\n",
+    "\n",
+    "df = pd.DataFrame(dict(x=range(10), y=range(20,30)))\n",
+    "clf = LinearRegression()\n",
+    "clf.fit(df[['x']], df[['y']])\n",
+    "clf.predict(df[['x']])\n",
+    "\n",
+    "om.models.put(clf, 'lrmodel')\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "LinearRegression(copy_X=True, fit_intercept=True, n_jobs=1, normalize=False)"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "om.models.get('lrmodel')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "> /home/patrick/projects/omegaml/omegaml/runtime/runtime.py(69)auth()\n",
+      "-> if self._auth is None:\n",
+      "(Pdb) self._auth\n",
+      "(Pdb) q\n"
+     ]
+    },
+    {
+     "ename": "BdbQuit",
+     "evalue": "",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mBdbQuit\u001b[0m                                   Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-5-eaac3e01b280>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0mresult\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mom\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mruntime\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmodel\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m'lrmodel'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mpredict\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdf\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m'x'\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      2\u001b[0m \u001b[0;31m#result.get()\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      3\u001b[0m \u001b[0mresult\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mget\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m~/projects/omegaml/omegaml/runtime/proxy.py\u001b[0m in \u001b[0;36mpredict\u001b[0;34m(self, Xpath_or_data, rName, **kwargs)\u001b[0m\n\u001b[1;32m    159\u001b[0m         \u001b[0mXname\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_ensure_data_is_stored\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mXpath_or_data\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    160\u001b[0m         return omega_predict.delay(self.modelname, Xname, rName=rName,\n\u001b[0;32m--> 161\u001b[0;31m                                    \u001b[0mauth\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mruntime\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mauth\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    162\u001b[0m                                    pure_python=self.pure_python, **kwargs)\n\u001b[1;32m    163\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m~/projects/omegaml/omegaml/runtime/runtime.py\u001b[0m in \u001b[0;36mauth\u001b[0;34m(self)\u001b[0m\n\u001b[1;32m     67\u001b[0m         \"\"\"\n\u001b[1;32m     68\u001b[0m         \u001b[0;32mimport\u001b[0m \u001b[0mpdb\u001b[0m\u001b[0;34m;\u001b[0m \u001b[0mpdb\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mset_trace\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 69\u001b[0;31m         \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_auth\u001b[0m \u001b[0;32mis\u001b[0m \u001b[0;32mNone\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     70\u001b[0m             \u001b[0;32mtry\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     71\u001b[0m                 kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),\n",
+      "\u001b[0;32m~/projects/omegaml/omegaml/runtime/runtime.py\u001b[0m in \u001b[0;36mauth\u001b[0;34m(self)\u001b[0m\n\u001b[1;32m     67\u001b[0m         \"\"\"\n\u001b[1;32m     68\u001b[0m         \u001b[0;32mimport\u001b[0m \u001b[0mpdb\u001b[0m\u001b[0;34m;\u001b[0m \u001b[0mpdb\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mset_trace\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 69\u001b[0;31m         \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_auth\u001b[0m \u001b[0;32mis\u001b[0m \u001b[0;32mNone\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     70\u001b[0m             \u001b[0;32mtry\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     71\u001b[0m                 kwargs = dict(userid=getattr(defaults, 'OMEGA_USERID'),\n",
+      "\u001b[0;32m/usr/local/anaconda/envs/omegamlpy3/lib/python3.5/bdb.py\u001b[0m in \u001b[0;36mtrace_dispatch\u001b[0;34m(self, frame, event, arg)\u001b[0m\n\u001b[1;32m     46\u001b[0m             \u001b[0;32mreturn\u001b[0m \u001b[0;31m# None\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     47\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mevent\u001b[0m \u001b[0;34m==\u001b[0m \u001b[0;34m'line'\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 48\u001b[0;31m             \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdispatch_line\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mframe\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     49\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mevent\u001b[0m \u001b[0;34m==\u001b[0m \u001b[0;34m'call'\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     50\u001b[0m             \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdispatch_call\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mframe\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0marg\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m/usr/local/anaconda/envs/omegamlpy3/lib/python3.5/bdb.py\u001b[0m in \u001b[0;36mdispatch_line\u001b[0;34m(self, frame)\u001b[0m\n\u001b[1;32m     65\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mstop_here\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mframe\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;32mor\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mbreak_here\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mframe\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     66\u001b[0m             \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0muser_line\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mframe\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 67\u001b[0;31m             \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mquitting\u001b[0m\u001b[0;34m:\u001b[0m \u001b[0;32mraise\u001b[0m \u001b[0mBdbQuit\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     68\u001b[0m         \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mtrace_dispatch\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     69\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mBdbQuit\u001b[0m: "
+     ]
+    }
+   ],
+   "source": [
+    "result = om.runtime.model('lrmodel').predict(df[['x']])\n",
+    "#result.get()\n",
+    "result.get()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['lrmodel']"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "om.models.list()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/patrick/projects/omegaml/omegaml/store/base.py:342: UserWarning: lrmodelX already exists, will append rows\n",
+      "  warn('%s already exists, will append rows' % name)\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "array([[ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.],\n",
+       "       [ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.]])"
+      ]
+     },
+     "execution_count": 26,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import sys;\n",
+    "sys.path.insert(0, '/home/patrick/projects/omegaml')\n",
+    "\n",
+    "\n",
+    "import omegaml as om \n",
+    "import pandas as pd \n",
+    "\n",
+    "om.models.get('lrmodel')\n",
+    "\n",
+    "df = pd.DataFrame(dict(x=range(70,80)))\n",
+    "om.datasets.put(df, 'lrmodelX')\n",
+    "\n",
+    "result = om.runtime.model('lrmodel').predict('lrmodelX')\n",
+    "result.get()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "False"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "om.runtime.model('lrmodel').pure_python"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'error': 'settings dump is disabled'}"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import sys;\n",
+    "sys.path.insert(0, '/home/patrick/projects/omegaml')\n",
+    "\n",
+    "\n",
+    "import omegaml as om \n",
+    "import pandas as pd \n",
+    "om.runtime.settings()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "AttributeError",
+     "evalue": "module 'omegaml.defaults' has no attribute 'OMEGA_APIKIEY'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-8-410cc772a0c3>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m()\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      2\u001b[0m kwargs = dict(userid=getattr(om.defaults, 'OMEGA_USERID'),\n\u001b[0;32m----> 3\u001b[0;31m                               apikey=getattr(om.defaults, 'OMEGA_APIKIEY'))\n\u001b[0m\u001b[1;32m      4\u001b[0m \u001b[0mOmegaRuntimeAuthentication\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mAttributeError\u001b[0m: module 'omegaml.defaults' has no attribute 'OMEGA_APIKIEY'"
+     ]
+    }
+   ],
+   "source": [
+    "\n",
+    "kwargs = dict(userid=getattr(om.defaults, 'OMEGA_USERID'),\n",
+    "                              apikey=getattr(om.defaults, 'OMEGA_APIKIEY'))\n",
+    "OmegaRuntimeAuthentication(**kwargs)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 161,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "LinearRegression(copy_X=True, fit_intercept=True, n_jobs=1, normalize=False)"
+      ]
+     },
+     "execution_count": 161,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "om.models.get('lrmodel')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([[ 90.],\n",
+       "       [ 91.],\n",
+       "       [ 92.],\n",
+       "       [ 93.],\n",
+       "       [ 94.],\n",
+       "       [ 95.],\n",
+       "       [ 96.],\n",
+       "       [ 97.],\n",
+       "       [ 98.],\n",
+       "       [ 99.]])"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "\n",
+    "clf = om.models.get('lrmodel')\n",
+    "df = pd.DataFrame(dict(x=range(70,80)))\n",
+    "clf.predict(df[['x']])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/patrick/projects/omegaml/omegaml/store/base.py:342: UserWarning: largeX already exists, will append rows\n",
+      "  warn('%s already exists, will append rows' % name)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 575 ms, sys: 217 ms, total: 792 ms\n",
+      "Wall time: 33.6 s\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<Metadata: Metadata(id=5a67953fde39d171375235dd,name=largeX,bucket=omegaml,uri=None,kind=pandas.dfrows,prefix=data/,attributes={},collection=omegaml.data_.largeX.datastore,created=2018-01-23 20:04:15.908000,s3file={},gridfile=<GridFSProxy: (no file)>,kind_meta={'columns': {'y': 'y', 'x': 'x', '_idx#0_0': '_idx#0_0'}, 'dtypes': {'y': 'int64', 'x': 'int64', '_idx#0_0': 'int64'}, 'idx_meta': {'names': [None]}},objid=None)>"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "\n",
+    "df = pd.DataFrame({'x': range(int(1e6))})\n",
+    "df['y'] = df['x']\n",
+    "\n",
+    "%time om.datasets.put(df, 'largeX')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 1.57 s, sys: 118 ms, total: 1.69 s\n",
+      "Wall time: 1.7 s\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style>\n",
+       "    .dataframe thead tr:only-child th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: left;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>x</th>\n",
+       "      <th>y</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>5</td>\n",
+       "      <td>5</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>6</td>\n",
+       "      <td>6</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>7</th>\n",
+       "      <td>7</td>\n",
+       "      <td>7</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8</th>\n",
+       "      <td>8</td>\n",
+       "      <td>8</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9</th>\n",
+       "      <td>9</td>\n",
+       "      <td>9</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10</th>\n",
+       "      <td>10</td>\n",
+       "      <td>10</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>11</th>\n",
+       "      <td>11</td>\n",
+       "      <td>11</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>12</th>\n",
+       "      <td>12</td>\n",
+       "      <td>12</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>13</th>\n",
+       "      <td>13</td>\n",
+       "      <td>13</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>14</th>\n",
+       "      <td>14</td>\n",
+       "      <td>14</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>15</th>\n",
+       "      <td>15</td>\n",
+       "      <td>15</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>16</th>\n",
+       "      <td>16</td>\n",
+       "      <td>16</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>17</th>\n",
+       "      <td>17</td>\n",
+       "      <td>17</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>18</th>\n",
+       "      <td>18</td>\n",
+       "      <td>18</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>19</th>\n",
+       "      <td>19</td>\n",
+       "      <td>19</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>20</th>\n",
+       "      <td>20</td>\n",
+       "      <td>20</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>21</th>\n",
+       "      <td>21</td>\n",
+       "      <td>21</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>22</th>\n",
+       "      <td>22</td>\n",
+       "      <td>22</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>23</th>\n",
+       "      <td>23</td>\n",
+       "      <td>23</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>24</th>\n",
+       "      <td>24</td>\n",
+       "      <td>24</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>25</th>\n",
+       "      <td>25</td>\n",
+       "      <td>25</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>26</th>\n",
+       "      <td>26</td>\n",
+       "      <td>26</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>27</th>\n",
+       "      <td>27</td>\n",
+       "      <td>27</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>28</th>\n",
+       "      <td>28</td>\n",
+       "      <td>28</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>29</th>\n",
+       "      <td>29</td>\n",
+       "      <td>29</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999970</th>\n",
+       "      <td>999970</td>\n",
+       "      <td>999970</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999971</th>\n",
+       "      <td>999971</td>\n",
+       "      <td>999971</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999972</th>\n",
+       "      <td>999972</td>\n",
+       "      <td>999972</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999973</th>\n",
+       "      <td>999973</td>\n",
+       "      <td>999973</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999974</th>\n",
+       "      <td>999974</td>\n",
+       "      <td>999974</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999975</th>\n",
+       "      <td>999975</td>\n",
+       "      <td>999975</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999976</th>\n",
+       "      <td>999976</td>\n",
+       "      <td>999976</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999977</th>\n",
+       "      <td>999977</td>\n",
+       "      <td>999977</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999978</th>\n",
+       "      <td>999978</td>\n",
+       "      <td>999978</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999979</th>\n",
+       "      <td>999979</td>\n",
+       "      <td>999979</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999980</th>\n",
+       "      <td>999980</td>\n",
+       "      <td>999980</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999981</th>\n",
+       "      <td>999981</td>\n",
+       "      <td>999981</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999982</th>\n",
+       "      <td>999982</td>\n",
+       "      <td>999982</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999983</th>\n",
+       "      <td>999983</td>\n",
+       "      <td>999983</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999984</th>\n",
+       "      <td>999984</td>\n",
+       "      <td>999984</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999985</th>\n",
+       "      <td>999985</td>\n",
+       "      <td>999985</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999986</th>\n",
+       "      <td>999986</td>\n",
+       "      <td>999986</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999987</th>\n",
+       "      <td>999987</td>\n",
+       "      <td>999987</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999988</th>\n",
+       "      <td>999988</td>\n",
+       "      <td>999988</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999989</th>\n",
+       "      <td>999989</td>\n",
+       "      <td>999989</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999990</th>\n",
+       "      <td>999990</td>\n",
+       "      <td>999990</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999991</th>\n",
+       "      <td>999991</td>\n",
+       "      <td>999991</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999992</th>\n",
+       "      <td>999992</td>\n",
+       "      <td>999992</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999993</th>\n",
+       "      <td>999993</td>\n",
+       "      <td>999993</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999994</th>\n",
+       "      <td>999994</td>\n",
+       "      <td>999994</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999995</th>\n",
+       "      <td>999995</td>\n",
+       "      <td>999995</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999996</th>\n",
+       "      <td>999996</td>\n",
+       "      <td>999996</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999997</th>\n",
+       "      <td>999997</td>\n",
+       "      <td>999997</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999998</th>\n",
+       "      <td>999998</td>\n",
+       "      <td>999998</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999999</th>\n",
+       "      <td>999999</td>\n",
+       "      <td>999999</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>1000000 rows × 2 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "             x       y\n",
+       "0            0       0\n",
+       "1            1       1\n",
+       "2            2       2\n",
+       "3            3       3\n",
+       "4            4       4\n",
+       "5            5       5\n",
+       "6            6       6\n",
+       "7            7       7\n",
+       "8            8       8\n",
+       "9            9       9\n",
+       "10          10      10\n",
+       "11          11      11\n",
+       "12          12      12\n",
+       "13          13      13\n",
+       "14          14      14\n",
+       "15          15      15\n",
+       "16          16      16\n",
+       "17          17      17\n",
+       "18          18      18\n",
+       "19          19      19\n",
+       "20          20      20\n",
+       "21          21      21\n",
+       "22          22      22\n",
+       "23          23      23\n",
+       "24          24      24\n",
+       "25          25      25\n",
+       "26          26      26\n",
+       "27          27      27\n",
+       "28          28      28\n",
+       "29          29      29\n",
+       "...        ...     ...\n",
+       "999970  999970  999970\n",
+       "999971  999971  999971\n",
+       "999972  999972  999972\n",
+       "999973  999973  999973\n",
+       "999974  999974  999974\n",
+       "999975  999975  999975\n",
+       "999976  999976  999976\n",
+       "999977  999977  999977\n",
+       "999978  999978  999978\n",
+       "999979  999979  999979\n",
+       "999980  999980  999980\n",
+       "999981  999981  999981\n",
+       "999982  999982  999982\n",
+       "999983  999983  999983\n",
+       "999984  999984  999984\n",
+       "999985  999985  999985\n",
+       "999986  999986  999986\n",
+       "999987  999987  999987\n",
+       "999988  999988  999988\n",
+       "999989  999989  999989\n",
+       "999990  999990  999990\n",
+       "999991  999991  999991\n",
+       "999992  999992  999992\n",
+       "999993  999993  999993\n",
+       "999994  999994  999994\n",
+       "999995  999995  999995\n",
+       "999996  999996  999996\n",
+       "999997  999997  999997\n",
+       "999998  999998  999998\n",
+       "999999  999999  999999\n",
+       "\n",
+       "[1000000 rows x 2 columns]"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "%time df.from_csv('/tmp/large.csv')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 10.4 s, sys: 466 ms, total: 10.9 s\n",
+      "Wall time: 11.8 s\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style>\n",
+       "    .dataframe thead tr:only-child th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: left;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>x</th>\n",
+       "      <th>y</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>5</td>\n",
+       "      <td>5</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>6</td>\n",
+       "      <td>6</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>7</th>\n",
+       "      <td>7</td>\n",
+       "      <td>7</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8</th>\n",
+       "      <td>8</td>\n",
+       "      <td>8</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9</th>\n",
+       "      <td>9</td>\n",
+       "      <td>9</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>10</th>\n",
+       "      <td>10</td>\n",
+       "      <td>10</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>11</th>\n",
+       "      <td>11</td>\n",
+       "      <td>11</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>12</th>\n",
+       "      <td>12</td>\n",
+       "      <td>12</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>13</th>\n",
+       "      <td>13</td>\n",
+       "      <td>13</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>14</th>\n",
+       "      <td>14</td>\n",
+       "      <td>14</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>15</th>\n",
+       "      <td>15</td>\n",
+       "      <td>15</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>16</th>\n",
+       "      <td>16</td>\n",
+       "      <td>16</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>17</th>\n",
+       "      <td>17</td>\n",
+       "      <td>17</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>18</th>\n",
+       "      <td>18</td>\n",
+       "      <td>18</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>19</th>\n",
+       "      <td>19</td>\n",
+       "      <td>19</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>20</th>\n",
+       "      <td>20</td>\n",
+       "      <td>20</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>21</th>\n",
+       "      <td>21</td>\n",
+       "      <td>21</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>22</th>\n",
+       "      <td>22</td>\n",
+       "      <td>22</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>23</th>\n",
+       "      <td>23</td>\n",
+       "      <td>23</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>24</th>\n",
+       "      <td>24</td>\n",
+       "      <td>24</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>25</th>\n",
+       "      <td>25</td>\n",
+       "      <td>25</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>26</th>\n",
+       "      <td>26</td>\n",
+       "      <td>26</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>27</th>\n",
+       "      <td>27</td>\n",
+       "      <td>27</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>28</th>\n",
+       "      <td>28</td>\n",
+       "      <td>28</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>29</th>\n",
+       "      <td>29</td>\n",
+       "      <td>29</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999970</th>\n",
+       "      <td>999970</td>\n",
+       "      <td>999970</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999971</th>\n",
+       "      <td>999971</td>\n",
+       "      <td>999971</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999972</th>\n",
+       "      <td>999972</td>\n",
+       "      <td>999972</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999973</th>\n",
+       "      <td>999973</td>\n",
+       "      <td>999973</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999974</th>\n",
+       "      <td>999974</td>\n",
+       "      <td>999974</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999975</th>\n",
+       "      <td>999975</td>\n",
+       "      <td>999975</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999976</th>\n",
+       "      <td>999976</td>\n",
+       "      <td>999976</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999977</th>\n",
+       "      <td>999977</td>\n",
+       "      <td>999977</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999978</th>\n",
+       "      <td>999978</td>\n",
+       "      <td>999978</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999979</th>\n",
+       "      <td>999979</td>\n",
+       "      <td>999979</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999980</th>\n",
+       "      <td>999980</td>\n",
+       "      <td>999980</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999981</th>\n",
+       "      <td>999981</td>\n",
+       "      <td>999981</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999982</th>\n",
+       "      <td>999982</td>\n",
+       "      <td>999982</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999983</th>\n",
+       "      <td>999983</td>\n",
+       "      <td>999983</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999984</th>\n",
+       "      <td>999984</td>\n",
+       "      <td>999984</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999985</th>\n",
+       "      <td>999985</td>\n",
+       "      <td>999985</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999986</th>\n",
+       "      <td>999986</td>\n",
+       "      <td>999986</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999987</th>\n",
+       "      <td>999987</td>\n",
+       "      <td>999987</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999988</th>\n",
+       "      <td>999988</td>\n",
+       "      <td>999988</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999989</th>\n",
+       "      <td>999989</td>\n",
+       "      <td>999989</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999990</th>\n",
+       "      <td>999990</td>\n",
+       "      <td>999990</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999991</th>\n",
+       "      <td>999991</td>\n",
+       "      <td>999991</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999992</th>\n",
+       "      <td>999992</td>\n",
+       "      <td>999992</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999993</th>\n",
+       "      <td>999993</td>\n",
+       "      <td>999993</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999994</th>\n",
+       "      <td>999994</td>\n",
+       "      <td>999994</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999995</th>\n",
+       "      <td>999995</td>\n",
+       "      <td>999995</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999996</th>\n",
+       "      <td>999996</td>\n",
+       "      <td>999996</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999997</th>\n",
+       "      <td>999997</td>\n",
+       "      <td>999997</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999998</th>\n",
+       "      <td>999998</td>\n",
+       "      <td>999998</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>999999</th>\n",
+       "      <td>999999</td>\n",
+       "      <td>999999</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>1000000 rows × 2 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "             x       y\n",
+       "0            0       0\n",
+       "1            1       1\n",
+       "2            2       2\n",
+       "3            3       3\n",
+       "4            4       4\n",
+       "5            5       5\n",
+       "6            6       6\n",
+       "7            7       7\n",
+       "8            8       8\n",
+       "9            9       9\n",
+       "10          10      10\n",
+       "11          11      11\n",
+       "12          12      12\n",
+       "13          13      13\n",
+       "14          14      14\n",
+       "15          15      15\n",
+       "16          16      16\n",
+       "17          17      17\n",
+       "18          18      18\n",
+       "19          19      19\n",
+       "20          20      20\n",
+       "21          21      21\n",
+       "22          22      22\n",
+       "23          23      23\n",
+       "24          24      24\n",
+       "25          25      25\n",
+       "26          26      26\n",
+       "27          27      27\n",
+       "28          28      28\n",
+       "29          29      29\n",
+       "...        ...     ...\n",
+       "999970  999970  999970\n",
+       "999971  999971  999971\n",
+       "999972  999972  999972\n",
+       "999973  999973  999973\n",
+       "999974  999974  999974\n",
+       "999975  999975  999975\n",
+       "999976  999976  999976\n",
+       "999977  999977  999977\n",
+       "999978  999978  999978\n",
+       "999979  999979  999979\n",
+       "999980  999980  999980\n",
+       "999981  999981  999981\n",
+       "999982  999982  999982\n",
+       "999983  999983  999983\n",
+       "999984  999984  999984\n",
+       "999985  999985  999985\n",
+       "999986  999986  999986\n",
+       "999987  999987  999987\n",
+       "999988  999988  999988\n",
+       "999989  999989  999989\n",
+       "999990  999990  999990\n",
+       "999991  999991  999991\n",
+       "999992  999992  999992\n",
+       "999993  999993  999993\n",
+       "999994  999994  999994\n",
+       "999995  999995  999995\n",
+       "999996  999996  999996\n",
+       "999997  999997  999997\n",
+       "999998  999998  999998\n",
+       "999999  999999  999999\n",
+       "\n",
+       "[1000000 rows x 2 columns]"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "%time om.datasets.getl('largeX').head(int(1000000)).value"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 54,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/home/patrick/projects/omegaml/omegaml/store/base.py:342: UserWarning: largeX already exists, will append rows\n",
+      "  warn('%s already exists, will append rows' % name)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 37.4 s, sys: 567 ms, total: 37.9 s\n",
+      "Wall time: 55 s\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<Metadata: Metadata(id=5a67953fde39d171375235dd,name=largeX,attributes={},created=2018-01-23 20:04:15.908000,s3file={},uri=None,kind=pandas.dfrows,gridfile=<GridFSProxy: (no file)>,kind_meta={'dtypes': {'x': 'int64', '_idx#0_0': 'int64', 'y': 'int64'}, 'columns': {'x': 'x', '_idx#0_0': '_idx#0_0', 'y': 'y'}, 'idx_meta': {'names': [None]}},prefix=data/,collection=omegaml.data_.largeX.datastore,objid=None,bucket=omegaml)>"
+      ]
+     },
+     "execution_count": 54,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "\n",
+    "df = pd.DataFrame({'x': range(int(1e6))})\n",
+    "df['y'] = df['x']\n",
+    "\n",
+    "%time om.datasets.put(df, 'largeX')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 56,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 33.7 s, sys: 639 ms, total: 34.3 s\n",
+      "Wall time: 52.5 s\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<pymongo.results.InsertManyResult at 0x7ff827842588>"
+      ]
+     },
+     "execution_count": 56,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "collection = om.datasets.collection('largeX')\n",
+    "%time collection.insert_many(df.astype('O').to_dict(orient='records'))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 16.9 s, sys: 118 ms, total: 17.1 s\n",
+      "Wall time: 25 s\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "\n",
+    "collection = om.datasets.collection('largeX')\n",
+    "\n",
+    "df = pd.DataFrame({'x': range(int(500000))})\n",
+    "df['y'] = df['x']\n",
+    "\n",
+    "def dfchunker(df, size=10000):\n",
+    "    return (df[pos:pos + size] for pos in range(0, len(df), size))\n",
+    "\n",
+    "def insert_as_chunks(df):\n",
+    "    for sdf in dfchunker(df):\n",
+    "        sdf = sdf.astype('O')\n",
+    "        collection.insert_many(sdf.to_dict(orient='records'))\n",
+    "        \n",
+    "%time insert_as_chunks(df)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 63,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 1min 15s, sys: 11.5 s, total: 1min 27s\n",
+      "Wall time: 1min 20s\n"
+     ]
+    }
+   ],
+   "source": [
+    "from multiprocessing.dummy import Pool\n",
+    "\n",
+    "def dfchunker(df, size=1000):\n",
+    "    return (df[pos:pos + size].copy() for pos in range(0, len(df), size))\n",
+    "\n",
+    "def insert_chunk(sdf):\n",
+    "    collection.insert_many(sdf.to_dict(orient='records'))\n",
+    "        \n",
+    "def insert_threaded(df):\n",
+    "    pool = Pool(5)\n",
+    "    pool.map(insert_chunk, dfchunker(df))\n",
+    "        \n",
+    "%time insert_threaded(df.astype('O'))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 66,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 2min 22s, sys: 748 ms, total: 2min 23s\n",
+      "Wall time: 2min 41s\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<pymongo.results.InsertManyResult at 0x7ff83bf7e4c8>"
+      ]
+     },
+     "execution_count": 66,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "%time collection.insert_many((row.to_dict() for i, row in df.astype('O').iterrows()))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "utf-8\n",
+      "CPU times: user 1.51 s, sys: 618 ms, total: 2.12 s\n",
+      "Wall time: 2min 47s\n"
+     ]
+    }
+   ],
+   "source": [
+    "import sys;\n",
+    "print(sys.getdefaultencoding())\n",
+    "sys.path.insert(0, '/home/patrick/projects/omegaml')\n",
+    "\n",
+    "import omegaml as om \n",
+    "import pandas as pd\n",
+    "\n",
+    "from multiprocessing import Pool\n",
+    "from itertools import repeat\n",
+    "from pymongo import MongoClient\n",
+    "\n",
+    "def dfchunker(df, size=10000):\n",
+    "    return (df[pos:pos + size].copy() for pos in range(0, len(df), size))\n",
+    "\n",
+    "def insert_chunk(job):\n",
+    "    sdf, mongo_url, collection_name = job\n",
+    "    collection = MongoClient(mongo_url).get_database()[collection_name]\n",
+    "    collection.insert_many(sdf.to_dict(orient='records'))\n",
+    "        \n",
+    "def fast_insert(df, omstore, name):\n",
+    "    \"\"\"\n",
+    "    fast insert of dataframe to mongodb, depending on size use single-process or multiprocessing\n",
+    "    \n",
+    "    Note this can max out \n",
+    "    \n",
+    "    :param df: the dataframe to store\n",
+    "    :param omstore: the OmegaStore to use. will be used to get the mongo_url\n",
+    "    :param name: the name in OmegaStore to use. will be used to get the collection name\n",
+    "    \"\"\"\n",
+    "    mongo_url = omstore.mongo_url\n",
+    "    collection_name = omstore.collection(name).full_name\n",
+    "    if len(df) * len(df.columns) > 20000:\n",
+    "        pool = Pool(5)\n",
+    "        jobs = zip(dfchunker(df), repeat(mongo_url), repeat(collection_name))\n",
+    "        pool.map(insert_chunk, (job for job in jobs))\n",
+    "    else:\n",
+    "        collection = MongoClient(mongo_url).get_database()[collection_name]\n",
+    "        collection.insert_many(df.to_dict(orient='records'))\n",
+    "        \n",
+    "        \n",
+    "if __name__ == '__main__':\n",
+    "    df = pd.DataFrame({'x': range(int(5000000))})\n",
+    "    %time fast_insert(df.astype('O'), om.datasets, 'superLargeX')\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 107,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'testing3.omegaml.data_.largeX.datastore'"
+      ]
+     },
+     "execution_count": 107,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "collection.full_name"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 98,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'mongodb://9BQ9q33UzLfrxSP6nRcsAHDfQycCMxFQxE76:azpyAq44mPdyhTAYdfA8UnaJS7pXjdWRDmer@dokku.me:27017/testing3'"
+      ]
+     },
+     "execution_count": 98,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "om.datasets.mongo_url"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.5.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}

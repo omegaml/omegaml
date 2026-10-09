@@ -1,0 +1,103 @@
+Release notes release/0.16.2
+============================
+
+Released 2024-03-08
+
+Address security issues and minor functional maintenance
+
+What’s Changed
+--------------
+
+-  update security policy by @omegaml in
+   https://github.com/omegaml/omegaml/pull/366
+-  Update security by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/368
+-  Update security by @omegaml in
+   https://github.com/omegaml/omegaml/pull/369
+-  Update security by @omegaml in
+   https://github.com/omegaml/omegaml/pull/370
+-  add .snyk file by @omegaml in
+   https://github.com/omegaml/omegaml/pull/371
+-  add .snyk file by @omegaml in
+   https://github.com/omegaml/omegaml/pull/372
+-  add .snyk file by @omegaml in
+   https://github.com/omegaml/omegaml/pull/373
+-  pin pandas dependency to circumvent sqlite testing issue by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/375
+-  upgrade circle-ci image by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/376
+-  Update security by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/374
+-  backport tarfile.extractall filter to Python < 3.12 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/379
+-  Simplify revisions by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/380
+-  improve virtualobj storing by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/378
+-  enable objects preloading and caching by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/381
+-  Fix mlflow project recreate by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/382
+-  Release build 0.16.2 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/377
+
+**Full Changelog**:
+https://github.com/omegaml/omegaml/compare/release/0.16.1…release/0.16.2
+
+Changes
+~~~~~~~
+
+-  Merge pull request #377 from omegaml/release-build-0.16.2
+   `69603ef <https://github.com/omegaml/omegaml/commit/69603ef>`__
+-  various updates
+   `7a4b2a9 <https://github.com/omegaml/omegaml/commit/7a4b2a9>`__
+-  Merge pull request #382 from omegaml/fix-mlflow-project-recreate
+   `b41a439 <https://github.com/omegaml/omegaml/commit/b41a439>`__
+-  Merge pull request #381 from omegaml/objects-cache
+   `e042852 <https://github.com/omegaml/omegaml/commit/e042852>`__
+-  enable objects preloading and caching
+   `6b3e4ee <https://github.com/omegaml/omegaml/commit/6b3e4ee>`__
+-  Merge pull request #378 from omegaml/improve-virtualobj-handling
+   `096e29b <https://github.com/omegaml/omegaml/commit/096e29b>`__
+-  improve virtualobj storing
+   `3b3de81 <https://github.com/omegaml/omegaml/commit/3b3de81>`__
+-  Merge pull request #380 from omegaml/simplify-revisions
+   `f509997 <https://github.com/omegaml/omegaml/commit/f509997>`__
+-  simplify model and dataset revisions
+   `8771e72 <https://github.com/omegaml/omegaml/commit/8771e72>`__
+-  Merge pull request #379 from omegaml/update-security
+   `ac066f8 <https://github.com/omegaml/omegaml/commit/ac066f8>`__
+-  backport tarfile.extractall filter to Python < 3.12
+   `021a3f4 <https://github.com/omegaml/omegaml/commit/021a3f4>`__
+-  Merge pull request #374 from omegaml/update-security
+   `4e0ef24 <https://github.com/omegaml/omegaml/commit/4e0ef24>`__
+-  Merge pull request #376 from omegaml/update-circleci-image
+   `2aa2c0a <https://github.com/omegaml/omegaml/commit/2aa2c0a>`__
+-  upgrade circle-ci image
+   `c8eadff <https://github.com/omegaml/omegaml/commit/c8eadff>`__
+-  pin pandas dependency to circumvent sqlite testing issue
+   `241c411 <https://github.com/omegaml/omegaml/commit/241c411>`__
+-  add .snyk file
+   `b5da310 <https://github.com/omegaml/omegaml/commit/b5da310>`__
+-  add .snyk file
+   `57ad8e8 <https://github.com/omegaml/omegaml/commit/57ad8e8>`__
+-  add .snyk file
+   `85b6aae <https://github.com/omegaml/omegaml/commit/85b6aae>`__
+-  add .snyk file
+   `16c1671 <https://github.com/omegaml/omegaml/commit/16c1671>`__
+-  add .snyk file
+   `a807c48 <https://github.com/omegaml/omegaml/commit/a807c48>`__
+-  add a .snyk file
+   `e028a27 <https://github.com/omegaml/omegaml/commit/e028a27>`__
+-  update security policy, resolve obsolete dependency
+   `ee73ea2 <https://github.com/omegaml/omegaml/commit/ee73ea2>`__
+-  update security policy
+   `1d2f66e <https://github.com/omegaml/omegaml/commit/1d2f66e>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fix mlflow project path creation issue
+   `3488427 <https://github.com/omegaml/omegaml/commit/3488427>`__
+-  fix code scanning issues found by snyk
+   `b860b99 <https://github.com/omegaml/omegaml/commit/b860b99>`__
