@@ -159,6 +159,8 @@ OMEGA_STORE_BACKENDS_OPENAI = {
     'genai.llm': 'omegaml.backends.genai.GenAIBaseBackend',
     'genai.convs': 'omegaml.backends.genai.models.ConversationModelBackend',
     'genai.text': 'omegaml.backends.genai.models.TextModelBackend',
+    'genai.assistant': 'omegaml.backends.genai.assistant.AssistantBackend',
+    'genai.eventagent': 'omegaml.backends.genai.eventagent.EventAgentBackend',
     'pgvector.conx': 'omegaml.backends.genai.retrieval.PGVectorBackend',
     'vector.conx': 'omegaml.backends.genai.retrieval.MongoDBVectorStore',
 }
@@ -556,6 +558,7 @@ def setup_logging():
         # -- sometimes resultins in large amounts of inadverted pymongo log output
         # -- https://www.mongodb.com/docs/languages/python/pymongo-driver/current/monitoring-and-logging/logging/
         'root': OMEGA_LOGLEVEL,
+        'omega': OMEGA_LOGLEVEL,
         'pymongo': 'ERROR',
         'pymongo.command': 'WARNING',
         'pymongo.connection': 'ERROR',
@@ -564,7 +567,7 @@ def setup_logging():
         'kombu': 'ERROR',
         'celery.backends': 'ERROR',
         'celery.utils.functional': 'ERROR',
-        # omgea store is too verbose
+        # omega store is too verbose
         'omegaml.store.base': 'ERROR',
     }
     for name, level in default_loglevels.items():

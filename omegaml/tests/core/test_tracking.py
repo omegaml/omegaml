@@ -653,6 +653,17 @@ class TrackingTestCases(OmegaTestMixin, unittest.TestCase):
         dfx = exp.restore_data('Y', run='*')
         self.assertEqual(len(dfx), 20)
 
+    def test_logged_event_data_is_dict(self):
+        om = self.om
+        exp: OmegaSimpleTracker
+        with om.runtime.experiment('myexp') as exp:
+            data = {'x': 42}
+            exp.log_event('event', 'key', data)
+        data = exp.data(event='event', key='key')
+        value = data.iloc[-1]['value']
+        self.assertEqual(value, {'x': 42})
+        self.assertTrue(type(value) is dict, f"expected value to be of {dict} got {type(value)}")
+
 
 if __name__ == '__main__':
     unittest.main()

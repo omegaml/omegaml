@@ -3,33 +3,7 @@ from types import FunctionType
 from omegaml.backends.virtualobj import VirtualObjectBackend, VirtualObjectHandler
 
 
-class GenAIBaseBackend(VirtualObjectBackend):
-    """Generic backend to store user-implemented AI model handlers
-
-    This handles storage and retrieval for GenAIModelHandler subclasses
-    and instances, and provides bindings for the runtime to call using
-    e.g. backend.perform('complete', 'mymodel', 'X'). Works the same
-    as VirtualObjectBackend, but with a different KIND and supports
-    other methods.
-
-    .. versionadded:: 0.17.0
-    """
-
-    KIND = 'genai.llm'
-
-    @classmethod
-    def supports(self, obj, name, **kwargs):
-        is_aimodel = isinstance(obj, GenAIModel) or hasattr(obj, '_omega_virtual_genai')
-        is_tool = isinstance(obj, FunctionType) and any(name.startswith(v) for v in self.TOOLS_PATHS)
-        return is_aimodel or is_tool
-
-    def _ensure_handler_instance(self, obj):
-        # always return a handler instance
-        obj = super()._ensure_handler_instance(obj)
-        if hasattr(obj, '_omega_virtual_genai') and isinstance(obj, FunctionType):
-            obj = GenAIModelHandler(fn=obj)
-        return obj
-
+class ConversationModelBackendMixin:
     def _resolve_input_data(self, method, Xname, **kwargs):
         # TODO this should not be necessary, the data should be resolved by super()
         #      we need this only due to VirtualObjectBackend not being a ModelBackend
@@ -127,6 +101,34 @@ class GenAIBaseBackend(VirtualObjectBackend):
 
     def predict(self, *args, **kwargs):
         raise NotImplementedError('A GenAIModel does not support prediction, use complete or generate')
+
+
+class GenAIBaseBackend(ConversationModelBackendMixin, VirtualObjectBackend):
+    """Generic backend to store user-implemented AI model handlers
+
+    This handles storage and retrieval for GenAIModelHandler subclasses
+    and instances, and provides bindings for the runtime to call using
+    e.g. backend.perform('complete', 'mymodel', 'X'). Works the same
+    as VirtualObjectBackend, but with a different KIND and supports
+    other methods.
+
+    .. versionadded:: 0.17.0
+    """
+
+    KIND = 'genai.llm'
+
+    @classmethod
+    def supports(self, obj, name, **kwargs):
+        is_aimodel = isinstance(obj, GenAIModel) or hasattr(obj, '_omega_virtual_genai')
+        is_tool = isinstance(obj, FunctionType) and any(name.startswith(v) for v in self.TOOLS_PATHS)
+        return is_aimodel or is_tool
+
+    def _ensure_handler_instance(self, obj):
+        # always return a handler instance
+        obj = super()._ensure_handler_instance(obj)
+        if hasattr(obj, '_omega_virtual_genai') and isinstance(obj, FunctionType):
+            obj = GenAIModelHandler(fn=obj)
+        return obj
 
 
 class GenAIModel:

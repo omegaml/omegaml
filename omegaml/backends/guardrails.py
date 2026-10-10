@@ -39,7 +39,7 @@ class GuardrailPolicy:
 
     def __repr__(self):
         """Return a string representation of the GuardrailPolicy instance."""
-        return f"GuardrailPolicy({self.name=}, {self.state=})"
+        return f"{self.__class__.__name__}({self.name=}, {self.state=})"
 
     def __call__(self, messages, step=None, model=None):
         # shim for GuardrailPolicy.eval()
@@ -199,7 +199,8 @@ class GuardrailPolicy:
         """Apply guardrail functions for a given state and step phase.
 
         Iterates through rail functions for the specified step, executes them,
-        and raises an error if any rail returns False.
+        and raises an error if any rail returns False. Note that rail functions defined
+        for step 'all' will always be included and run *first*.
 
         Args:
             state (str): The identifier of the state to check rails for.
@@ -213,7 +214,8 @@ class GuardrailPolicy:
             ValueError: If any rail function indicates failure with a reason.
         """
         rails = self.rules[state]["rails"]
-        for railfn in rails.get(step) or []:
+        step_fns = rails.get('all', []) + rails.get(step, [])
+        for railfn in step_fns:
             railfn = self.registry.get(railfn, railfn)
             result = self._callfn(railfn, messages, step=step, model=self.model, policy=self) if railfn else True
             expanded_result = (result, 'ok') if result else (result, 'not ok')

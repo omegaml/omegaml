@@ -147,8 +147,8 @@ class GenAIView(BaseView):
     def api_conversations(self, name):
         """List conversations for a given model"""
         om = self.om
-        model = om.models.get(name, data_store=om.datasets)
-        model.tracking = om.runtime.model(name).experiment()
+        exp = om.runtime.model(name).experiment()
+        model = om.models.get(name, data_store=om.datasets, tracking=exp)
         messages = model.conversation(run='*', userid=self.userid)
         messages.drop_duplicates(['key'], inplace=True, keep='first')
         return {
