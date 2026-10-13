@@ -7,7 +7,7 @@ from omegaml.server.app import create_app
 from omegaml.tests.util import OmegaTestMixin
 
 
-class PromptsViewTest(OmegaTestMixin, TestCase):
+class AssistantsViewTest(OmegaTestMixin, TestCase):
     def setUp(self):
         super().setUp()
         self.app = create_app()
@@ -26,35 +26,35 @@ class PromptsViewTest(OmegaTestMixin, TestCase):
         om.models.put('openai+http://localhost/mymodel', 'llms/mymodel', prompt='you are not very helpful')
         # create a new prompt based on an existing model
         resp = self.client.post(
-            url_for('omega-ai.prompts_api_save_prompt', name='prompts/myprompt'),
+            url_for('omega-ai.assistants_api_save_prompt', name='myprompt'),
             json={
                 'model': 'llms/mymodel',
                 'prompt': 'you are a very helpful assistant',
             },
         )
         self.assertEqual(resp.status_code, 200)
-        self.assertIn('prompts/myprompt', om.models.list())
-        meta = om.models.metadata('prompts/myprompt')
+        self.assertIn('assistants/myprompt', om.models.list())
+        meta = om.models.metadata('assistants/myprompt')
         self.assertEqual(meta.attributes['model'], 'llms/mymodel')
         self.assertEqual(meta.attributes['prompt'], 'you are a very helpful assistant')
-        prompt = om.models.get('prompts/myprompt')
+        prompt = om.models.get('assistants/myprompt')
         self.assertIsInstance(prompt, ConversationModel)
         self.assertEqual(prompt.model, 'mymodel')
         self.assertEqual(prompt.prompt, 'you are a very helpful assistant')
         # update the prompt
         resp = self.client.post(
-            url_for('omega-ai.prompts_api_save_prompt', name='prompts/myprompt'),
+            url_for('omega-ai.assistants_api_save_prompt', name='assistants/myprompt'),
             json={
                 'model': 'llms/mymodel',
                 'prompt': 'you are a really very helpful assistant',
             },
         )
         self.assertEqual(resp.status_code, 200)
-        self.assertIn('prompts/myprompt', om.models.list())
-        meta = om.models.metadata('prompts/myprompt')
+        self.assertIn('assistants/myprompt', om.models.list())
+        meta = om.models.metadata('assistants/myprompt')
         self.assertEqual(meta.attributes['model'], 'llms/mymodel')
         self.assertEqual(meta.attributes['prompt'], 'you are a really very helpful assistant')
-        prompt = om.models.get('prompts/myprompt')
+        prompt = om.models.get('assistants/myprompt')
         self.assertIsInstance(prompt, ConversationModel)
         self.assertEqual(prompt.model, 'mymodel')
         self.assertEqual(prompt.prompt, 'you are a really very helpful assistant')

@@ -142,7 +142,7 @@ class GenericModelResource(GenericResourceMixin, StreamableResourceMixin):
         model_id = self._resolve_model_id(model_id, payload)
         format_kwargs = self._result_format_kwargs(query, payload)
         datax = payload or (query.get('dataX') or query.get('audio') or payload)
-        payload.setdefault('audio', payload.pop('files', {}).get('file'))
+        payload.setdefault('audio', payload.pop('files', payload).get('file'))
         promise = self.om.runtime.model(model_id).transcribe(datax, **format_kwargs)
         # TODO how do we output raw format when it is not json? prepare_result needs to handle this case
         result = self.prepare_result(promise, model_id=model_id, **format_kwargs) if not self.is_async else promise

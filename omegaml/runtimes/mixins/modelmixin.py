@@ -139,15 +139,20 @@ class ModelMixin:
         Xname = self._ensure_data_is_stored(Xname)
         return omega_complete.delay(self.modelname, Xname, rName=rName, **kwargs)
 
+    def invoke(self, Xname, rName=None, **kwargs):
+        omega_invoke = self.task('omegaml.tasks.omega_invoke')
+        Xname = self._ensure_data_is_stored(Xname, as_payload=True)
+        return omega_invoke.delay(self.modelname, Xname, rName=rName, **kwargs)
+
     def transcribe(self, Xname, rName=None, **kwargs):
         omega_transcribe = self.task('omegaml.tasks.omega_transcribe')
         Xname = self._ensure_data_is_stored(Xname)
-        return omega_transcribe.delay(self.modelname, Xname=Xname, rName=rName, **kwargs)
+        return omega_transcribe.delay(self.modelname, Xname, rName=rName, **kwargs)
 
     def speech(self, Xname, rName=None, **kwargs):
         omega_speech = self.task('omegaml.tasks.omega_speech')
         Xname = self._ensure_data_is_stored(Xname)
-        return omega_speech.delay(self.modelname, Xname=Xname, rName=rName, **kwargs)
+        return omega_speech.delay(self.modelname, Xname, rName=rName, **kwargs)
 
     def embed(self, Xname, rName=None, **kwargs):
         """
