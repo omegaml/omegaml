@@ -18,6 +18,7 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Any
 
+import cachetools
 import validators
 from bson import ObjectId
 
@@ -108,22 +109,13 @@ def settings(reload=False):
     if not reload and __settings is not None:
         return __settings
     try:
-        # see if we're running as a django app
-        from django.conf import settings as djsettings  # @UnresolvedImport
+        from django.conf import settings as djsettings
 
-        try:
-            djsettings.SECRET_KEY
-        except Exception:
-            from warnings import warn
-
-            warn(
-                "Using omegaml.defaults because Django was not initialized."
-                "Try importing omegaml within a method instead of at the "
-                "module level"
-            )
-            raise
-        else:
-            defaults = djsettings
+        # accessing a setting will call django.setup() once
+        # -- we do this to avoid calling django.setup() multiple times, we has unpredictable results
+        #    (e.g. django.setup() will reload logger config and override current loggers)
+        loaded = djsettings.SECRET_KEY is not None  # noqa
+        defaults = djsettings
     except Exception:
         # django failed to initialize, use omega defaults
         defaults = omdefaults
@@ -135,6 +127,8 @@ def settings(reload=False):
             if k.isupper() and not hasattr(defaults, k):
                 setattr(defaults, k, getattr(omdefaults, k))
     __settings = DefaultsContext(defaults)
+    # load commerical defaults
+    omdefaults.load_eedefaults(vars=__settings)
     omdefaults.load_config_file(vars=__settings)
     omdefaults.update_from_env(vars=__settings)
     omdefaults.load_framework_support(vars=__settings)
@@ -1515,3 +1509,32 @@ def silence():
 class safeformat(dict):
     def __missing__(self, key):
         return f"{{{key}}}"  # return "{<key>}"
+
+
+def first_call_cached(cacheclz, obj, attribute):
+    """a wrapper for the cachetools.cached() decorator that allocates the cache on the first call
+
+    Usage:
+
+        @first_call_cached(cacheclz, obj, attribute)
+        def myfunc(*args, **kwargs):
+            ...
+
+        The cache will be allocated using cachetools.cached(cache=cacheclz(**cache_config)),
+        where cache_config is getattr(obj, attribute) => dict evaluated upon the first call.
+
+        Use this to enable dependency injection of configuration variables. This essentially
+        recreates behavior seen in previous Python / cachetools versions.
+    """
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if not hasattr(func, '__cached'):
+                cache_config = getattr(obj, attribute)
+                cached = cachetools.cached(cache=cacheclz(**cache_config))
+                func.__cached = cached(func)
+            return func.__cached(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
