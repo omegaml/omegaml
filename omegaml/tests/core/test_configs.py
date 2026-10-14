@@ -98,6 +98,7 @@ class ConfigurationTests(TestCase):
             defaults.update_from_env = _real_base_config.update_from_env
             defaults.load_user_extensions = lambda *args, **kwargs: None
             defaults.load_framework_support = lambda *args, **kwargs: None
+            defaults.load_eedefaults = _real_base_config.load_eedefaults
             defaults.is_test_run = True
             setup = om.setup
             defaults.MY_OWN_SETTING = 'foo'
@@ -182,6 +183,7 @@ class ConfigurationTests(TestCase):
                 defaults.load_user_extensions = _real_base_config.load_user_extensions
                 defaults.load_config_file = _real_base_config.load_config_file
                 defaults.update_from_env = _real_base_config.update_from_env
+                defaults.load_eedefaults = _real_base_config.load_eedefaults
                 defaults.load_framework_support = lambda *args, **kwargs: None
                 defaults.is_test_run = True
                 defaults.OMEGA_MY_OWN_SETTING = 'foo'
