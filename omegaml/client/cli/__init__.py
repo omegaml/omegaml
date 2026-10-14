@@ -42,6 +42,7 @@ Options:
 [description:shell]
 """
 
+import os
 import sys
 
 from omegaml import version
@@ -58,7 +59,7 @@ from omegaml.client.docoptparser import CommandParser
 
 def main(argv=None, logger=None, **kwargs):
     # make sure cli sees current project
-    sys.path.insert(0, '.')
+    sys.path.insert(0, os.getcwd())
     # use argv and logger for debugging and testing
     parser = CommandParser(
         __doc__,
