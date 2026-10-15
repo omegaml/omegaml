@@ -4,60 +4,57 @@ from uuid import uuid4
 
 from omegaml.backends.genai.memory import EpisodeMemory
 from omegaml.backends.genai.models import ConversationModel
+from omegaml.backends.specsobj import SpecsBackend, SpecsMixin
 from omegaml.backends.tracking import OmegaSimpleTracker
-from omegaml.backends.virtualobj import virtualobj
 from omegaml.client.util import dotable
 from omegaml.util import ensure_list
 
 
-@virtualobj
-class EventAgent:
-    def __init__(self, name=None, sessionid=None, model=None, context=None, tracking=None, memory=None):
+class EventAgent(SpecsMixin):
+    name: str
+    sessionid: str
+    model: str
+    memory: str
+    tracking: OmegaSimpleTracker
+
+    def __init__(self, name=None, sessionid=None, model=None, context=None, tracking=None, memory=None, **kwargs):
         self.context = context or {}
+        self.tracking = tracking
         self._model: ConversationModel = None
         self._memory: EpisodeMemory = None
-        self.tracking: OmegaSimpleTracker = tracking
-        self.initialize(sessionid=sessionid, model=model, context=context, name=name, memory=memory)
+        super().__init__(name=name, sessionid=sessionid, model=model, memory=memory, **kwargs)
 
     def __call__(self, method=None, data=None, conversation_id=None, **kwargs):
         if method == 'invoke':
-            return self.invoke(data, conversation_id=conversation_id)
+            is_string_prompt = isinstance(data, list) and len(data) > 0 and isinstance(data[0], str)
+            data = data[0] if is_string_prompt else data
+            return self.invoke(data, conversation_id=conversation_id, **kwargs)
 
     def __repr__(self):
         name, sessionid = self.name, self.sessionid
         return f'EventAgent({name=}, {sessionid=})'
 
-    def __getstate__(self):
-        return self.context
-
-    def __setstate__(self, state):
-        self.context = state
-        self._model = None
-        self._memory = None
-        self.tracking = None
-        self.load()
-
-    def initialize(self, sessionid=None, model=None, context=None, name=None, memory=None):
-        sessionid = sessionid or self.sessionid or uuid4().hex
-        name = name or self.name or uuid4().hex
-        memory = memory or name
-        self.context = (context or self.context) or {
-            'id': sessionid,
-            'name': name,
-            'model': model,
-            'memory': memory,
+    def initialize(self, load=False, **kwargs):
+        super().initialize(load=False, **kwargs)
+        self.sessionid = self.sessionid or uuid4().hex
+        self.name = self.name or uuid4().hex
+        self.memory = self.memory or self.name
+        self.context = {
+            'id': self.sessionid,
+            'name': self.name,
+            'model': self.model,
+            'memory': self.memory,
             'state': 'inception',
             'history': [],
             'actions': [],
             'inputs': [],
             'response': None,
         }
-        self.load()
+        self.load() if load else None
 
     def load(self):
         import omegaml as om
 
-        # if self.sessionid in AGENT_SESSIONS:
         if self.tracking is None:
             self.tracking = om.runtime.experiment(self.name)
         if self.sessionid:
@@ -66,12 +63,13 @@ class EventAgent:
             self.context = data.iloc[-1]['value'] if data is not None and not data.empty else self.context
         if self._model is None:
             self._model = om.models.get(self.model, data_store=om.datasets)
+            # add tools
             self._model.tools.append(self.handoff_to_agent)
             self._model.tools.append(self.handoff_to_human)
         if self._memory is None:
             self.context.setdefault('memory', self.name)
             self._memory = EpisodeMemory(self.context.get('memory'), data_store=self._model.data_store)
-            self._model.tools.append(self.memory.memory_tool)
+            self._model.tools.append(self._memory.memory_tool)
 
     def save(self):
         # AGENT_SESSIONS[self.sessionid] = deepcopy(self.context)
@@ -81,33 +79,20 @@ class EventAgent:
     def __repr__(self):
         return f'EventAgent({self.sessionid})'
 
-    @property
-    def sessionid(self):
-        return self.context.get('id')
+    def conversation(self, conversation_id=None, raw=False, **filter):
+        return self._model.conversation(conversation_id=conversation_id, raw=raw, **filter)
 
-    @sessionid.setter
-    def sessionid(self, sessionid):
-        self.context['id'] = sessionid
-
-    def sessions(self, raw=False):
+    def sessions(self, raw=False, load=False):
+        load = False if raw else load
         data = self.tracking.data(event='agent:session', run='*')
-        agents = (EventAgent(name=self.name, sessionid=sessionid) for sessionid in data['key'].unique())
+        agents = (
+            EventAgent(model=self.model, name=self.name, sessionid=sessionid, load=load)
+            for sessionid in data['key'].unique()
+        )
         return data.to_dict('records') if raw else list(agents)
 
-    @property
-    def model(self):
-        return self.context.get('model')
-
-    @property
-    def name(self):
-        return self.context.get('name')
-
-    @property
-    def memory(self):
-        return self._memory
-
-    def invoke(self, prompt, conversation_id=None):
-        self.initialize(sessionid=conversation_id)
+    def invoke(self, prompt, conversation_id=None, raw=False, **kwargs):
+        self.initialize(sessionid=conversation_id or self.sessionid, load=True)
         if self.context['state'] in 'awaiting':
             self.handle_deferred_actions()
             for action, response in self.iter_responses():
@@ -118,20 +103,23 @@ class EventAgent:
             you are an agentic AI assistant
             ''')
             prompt = f'{system_prompt}\n\n{prompt}'
-            message = self.invoke_one(prompt, conversation_id=self.sessionid)
+            message = self.invoke_one(prompt, conversation_id=self.sessionid, raw=raw, **kwargs)
         else:
-            message = self.invoke_one(prompt, conversation_id=self.sessionid)
+            message = self.invoke_one(prompt, conversation_id=self.sessionid, raw=raw, **kwargs)
         self.save()
         return message
 
-    def invoke_one(self, prompt, conversation_id=None):
+    def invoke_one(self, prompt, conversation_id=None, raw=False, **kwargs):
         # -- call model
         self.context['state'] = 'processing'
         self.context['conversation_id'] = conversation_id
         resp = self._model.complete(prompt, conversation_id=conversation_id, raw=True, use_tools=False)
         # process response
         message = resp['choices'][0]['message']
-        self.context['history'].append(message)
+        self.context['history'].append({
+            'input': prompt,
+            'response': message,
+        })
         self.context['response'] = message
         # determine deferred actions
         reasoning = message.get('reasoning') or '-no-text-'
@@ -143,7 +131,7 @@ class EventAgent:
         else:
             self.context['state'] = 'done'
             self.context['final_output'] = content
-        return message
+        return resp if raw else message
 
     def handoff_to_agent(self, agent, prompt):
         self.add_deferred_action('agent:invoke', dict(agent=agent, prompt=prompt))
@@ -206,7 +194,7 @@ class EventAgent:
     def iter_actions(self, op=None, pending=True):
         for action in self.context['actions']:
             # TODO: is 'pending' the only pending state? e.g. responded is also pending?
-            if pending and action['state'] not in ['pending']:
+            if pending and action['state'] != 'pending':
                 continue
             if op and action['op'] not in ensure_list(op):
                 continue
@@ -245,3 +233,18 @@ def process_pending_agents():
 
         agent = EventAgent(sessionid)
         agent.invoke('continue')
+
+
+class EventAgentBackend(SpecsBackend):
+    KIND = 'genai.eventagent'
+    SPECS_CLASS = EventAgent
+
+    def invoke(self, modelname, xName, rName=None, **kwargs):
+        # make this work as a model backend too
+        meta = self.model_store.metadata(modelname)
+        handler = self._ensure_handler_instance(self.get(modelname))
+        # ensure we have expected properties
+        X = self.data_store.get(xName)
+        return handler(
+            method='invoke', data=X, meta=meta, store=self.model_store, rName=rName, tracking=self.tracking, **kwargs
+        )

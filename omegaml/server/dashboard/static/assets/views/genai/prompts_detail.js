@@ -9,12 +9,13 @@ $(function () {
     availablePipelines: window.context.availablePipelines || [],
     availableDocuments: window.context.availableDocuments || [],
     availableGuardrails: window.context.availableGuardrails || [],
+    availableTools: window.context.availableTools || [],
     isNew: window.context.isNew || false,
   });
   assistantFormView.render();
   assistantFormView.on("submit", function (data) {
     $.ajax({
-      url: url_for(".prompts_api_save_prompt", {
+      url: url_for(".assistants_api_save_prompt", {
         name: data.assistantName || data.name,
       }),
       type: "POST",
@@ -28,7 +29,7 @@ $(function () {
       },
       error: function (xhr) {
         alert(
-          "error saving prompt Status" + xhr.status + ": " + xhr.statusText
+          "error saving prompt Status" + xhr.status + ": " + xhr.statusText,
         );
       },
     });

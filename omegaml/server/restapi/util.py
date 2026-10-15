@@ -91,14 +91,13 @@ class OmegaFlaskResourceMixin:
             }
         else:
             abort(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
-        # update for defaults
-        for k, v in payload_defaults.items():
-            payload.setdefault(k, v)
         # format
         # -- handle list or dict payload
         format_payload = (
             payload if isinstance(payload, dict) else payload[0] if isinstance(payload, list) and payload else {}
         )
+        format_payload = {**payload_defaults, **format_payload}
+        # -- determine format
         format = {
             'raw': raw or format_payload.get('raw', False),
             'stream': isTrue(stream or format_payload.get('stream') or query.get('stream')),
