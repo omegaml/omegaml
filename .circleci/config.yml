@@ -103,6 +103,7 @@ jobs:
             mkdir -p ~/.omegaml
             echo $BEHAVE_YML | base64 -d > ~/.omegaml/behave.yml
             echo $PYPIRC_INI | base64 -d > ~/.pypirc
+            echo "Testing"
             ls -lart ~/.omegaml
             cd omegaml-ce
             cp scripts/mongoinit.js.example scripts/mongoinit.js
