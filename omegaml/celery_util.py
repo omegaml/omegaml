@@ -18,6 +18,7 @@ class EagerSerializationTaskMixin:
     # adopted from https://github.com/celery/celery/issues/4008#issuecomment-330292405
     abstract = True
 
+    @property
     def _not_eager(self):
         app = self._app
         return not app.conf.CELERY_ALWAYS_EAGER
