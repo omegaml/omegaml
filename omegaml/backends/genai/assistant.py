@@ -1,3 +1,5 @@
+import uuid
+
 from omegaml.backends.genai import ConversationModelBackendMixin
 from omegaml.backends.genai.models import ConversationModel
 from omegaml.backends.specsobj import SpecsBackend, SpecsMixin
@@ -28,23 +30,31 @@ class Assistant(SpecsMixin):
             tracking=self.tracking,
             **subdict_except(self.specs, ['model', 'tracking']),
         )
+        self.conversation_id = getattr(self, 'conversation_id', None)
+
+    def reset(self):
+        self.conversation_id = uuid.uuid4().hex
+        return self.conversation_id
 
     def complete(
-        self, prompt, messages=None, conversation_id=None, stream=None, use_tools=True, agentic=False, **kwargs
+        self, prompt, messages=None, conversation_id=None, stream=False, use_tools=True, agentic=False, **kwargs
     ):
         self.initialize(load=True)
-        return self._model.complete(
+        self.conversation_id = conversation_id or self.conversation_id or self.reset()
+        resp = self._model.complete(
             prompt,
             messages=messages,
-            conversation_id=conversation_id,
+            conversation_id=self.conversation_id,
             stream=stream,
             use_tools=use_tools,
             agentic=agentic,
             **kwargs,
         )
+        return resp
 
     def conversation(self, conversation_id=None, raw=False, **filter):
         self.initialize(load=True)
+        conversation_id = conversation_id or self.conversation_id
         return self._model.conversation(conversation_id=conversation_id, raw=raw, **filter)
 
 

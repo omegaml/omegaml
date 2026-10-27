@@ -500,6 +500,8 @@ def load_framework_support(vars=globals()):
         pass  # this is just to load torch transformers after tensorflow
     #: openapi backend
     if module_available('openai'):
+        # disable onnxruntime telemetry collection, due to https://github.com/microsoft/onnxruntime/blob/main/docs/Privacy.md
+        os.environ.setdefault('ORT_DISABLE_TELEMETRY', '1')
         if os.environ.get('ORT_LOGGING_LEVEL', 'ERROR') in ('3', '4', 'ERROR', 'test', 'FATAL'):
             # respect ORT_LOGGING_LEVEL, due to https://github.com/microsoft/onnxruntime/issues/27092
             from omegaml.util import silence

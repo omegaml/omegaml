@@ -161,8 +161,8 @@ class GenericModelResource(GenericResourceMixin, StreamableResourceMixin):
         # endpoint according to https://platform.openai.com/docs/api-reference/models/
         # same code as AIPromptsView.members
         excludes = (lambda m: m.name.startswith('_'), lambda m: m.name.startswith('experiments/'))
-        kind = ['genai.text', 'genai.llm']
-        items = (m for m in self.om.models.list('prompts/*', kind=kind, raw=True) if not any(e(m) for e in excludes))
+        items = [m for m in self.om.models.list('prompts/*', raw=True) if not any(e(m) for e in excludes)]
+        items += [m for m in self.om.models.list('assistants/*', raw=True) if not any(e(m) for e in excludes)]
         models = {
             "object": "list",
             "data": [
