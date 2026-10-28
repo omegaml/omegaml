@@ -1,6 +1,7 @@
 import json
 import unittest
 from hashlib import pbkdf2_hmac
+from random import randint
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -31,8 +32,8 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         producer_events = [
             {
                 'message': 'hello world',
-            }
-        ]
+            },
+        ] * randint(1, 10)
         for event in producer_events:
             stream.append(event)
         # mark end of streaming
