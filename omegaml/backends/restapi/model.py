@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
+from omegaml import _base_config
 from omegaml.backends.restapi.resource import GenericResourceMixin
 from omegaml.backends.restapi.streamable import StreamableResourceMixin
 from omegaml.util import ensure_json_serializable, isTrue
@@ -11,6 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 class GenericModelResource(GenericResourceMixin, StreamableResourceMixin):
+    def __init__(self, om, *args, **kwargs):
+        super().__init__(om, *args, **kwargs)
+        # reset StreamableResourceMixin.streamer
+        self.streamer = self.streamer or _base_config.OMEGA_EVENTS_STREAMER
+
     def is_eager(self):
         return getattr(self.om.runtime.celeryapp.conf, 'CELERY_ALWAYS_EAGER', False)
 
@@ -35,7 +41,6 @@ class GenericModelResource(GenericResourceMixin, StreamableResourceMixin):
         return {
             'raw': isTrue(self.raw or payload.get('raw', False) or query.get('raw')),
             'stream': isTrue(self.stream or payload.get('stream', False) or query.get('stream')),
-            'streamer': self.streamer or payload.get('streamer', False) or query.get('streamer'),
         }
 
     def predict(self, model_id, query, payload):

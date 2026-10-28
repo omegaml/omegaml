@@ -41,12 +41,11 @@ class StreamableResourceMixin:
 
     SECRET_KEY = os.getenv('SECRET_KEY', 'ec3d75c6f5b3965f24f148969b1c82d57246a8aab46393b55ba18d712fa1a0ad')
     PBKDF_ITER = int(os.getenv('PBKDF_ITER', 500000))
-    TEST_STREAMER = None
 
     def __init__(self, *args, streamer=None, **kwargs):
-        self.streamer = streamer or self.TEST_STREAMER  # enable testing inline or ssechat
+        self.streamer = streamer  # enable testing inline or ssechat
 
-    def prepare_streaming_result(self, promise=None, resource_name=None, raw=False, stream=None, streamer=None):
+    def prepare_streaming_result(self, promise=None, resource_name=None, raw=False, stream=None):
         """prepare result for event streaming
 
         Args:
@@ -60,16 +59,14 @@ class StreamableResourceMixin:
             str | tuple: a serializable result (str) or a Flask-compatible tuple of (body, status_code, location, cookies)
         """
         stream = stream or promise.id  # type: str
-        streamer = streamer or self.streamer or self.om.defaults.OMEGA_EVENTS_STREAMER
         # functions that handle streaming
         #    name => method(stream)
         STREAMERS = {
             'inline': self._inline_streaming,
             'ssechat': self._handoff_to_ssechat,
-            'default': self._inline_streaming,
         }  # type: Dict[str, Callable[..., Any]]
-        _default_streamer = STREAMERS.get('default')
-        streaming_method = STREAMERS.get(streamer, _default_streamer)
+        _default_streamer = STREAMERS.get('inline')
+        streaming_method = STREAMERS.get(self.streamer, _default_streamer)
         return streaming_method(stream, resource_name=resource_name, raw=raw)
 
     def prepare_result(self, chunk, **kwargs):
