@@ -15,7 +15,7 @@ from omegaml.util import utcnow
 
 TIMEOUT = 100  # timeout in seconds
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG)
 bp = Blueprint('ssechat', __name__)
 context = threading.local()
 

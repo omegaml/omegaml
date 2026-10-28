@@ -1,6 +1,7 @@
 import json
 import unittest
 from hashlib import pbkdf2_hmac
+from random import randint
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -31,8 +32,8 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         producer_events = [
             {
                 'message': 'hello world',
-            }
-        ]
+            },
+        ] * randint(1, 10)
         for event in producer_events:
             stream.append(event)
         # mark end of streaming
@@ -41,8 +42,9 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
                 'stream_complete': 'stop',
             },
         )
-        result = resource.prepare_streaming_result(stream='messages')
-        received_events = list(result)
+        with patch.object(om.defaults, attribute='OMEGA_EVENTS_TIMEOUT', new=10):
+            result = resource.prepare_streaming_result(stream='messages')
+            received_events = list(result)
         self.assertEqual(len(received_events), len(producer_events))
         self.assertTrue(all(ev in producer_events for ev in received_events))
 
@@ -64,8 +66,12 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
                 'message': 'error occurred',
             },
         )
-        with self.assertRaises(RuntimeError):
+        with (
+            self.assertRaises(RuntimeError) as error,
+            patch.object(om.defaults, attribute='OMEGA_EVENTS_TIMEOUT', new=10),
+        ):
             list(resource.prepare_streaming_result(stream='messages'))
+            self.assertTrue('error occurred' in str(error).lower())
 
     def test_streamable_ssechat_redirect(self):
         resource = StreamableResourceMixin(streamer='ssechat')

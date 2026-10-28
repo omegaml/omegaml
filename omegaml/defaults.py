@@ -236,7 +236,7 @@ OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 #: default log level
 #: .. versionchanged:: 0.18.0
 #:     set default loglevel
-OMEGA_LOGLEVEL = os.environ.get('OMEGA_LOGLEVEL') or 'INFO'
+OMEGA_LOGLEVEL = str(os.environ.get('OMEGA_LOGLEVEL') or 'INFO').upper()
 #: tracking providers
 OMEGA_TRACKING_PROVIDERS = {
     'simple': 'omegaml.backends.tracking.OmegaSimpleTracker',
@@ -267,6 +267,10 @@ OMEGA_CARDS_ENABLED = truefalse(os.environ.get('OMEGA_CARDS_ENABLED', False))
 OMEGA_EVENTS_STREAMER = os.environ.get('OMEGA_EVENTS_STREAMER', 'inline')
 #: events streaming ssechat server
 OMEGA_EVENTS_STREAMER_URL = os.environ.get('OMEGA_EVENTS_STREAMER_URL', '/events/chat/completions')
+#: events streaming timeout in seconds, defaults to 10 minutes
+OMEGA_EVENTS_TIMEOUT = int(os.environ.get('OMEGA_EVENTS_TIMEOUT', '600'))
+#: events streaming batch size, at most N, defaults to 10 events
+OMEGA_EVENTS_BATCHSIZE = int(os.environ.get('OMEGA_EVENTS_TIMEOUT', '10'))
 #: vector db
 OMEGA_VECTORDB_URL = os.environ.get('OMEGA_VECTORDB_URL', 'vector+mongodb://')
 #: show loading progress, defaults to True, set to '0' to disable
@@ -564,7 +568,7 @@ def setup_logging():
         # -- sometimes resultins in large amounts of inadverted pymongo log output
         # -- https://www.mongodb.com/docs/languages/python/pymongo-driver/current/monitoring-and-logging/logging/
         'root': OMEGA_LOGLEVEL,
-        'omega': OMEGA_LOGLEVEL,
+        'omegaml': OMEGA_LOGLEVEL,
         'pymongo': 'ERROR',
         'pymongo.command': 'WARNING',
         'pymongo.connection': 'ERROR',
@@ -590,7 +594,7 @@ if not is_cli_run and is_test_run:
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_LOCAL_RUNTIME = True
     OMEGA_RESTAPI_URL = 'local'
-    OMEGA_LOGLEVEL = 'INFO'
+    OMEGA_LOGLEVEL = 'DEBUG'
 else:
     # overrides in actual operations
     load_config_file()
