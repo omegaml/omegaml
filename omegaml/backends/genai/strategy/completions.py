@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from itertools import chain
 from uuid import uuid4
 
@@ -74,11 +75,11 @@ class CompletionsMixin(ConversationModelMixinBase):
 
         def parse_completion_response(r):
             response, _, response_message, raw_response = r
-            return response_message if not raw else response
+            return response_message if not raw else raw_response
 
         def parse_chat_response(r):
             conversation_id, response, _, response_message, raw_response = r
-            return response_message if not raw else response
+            return response_message if not raw else raw_response
 
         def generate_response_stream_once(prompt, messages, use_tools):
             if not chat and conversation_id is None:
@@ -218,6 +219,7 @@ class CompletionsMixin(ConversationModelMixinBase):
         )
         # finally call the model provider, if needed
         self._log_events('conversation', conversation_id, prompt_message)
+        start_time = datetime.now()
         response = response or self.provider.complete(messages=messages, model=self.model, **kwargs)
         self.eval_guardrails(messages, 'response', conversation_id=conversation_id)
 
@@ -304,6 +306,7 @@ class CompletionsMixin(ConversationModelMixinBase):
                 )
                 or response_message
             )
+            raw_response['model'] = self.model
             return response, prompt_message, response_message, raw_response
 
         def resolve_chunk(response, chunk, chunks, prompt_message, consolidated_response, use_tools=False):
@@ -377,6 +380,7 @@ class CompletionsMixin(ConversationModelMixinBase):
             consolidated_response.update({'content': content, 'reasoning': reasoning})
             consolidated_response.update(response_message)
             chunks.append(raw_response)
+            raw_response['model'] = self.model
             return response, prompt_message, response_message, raw_response
 
         if stream:
@@ -385,6 +389,9 @@ class CompletionsMixin(ConversationModelMixinBase):
             # -- wrap generator in try/finally to ensure we capture consolidated response even if client aborts
             try:
                 for chunk in response:
+                    if len(chunks) == 0:
+                        ttft_metric = (datetime.now() - start_time).total_seconds()
+                        self._log_events('timings', conversation_id, ttft_metric, key='first_token')
                     try:
                         self._track_usage(chunk, conversation_id)
                         resolved = resolve_chunk(
@@ -414,6 +421,8 @@ class CompletionsMixin(ConversationModelMixinBase):
                     self._log_events('conversation', conversation_id, consolidated_response)
         else:
             try:
+                ttft_metric = (datetime.now() - start_time).total_seconds()
+                self._log_events('timings', conversation_id, ttft_metric, key='first_token')
                 self._track_usage(response, conversation_id)
                 resolved = resolve_response(response, prompt_message, use_tools=use_tools)
             except Exception as e:
@@ -451,7 +460,7 @@ class CompletionsMixin(ConversationModelMixinBase):
         return message
 
     def _get_finish_reason(self, response):
-        return response.get('choices', [{}])[-1].get('finish_reason')
+        return (response.get('choices') or [{}])[-1].get('finish_reason')
 
     def _has_tool_calls(self, response, implicit=False):
         message = self._get_response_message(response)

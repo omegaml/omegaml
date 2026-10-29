@@ -97,6 +97,9 @@ class ExperimentStatistics:
         .. versionchanged:: 0.16.4
             Metrics are calculated by run (new default). To get back the previous behavior,
             calculated across all runs, set groupby=''.
+
+        .. versionchanged:: NEXT
+            kwargs event=, batchsize= now override the defaults
         """
         # metrics - percentiles for each metric
         event = event or 'metric'
@@ -107,7 +110,7 @@ class ExperimentStatistics:
             metrics = data.groupby(list(groups)).apply(lambda v: v['value'].describe(percentiles=percentiles))
             return metrics
 
-        batches = self.data(event=event, batchsize=self.options.batchsize, **kwargs)
+        batches = self.data(**{'event': event, 'batchsize': self.options.batchsize, **kwargs})
         aggstats = (v for v in map(stats, batches) if v is not None)
         return pd.concat(aggstats, copy=False)
 
@@ -139,6 +142,9 @@ class ExperimentStatistics:
             1. group by run
             2. calculate duration as the difference between start and stop for each group
             3. calculate percentiles across all groups
+
+        .. versionchanged:: NEXT
+            kwargs event=, batchsize= now override the defaults
         """
         groupby = groupby or self.options.groupby
         time_key = time_key or self.options.time_key
@@ -178,7 +184,7 @@ class ExperimentStatistics:
                 )
             return duration
 
-        batches = self.data(event=time_events, batchsize=self.options.batchsize, **kwargs)
+        batches = self.data(**{'event': time_events, 'batchsize': self.options.batchsize, **kwargs})
         aggstats = (v for v in map(stats, batches) if v is not None)
         return pd.concat(aggstats, copy=False)
 
@@ -202,6 +208,9 @@ class ExperimentStatistics:
 
         Notes:
             1. calculate throughput as the number of events / duration
+
+        .. versionchanged:: NEXT
+            kwargs event=, batchsize= now override the defaults
         """
         time_events = time_events or self.options.time_events
         time_key = time_key or self.options.time_key
@@ -222,7 +231,7 @@ class ExperimentStatistics:
             self.align_index(throughput, f'group_{time_key}')
             return throughput
 
-        batches = self.data(event=time_events, batchsize=self.options.batchsize, **kwargs)
+        batches = self.data(**{'event': time_events, 'batchsize': self.options.batchsize, **kwargs})
         aggstats = (v for v in map(stats, batches) if v is not None)
         return pd.concat(list(aggstats))
 
@@ -250,9 +259,12 @@ class ExperimentStatistics:
             1. cut the events into bins of 10% of the total number of events
             2. group by bins
             3. calculate total latency as the percentiles across all bins
+
+        .. versionchanged:: NEXT
+            kwargs event=, batchsize= now override the defaults
         """
         time_events = time_events or self.options.time_events
-        time_data = self.data(event=time_events, **kwargs)
+        time_data = self.data(**{'event': time_events, **kwargs})
         time_slots = time_slots or math.ceil(len(time_data) * 0.1)
         bins = pd.cut(time_data['dt'], bins=time_slots)
         latency = (
@@ -291,11 +303,14 @@ class ExperimentStatistics:
                -- note we divide by 2 since we have start and stop events
             3. calculate percentiles across all bins
             4. calculate utilization as throughput / throughput_eff
+
+        .. versionchanged:: NEXT
+            kwargs event=, batchsize= now override the defaults
         """
 
         tp_unit = tp_unit or self.options.tp_unit
         time_events = time_events or self.options.time_events
-        time_data = self.data(event=time_events, **kwargs)
+        time_data = self.data(**{'event': time_events, **kwargs})
         time_slots = math.ceil(len(time_data) * 0.1)
         bins = pd.cut(time_data['dt'], bins=time_slots)
         throughput = self.throughput(tp_unit=tp_unit, time_events=time_events, **kwargs)
