@@ -107,7 +107,7 @@ class ExperimentStatistics:
             metrics = data.groupby(list(groups)).apply(lambda v: v['value'].describe(percentiles=percentiles))
             return metrics
 
-        batches = self.data(event=event, batchsize=self.options.batchsize, **kwargs)
+        batches = self.data(**{'event': event, 'batchsize': self.options.batchsize, **kwargs})
         aggstats = (v for v in map(stats, batches) if v is not None)
         return pd.concat(aggstats, copy=False)
 
@@ -178,7 +178,7 @@ class ExperimentStatistics:
                 )
             return duration
 
-        batches = self.data(event=time_events, batchsize=self.options.batchsize, **kwargs)
+        batches = self.data(**{'event': time_events, 'batchsize': self.options.batchsize, **kwargs})
         aggstats = (v for v in map(stats, batches) if v is not None)
         return pd.concat(aggstats, copy=False)
 
@@ -222,7 +222,7 @@ class ExperimentStatistics:
             self.align_index(throughput, f'group_{time_key}')
             return throughput
 
-        batches = self.data(event=time_events, batchsize=self.options.batchsize, **kwargs)
+        batches = self.data(**{'event': time_events, 'batchsize': self.options.batchsize, **kwargs})
         aggstats = (v for v in map(stats, batches) if v is not None)
         return pd.concat(list(aggstats))
 
@@ -252,7 +252,7 @@ class ExperimentStatistics:
             3. calculate total latency as the percentiles across all bins
         """
         time_events = time_events or self.options.time_events
-        time_data = self.data(event=time_events, **kwargs)
+        time_data = self.data(**{'event': time_events, **kwargs})
         time_slots = time_slots or math.ceil(len(time_data) * 0.1)
         bins = pd.cut(time_data['dt'], bins=time_slots)
         latency = (
@@ -295,7 +295,7 @@ class ExperimentStatistics:
 
         tp_unit = tp_unit or self.options.tp_unit
         time_events = time_events or self.options.time_events
-        time_data = self.data(event=time_events, **kwargs)
+        time_data = self.data(**{'event': time_events, **kwargs})
         time_slots = math.ceil(len(time_data) * 0.1)
         bins = pd.cut(time_data['dt'], bins=time_slots)
         throughput = self.throughput(tp_unit=tp_unit, time_events=time_events, **kwargs)
