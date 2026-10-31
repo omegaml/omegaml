@@ -27,7 +27,7 @@ class Assistant(SpecsMixin):
         self._model = self._model or om.models.get(
             self.model,
             data_store=om.datasets,
-            tracking=self.tracking,
+            tracking=getattr(self, 'tracking', None),
             **subdict_except(self.specs, ['model', 'tracking']),
         )
         self.conversation_id = getattr(self, 'conversation_id', None)
@@ -56,6 +56,10 @@ class Assistant(SpecsMixin):
         self.initialize(load=True)
         conversation_id = conversation_id or self.conversation_id
         return self._model.conversation(conversation_id=conversation_id, raw=raw, **filter)
+
+    @property
+    def stats(self):
+        return self._model.tracking.stats
 
 
 class AssistantBackend(ConversationModelBackendMixin, SpecsBackend):

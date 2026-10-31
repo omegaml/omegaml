@@ -16,7 +16,6 @@ from minibatch.tests.util import LocalExecutor
 from omegaml.util import tryOr, utcnow
 
 logger = logging.getLogger(__name__)
-logger.setLevel('DEBUG')
 
 
 class StreamableResourceMixin:
@@ -97,15 +96,22 @@ class StreamableResourceMixin:
             sink=buffer,
             size=om.defaults.OMEGA_EVENTS_BATCHSIZE,  # limit messages in each steps (reduces memory allocation)
             interval=1,
-            emitter=FlushWindow,
+            emitter=FlushWindow,  # this flushes any data available without regards to insert time
         )
         # -- emitter to buffer as a sink
         emitter = streaming.make(lambda window: window.data)
 
+        # set to exponentially increase wait intervals in case of missing data in good grace
+        # -- [0.0005 * (2.0 ** exp) for exp in range(1, 15)]
+        #    => [0.001, 0.002, 0.004, 0.008, 0.016, 0.032, 0.064, 0.128, 0.256, 0.512, 1.024, 2.048, 4.096, 8.192]
+        # -- rationale: time to first token can be within several seconds, however there has been a handoff
+        #    from original API call to SSE streaming server, so we start with a delay of anywhere 200ms - 2s.
+        #    Thus at first we poll the buffer frequently, then increase to at most 2 seconds. Note we add
+        #    jitter to avoid thundering herd issues.
         @exponential_backoff(
-            initial_interval=0.0001,  # sleep in seconds
-            max_interval=1.0,  # max time to wait in seconds
-            timeout=om.defaults.OMEGA_EVENTS_TIMEOUT,  # timeout in seconds, max
+            initial_interval=0.0005,  # sleep in seconds
+            max_interval=2.0,  # max time to wait in seconds
+            timeout=om.defaults.OMEGA_EVENTS_TIMEOUT,  # timeout in seconds, max (
             factor=2.0,  # exponential growth for interval
             jitter=True,  # add some jitter to distribute load randomly
         )
@@ -179,26 +185,24 @@ def exponential_backoff(
     timeout: float = 10.0,
     factor: float = 2.0,
     jitter: bool = True,
+    data_resets_timeout: bool = True,  # reset timeout on new data
 ):
     """
     A general-purpose decorator that applies exponential backoff with timeout to
     any polling/streaming function (generator or callable).
 
-    It does NOT inspect yielded values, check for keys like 'stream_complete', or
-    assume anything about the function's internal logic.
-
     The wrapped function is responsible for its own termination condition.
     This decorator only ensures:
-      - Sleeps grow exponentially over time
-      - Stops after `timeout` seconds
+      - Sleeps grow exponentially over time if no data is received
+      - Stops after `timeout` seconds of no data received
       - Optionally adds jitter
 
     Usage:
         @exponential_backoff(timeout=10, initial_interval=0.0001)
         def stream_chunks():
-            while not done():
-                yield get_chunk()
-                time.sleep(0.001)  # <-- This is now IGNORED; decorator controls sleep
+            # called once for each interval
+            yield get_chunk()
+
     """
 
     def decorator(func: Callable) -> Callable:
@@ -209,21 +213,24 @@ def exponential_backoff(
             # wrapped function is called in every interval
             while True:
                 elapsed += next_sleep
-                exponential = min(elapsed // initial_interval, 50)
+                exponential = min(elapsed // initial_interval, 15)
                 next_sleep = min(initial_interval * (factor**exponential), max_interval)
-                logger.debug(f'exponential backup {elapsed}s/{timeout}')
                 for data, should_stop in func(*args, **kwargs):
-                    logger.debug(f'yielding data {data}')
+                    logger.debug('%s yielding data %s', func, data)
                     if data:
                         yield data
-                        next_sleep = 0  # we have data, no need to sleep
+                        elapsed, next_sleep = (0, 0) if data_resets_timeout else (elapsed, next_sleep)
                     if should_stop:
                         return
                 if jitter:
                     next_sleep *= 0.5 + random()  # → [0.5, 1.5)
-                time.sleep(next_sleep)
+                logger.debug(
+                    'exponential backup %(elapsed)ss/%(timeout)s, using sleep=%(next_sleep)s from exp=%(exponential)s',
+                    dict(elapsed=elapsed, timeout=timeout, next_sleep=next_sleep, exponential=exponential),
+                )
+                time.sleep(next_sleep) if next_sleep else None
                 if elapsed >= timeout:
-                    logger.debug(f'exponential backup timeout exceeded {timeout}s')
+                    logger.debug('exponential backup timeout exceeded %(timeout)s', dict(timeout=timeout))
                     raise TimeoutError(f"{func.__name__} exceeded timeout of {timeout}s")
 
         return wrapper
