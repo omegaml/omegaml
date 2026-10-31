@@ -72,7 +72,7 @@ class OmegaFlaskResourceMixin:
                 om.defaults.OMEGA_USERID = getpass.getuser()
         return self._omega_instance
 
-    def get_query_payload(self, raw=False, stream=False, streamer=False, is_async=False, **payload_defaults):
+    def get_query_payload(self, raw=False, stream=False, is_async=False, **payload_defaults):
         """get query and payload arguments
 
         Returns the (query, payload, format) tuple as dictionaries to contain a request's parsed query and
@@ -101,7 +101,6 @@ class OmegaFlaskResourceMixin:
         format = {
             'raw': raw or format_payload.get('raw', False),
             'stream': isTrue(stream or format_payload.get('stream') or query.get('stream')),
-            'streamer': streamer or query.get('streamer') or format_payload.get('streamer'),
             'is_async': isTrue(is_async or self.is_async or query.get('async') or format_payload.get('async')),
         }
         return query, payload, format

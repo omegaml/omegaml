@@ -15,14 +15,24 @@ from omegaml.util import utcnow
 
 TIMEOUT = 100  # timeout in seconds
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG)
 bp = Blueprint('ssechat', __name__)
 context = threading.local()
 
 
 class Streamable(StreamableResourceMixin):
-    def __init__(self, om):
+    def __init__(self, om, *args, streamer=False, **kwargs):
+        """initialize the streamable resource
+
+        Args:
+            om (Omega): the omega instance
+            *args: further args
+            streamer (str): the streamer to use, 'inline' or 'ssechat)
+            **kwargs: further kwargs
+        """
+        streamer = streamer or 'inline'
         self.om = om
+        super().__init__(*args, streamer=streamer, **kwargs)
 
 
 def get_auth_env():
@@ -87,7 +97,10 @@ def authorized(fn):
         kind, token = auth_header.split(' ') if auth_header else ('', '')
         if kind.lower() not in ('bearer', 'apikey'):
             token = ''
-        elif kind.lower() == 'apikey':
+        elif ':' in token and '.' not in token:
+            # ':' => means we have userid:apikey
+            # not '.' => means we don't have a jwt
+            # we only want the apikey
             token = token.split(':')[-1]
         return token
 
@@ -170,8 +183,8 @@ def sse_json(fn):
 
 @sse_json
 def stream_result(key):
-    streamable = Streamable(context.om)
-    for chunk in streamable.prepare_streaming_result(stream=key, raw=True, streamer='inline'):
+    streamable = Streamable(context.om, streamer='inline')
+    for chunk in streamable.prepare_streaming_result(stream=key, raw=True):
         yield chunk
 
 

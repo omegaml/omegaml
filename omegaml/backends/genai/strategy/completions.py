@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from itertools import chain
 from uuid import uuid4
 
@@ -74,11 +75,11 @@ class CompletionsMixin(ConversationModelMixinBase):
 
         def parse_completion_response(r):
             response, _, response_message, raw_response = r
-            return response_message if not raw else response
+            return response_message if not raw else raw_response
 
         def parse_chat_response(r):
             conversation_id, response, _, response_message, raw_response = r
-            return response_message if not raw else response
+            return response_message if not raw else raw_response
 
         def generate_response_stream_once(prompt, messages, use_tools):
             if not chat and conversation_id is None:
@@ -118,7 +119,7 @@ class CompletionsMixin(ConversationModelMixinBase):
                 # -- then, check for tool calls across the consolidate stream
                 # -- use_tools=True triggers tool choices, actual decision to run below
                 try:
-                    for response in generate_response_stream_once(turn_prompt, messages, use_tools=True):
+                    for response in generate_response_stream_once(turn_prompt, messages, use_tools=use_tools):
                         if not raw and intermediate_results:
                             # FIXME move to conversation state
                             response.setdefault('intermediate_results', []).append(intermediate_results)
@@ -130,7 +131,7 @@ class CompletionsMixin(ConversationModelMixinBase):
                     response = {"error": {"message": f"could not process response in {conversation_id=}"}}
                     yield response
                     break
-                if response and tool_calls and (agentic or use_tools):
+                if response and tool_calls and (agentic or use_tools) and self.tools:
                     intermediate_results, tool_prompts = self._handle_toolcalls(response, tool_calls, conversation_id)
                     turn_prompt = tool_prompts
                     continue
@@ -148,6 +149,7 @@ class CompletionsMixin(ConversationModelMixinBase):
         kwargs.update(self.strategy.get('complete', {}))
         kwargs.update(stream=stream)
         # prepare tools
+        # -- tools are passed to the model whenever available
         if self.tools:
             kwargs.update(tools=self.tools_specs(self.tools), tool_choice=self.strategy.get('tool_choice', 'auto'))
         # prepare template
@@ -171,12 +173,16 @@ class CompletionsMixin(ConversationModelMixinBase):
             messages += [self._augment_message(prompt_message, documents=self.documents, template=template)]
         elif isinstance(prompt, dict):
             # support structured input
-            # -- see OpenAI /chat/completions endpoint, "messages" parameter
+            # -- see OpenAI /chat/completions endpoint, the full body
             #    https://platform.openai.com/docs/api-reference/chat
             # -- assume prompt is a fully formed provider-compatible message,e.g. from a chat client
-            messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
-            messages += [self._augment_message(prompt, documents=self.documents, template=template)]
             prompt_message = messages[-1]
+            messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
+            messages += [self._augment_message(prompt_message, documents=self.documents, template=template)]
+            # extract tools provided by client
+            # -- model-specified tools override client tools
+            kwargs.setdefault('tools', prompt.pop('tools', None))
+            kwargs.setdefault('tool_choice', prompt.pop('tool_choice', None))
         elif isinstance(prompt, list):
             # support structured input, as messages
             # -- see OpenAI /chat/completions endpoint, "messages" parameter
@@ -188,11 +194,12 @@ class CompletionsMixin(ConversationModelMixinBase):
             messages += [self._augment_message(prompt[-1], documents=self.documents, template=template)]
             prompt_message = messages[-1]
         else:
-            # raw input, assume messages contains the user prompt
+            # raw prompt, assume messages contains the user prompt
             messages.insert(0, self._system_message(self.prompt, conversation_id=conversation_id))
             # augment last message only
             messages[-1] = self._augment_message(messages[-1], documents=self.documents, template=template)
             prompt_message = messages[-1]
+
         # prepare messages
         _default_messages = messages
         messages = (
@@ -218,6 +225,7 @@ class CompletionsMixin(ConversationModelMixinBase):
         )
         # finally call the model provider, if needed
         self._log_events('conversation', conversation_id, prompt_message)
+        start_time = datetime.now()
         response = response or self.provider.complete(messages=messages, model=self.model, **kwargs)
         self.eval_guardrails(messages, 'response', conversation_id=conversation_id)
 
@@ -235,7 +243,7 @@ class CompletionsMixin(ConversationModelMixinBase):
             """
             tool_message = self._get_response_message(response_message)
             should_call = self._get_finish_reason(response) == 'tool_calls'
-            if should_call and self.tools:
+            if use_tools and should_call and self.tools:
                 if chunks:
                     # consolidate previous chunks, if any
                     # -- in streaming mode, tool_calls can be sent in multiple chunks
@@ -304,6 +312,7 @@ class CompletionsMixin(ConversationModelMixinBase):
                 )
                 or response_message
             )
+            raw_response['model'] = self.model
             return response, prompt_message, response_message, raw_response
 
         def resolve_chunk(response, chunk, chunks, prompt_message, consolidated_response, use_tools=False):
@@ -377,6 +386,7 @@ class CompletionsMixin(ConversationModelMixinBase):
             consolidated_response.update({'content': content, 'reasoning': reasoning})
             consolidated_response.update(response_message)
             chunks.append(raw_response)
+            raw_response['model'] = self.model
             return response, prompt_message, response_message, raw_response
 
         if stream:
@@ -385,6 +395,9 @@ class CompletionsMixin(ConversationModelMixinBase):
             # -- wrap generator in try/finally to ensure we capture consolidated response even if client aborts
             try:
                 for chunk in response:
+                    if len(chunks) == 0:
+                        ttft_metric = (datetime.now() - start_time).total_seconds()
+                        self._log_events('timings', conversation_id, ttft_metric, key='first_token')
                     try:
                         self._track_usage(chunk, conversation_id)
                         resolved = resolve_chunk(
@@ -414,6 +427,8 @@ class CompletionsMixin(ConversationModelMixinBase):
                     self._log_events('conversation', conversation_id, consolidated_response)
         else:
             try:
+                ttft_metric = (datetime.now() - start_time).total_seconds()
+                self._log_events('timings', conversation_id, ttft_metric, key='first_token')
                 self._track_usage(response, conversation_id)
                 resolved = resolve_response(response, prompt_message, use_tools=use_tools)
             except Exception as e:
@@ -451,7 +466,7 @@ class CompletionsMixin(ConversationModelMixinBase):
         return message
 
     def _get_finish_reason(self, response):
-        return response.get('choices', [{}])[-1].get('finish_reason')
+        return (response.get('choices') or [{}])[-1].get('finish_reason')
 
     def _has_tool_calls(self, response, implicit=False):
         message = self._get_response_message(response)
