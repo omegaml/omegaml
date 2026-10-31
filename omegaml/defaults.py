@@ -267,7 +267,7 @@ OMEGA_CARDS_ENABLED = truefalse(os.environ.get('OMEGA_CARDS_ENABLED', False))
 OMEGA_EVENTS_STREAMER = os.environ.get('OMEGA_EVENTS_STREAMER', 'inline')
 #: events streaming ssechat server
 OMEGA_EVENTS_STREAMER_URL = os.environ.get('OMEGA_EVENTS_STREAMER_URL', '/events/chat/completions')
-#: events streaming timeout in seconds, defaults to 10 minutes
+#: events streaming timeout in seconds, defaults to 10 minutes (new data resets the timeout)
 OMEGA_EVENTS_TIMEOUT = int(os.environ.get('OMEGA_EVENTS_TIMEOUT', '600'))
 #: events streaming batch size, at most N, defaults to 10 events
 OMEGA_EVENTS_BATCHSIZE = int(os.environ.get('OMEGA_EVENTS_TIMEOUT', '10'))

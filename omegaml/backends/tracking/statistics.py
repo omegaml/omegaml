@@ -8,11 +8,13 @@ from omegaml.util import tryOr
 class ExperimentStatistics:
     class options:
         time_events = ['start', 'stop']
+        metric_event = 'metric'
         tp_unit = 60
         groupby = 'run'
         time_key = 'latency'
         percentiles = [0.25, 0.5, 0.75]  # same default as pandas.DataFrame.describe()
         batchsize = 10000
+        run = '*'
 
     def __init__(self, tracker):
         self.tracker = tracker
@@ -21,7 +23,7 @@ class ExperimentStatistics:
         return f"{self.__class__.__name__}({self.tracker})"
 
     def data(self, **kwargs):
-        return self.tracker.data(**kwargs)
+        return self.tracker.data(**{'run': self.options.run, **kwargs})
 
     def align_index(self, df, key=None):
         """align the index of statistics DataFrames to event/key"""
@@ -99,7 +101,7 @@ class ExperimentStatistics:
             calculated across all runs, set groupby=''.
         """
         # metrics - percentiles for each metric
-        event = event or 'metric'
+        event = event or self.options.metric_event
         groupby = [groupby or self.options.groupby] if groupby not in (0, '', -1) else []
         groups = dict.fromkeys(groupby + ['event', 'key'])
 

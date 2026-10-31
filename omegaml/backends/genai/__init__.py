@@ -36,7 +36,7 @@ class ConversationModelBackendMixin:
         data = data[0] if isinstance(data, list) else data
         if isinstance(data, dict):
             # a qualified prompt, possibly as a chat
-            prompt = data.get('prompt', '')
+            prompt = data.get('prompt', data)
             messages = data.get('messages')
             user_data = data.get('data')
             chat = data.get('chat', False)
