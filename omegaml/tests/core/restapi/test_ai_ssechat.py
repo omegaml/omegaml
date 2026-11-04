@@ -1,6 +1,7 @@
 import json
 import unittest
 from hashlib import pbkdf2_hmac
+from random import randint
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -25,14 +26,14 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         self.app.register_blueprint(ssechat_bp)
 
     def test_streamable_inline(self):
-        resource = StreamableResourceMixin()
+        resource = StreamableResourceMixin(streamer='inline')
         om = resource.om = self.om
         stream = om.streams.get('.system/complete/messages')
         producer_events = [
             {
                 'message': 'hello world',
-            }
-        ]
+            },
+        ] * randint(1, 10)
         for event in producer_events:
             stream.append(event)
         # mark end of streaming
@@ -41,13 +42,14 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
                 'stream_complete': 'stop',
             },
         )
-        result = resource.prepare_streaming_result(stream='messages', streamer='inline')
-        received_events = list(result)
+        with patch.object(om.defaults, attribute='OMEGA_EVENTS_TIMEOUT', new=10):
+            result = resource.prepare_streaming_result(stream='messages')
+            received_events = list(result)
         self.assertEqual(len(received_events), len(producer_events))
         self.assertTrue(all(ev in producer_events for ev in received_events))
 
     def test_streamable_inline_error(self):
-        resource = StreamableResourceMixin()
+        resource = StreamableResourceMixin(streamer='inline')
         om = resource.om = self.om
         stream = om.streams.get('.system/complete/messages')
         producer_events = [
@@ -64,13 +66,17 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
                 'message': 'error occurred',
             },
         )
-        with self.assertRaises(RuntimeError):
-            list(resource.prepare_streaming_result(stream='messages', streamer='inline'))
+        with (
+            self.assertRaises(RuntimeError) as error,
+            patch.object(om.defaults, attribute='OMEGA_EVENTS_TIMEOUT', new=10),
+        ):
+            list(resource.prepare_streaming_result(stream='messages'))
+            self.assertTrue('error occurred' in str(error).lower())
 
     def test_streamable_ssechat_redirect(self):
-        resource = StreamableResourceMixin()
+        resource = StreamableResourceMixin(streamer='ssechat')
         om = resource.om = self.om
-        result = resource.prepare_streaming_result(stream='messages', streamer='ssechat')
+        result = resource.prepare_streaming_result(stream='messages')
         self.assertIsInstance(result, (list, tuple))
         # verify we get a redirect
         body, status_code, headers, cookies = result
@@ -108,9 +114,9 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
     def _create_cookies(self, om=None):
         # simulate a streaming result using 'ssechat' streamer
         # -- we only do this to get a valid cookie, as if produced the /chat/completions api
-        resource = StreamableResourceMixin()
+        resource = StreamableResourceMixin(streamer='ssechat')
         resource.om = om or self.om
-        result = resource.prepare_streaming_result(stream='messages', streamer='ssechat')
+        result = resource.prepare_streaming_result(stream='messages')
         self.assertIsInstance(result, (list, tuple))
         body, status_code, headers, cookies = result
         return cookies

@@ -2,6 +2,7 @@ import warnings
 from hashlib import md5
 
 from omegaml.documents import MDREGISTRY
+from omegaml.mongoshim import sanitize_mongo_kwargs
 from omegaml.store import OmegaStore
 
 
@@ -56,7 +57,7 @@ class StreamsProxy(OmegaStore):
         super().__init__(mongo_url=mongo_url, prefix=prefix, bucket=bucket, defaults=defaults)
         cnx_kwargs = self.defaults.OMEGA_MONGO_SSL_KWARGS
         cnx_kwargs.update(kwargs)
-        self._stream_cnx_kwargs = dict(url=self.mongo_url, **cnx_kwargs)
+        self._stream_cnx_kwargs = sanitize_mongo_kwargs(dict(url=self.mongo_url, **cnx_kwargs))
 
     def _mixins_conditional(self, cls, obj):
         # only allow mixins that do not interfere with streams get/put

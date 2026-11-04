@@ -1,8 +1,13 @@
+import functools
 import json
 import logging
 import os
+import time
+from collections.abc import Callable
+from datetime import datetime
 from hashlib import pbkdf2_hmac
-from time import sleep
+from random import random
+from typing import Any
 from uuid import uuid4
 
 from jose import jwe
@@ -40,13 +45,12 @@ class StreamableResourceMixin:
     """
 
     SECRET_KEY = os.getenv('SECRET_KEY', 'ec3d75c6f5b3965f24f148969b1c82d57246a8aab46393b55ba18d712fa1a0ad')
-    PBKDF_ITER = int(os.getenv('PBKDF_ITER', 500000))
-    TEST_STREAMER = None
+    PBKDF_ITER = int(os.getenv('PBKDF_ITER', '500000'))
 
     def __init__(self, *args, streamer=None, **kwargs):
-        self.streamer = streamer or self.TEST_STREAMER  # enable testing inline or ssechat
+        self.streamer = streamer  # enable testing inline or ssechat
 
-    def prepare_streaming_result(self, promise=None, resource_name=None, raw=False, stream=None, streamer=None):
+    def prepare_streaming_result(self, promise=None, resource_name=None, raw=False, stream=None):
         """prepare result for event streaming
 
         Args:
@@ -60,16 +64,14 @@ class StreamableResourceMixin:
             str | tuple: a serializable result (str) or a Flask-compatible tuple of (body, status_code, location, cookies)
         """
         stream = stream or promise.id  # type: str
-        streamer = streamer or self.streamer or self.om.defaults.OMEGA_EVENTS_STREAMER
         # functions that handle streaming
         #    name => method(stream)
         STREAMERS = {
             'inline': self._inline_streaming,
             'ssechat': self._handoff_to_ssechat,
-            'default': self._inline_streaming,
         }  # type: Dict[str, Callable[..., Any]]
-        _default_streamer = STREAMERS.get('default')
-        streaming_method = STREAMERS.get(streamer, _default_streamer)
+        _default_streamer = STREAMERS.get('inline')
+        streaming_method = STREAMERS.get(self.streamer, _default_streamer)
         return streaming_method(stream, resource_name=resource_name, raw=raw)
 
     def prepare_result(self, chunk, **kwargs):
@@ -86,56 +88,57 @@ class StreamableResourceMixin:
 
         om = self.om
         buffer = Sink()
-        logger.debug("complete:stream_result getting stream")
+        logger.debug("stream_result: getting stream")
         stream_name = f'.system/complete/{stream}'
         streaming = om.streams.getl(
             stream_name,
             executor=LocalExecutor(),
             sink=buffer,
-            size=1,
-            interval=0.01,
+            size=om.defaults.OMEGA_EVENTS_BATCHSIZE,  # limit messages in each steps (reduces memory allocation)
+            interval=1,
+            emitter=FlushWindow,  # this flushes any data available without regards to insert time
         )
-        # process stream, one message at a time
-        # -- emitter to sink buffer
+        # -- emitter to buffer as a sink
         emitter = streaming.make(lambda window: window.data)
-        # -- check for new messages
-        has_chunks = lambda: emitter.stream.buffer().limit(1).count() > 0
-        logger.debug("complete:stream_result waiting for status ")
-        # -- interval => frequency of stream checks, keep resource friendly (CPU, DB)
-        # -- timeout => maximum time (in interval steps) without new messages
-        interval = 0.0001  # sleep
-        timeout = 10 // interval  # timeout in seconds, max
-        has_error = False  # error flag, as indicated by chunks
-        message = None  # final error message, used on has_error = True
-        # -- process messages
-        while timeout > 0 or has_chunks():
-            timeout -= 1
-            logger.debug("complete:stream_result waiting for chunks")
-            emitter.run(blocking=False)
+
+        # set to exponentially increase wait intervals in case of missing data in good grace
+        # -- [0.0005 * (2.0 ** exp) for exp in range(1, 15)]
+        #    => [0.001, 0.002, 0.004, 0.008, 0.016, 0.032, 0.064, 0.128, 0.256, 0.512, 1.024, 2.048, 4.096, 8.192]
+        # -- rationale: time to first token can be within several seconds, however there has been a handoff
+        #    from original API call to SSE streaming server, so we start with a delay of anywhere 200ms - 2s.
+        #    Thus at first we poll the buffer frequently, then increase to at most 2 seconds. Note we add
+        #    jitter to avoid thundering herd issues.
+        @exponential_backoff(
+            initial_interval=0.0005,  # sleep in seconds
+            max_interval=2.0,  # max time to wait in seconds
+            timeout=om.defaults.OMEGA_EVENTS_TIMEOUT,  # timeout in seconds, max (
+            factor=2.0,  # exponential growth for interval
+            jitter=True,  # add some jitter to distribute load randomly
+        )
+        def stream_result(resource_name: str, emitter, buffer, raw: bool = False):
+            # process stream, one message at a time
+            logger.debug("stream_result: attempting to get new events")
+            logger.debug(f"stream contents {emitter.stream.buffer()}")
+            emitter.run(blocking=False)  # this emits new data to the Sink() buffer
             for chunk in buffer:
-                logger.debug("complete:stream_result chunk received: %s", chunk)
-                # determine if we should stop
+                logger.debug(f"stream_result: received chunk {chunk}")
                 finish_reason = chunk.get('stream_complete', '')
+                message = chunk.get('message')
                 should_stop = finish_reason.startswith('stop')
                 has_error = finish_reason.startswith('error')
-                if should_stop or has_error:
-                    timeout = 0
-                    message = chunk.get('message', '')
-                    break
-                # process chunk by forwarding to Sink buffer
-                data = self.prepare_result(chunk, resource_name=resource_name)
-                data.update(data.pop('result', {})) if raw else None
-                yield data
+                data = self.prepare_result(chunk, resource_name=resource_name) if not should_stop else None
+                data.update(data.pop('result', {})) if raw and isinstance(data, dict) else data
+                yield data, should_stop
+                if has_error:
+                    raise RuntimeError(message or finish_reason)
             buffer.clear()
-            sleep(interval)
-        # -- done by timeout or end of messages, clear the stream
-        emitter.stream.clear()
-        om.streams.drop(stream_name, force=True)
-        logger.debug("done:stream_result closing response")
-        # propagate errors as RuntimeExceptions
-        # -- allow failure to propagate to http service endpoint
-        if has_error:
-            raise RuntimeError(message)
+
+        try:
+            yield from stream_result(resource_name, emitter, buffer, raw=raw)
+        finally:
+            emitter.stream.clear()
+            om.streams.drop(stream_name, force=True)
+            logger.debug("done:stream_result closing response")
 
     def _handoff_to_ssechat(self, stream, raw=False, resource_name=None):
         # implement sse event streaming by 302 redirect, handing off to streaming endpoint
@@ -174,3 +177,97 @@ class StreamableResourceMixin:
         # -- https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/307
         # -- https://www.rfc-editor.org/rfc/rfc9110#status.307
         return '', 307, {'Location': location, 'Content-Type': 'text/event-stream'}, cookies
+
+
+def exponential_backoff(
+    initial_interval: float = 0.0001,
+    max_interval: float = 1.0,
+    timeout: float = 10.0,
+    factor: float = 2.0,
+    jitter: bool = True,
+    data_resets_timeout: bool = True,  # reset timeout on new data
+):
+    """
+    A general-purpose decorator that applies exponential backoff with timeout to
+    any polling/streaming function (generator or callable).
+
+    The wrapped function is responsible for its own termination condition.
+    This decorator only ensures:
+      - Sleeps grow exponentially over time if no data is received
+      - Stops after `timeout` seconds of no data received
+      - Optionally adds jitter
+
+    Usage:
+        @exponential_backoff(timeout=10, initial_interval=0.0001)
+        def stream_chunks():
+            # called once for each interval
+            yield get_chunk()
+
+    """
+
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> Any:
+            next_sleep = initial_interval
+            elapsed = 0
+            # wrapped function is called in every interval
+            while True:
+                elapsed += next_sleep
+                exponential = min(elapsed // initial_interval, 15)
+                next_sleep = min(initial_interval * (factor**exponential), max_interval)
+                for data, should_stop in func(*args, **kwargs):
+                    logger.debug('%s yielding data %s', func, data)
+                    if data:
+                        yield data
+                        elapsed, next_sleep = (0, 0) if data_resets_timeout else (elapsed, next_sleep)
+                    if should_stop:
+                        return
+                if jitter:
+                    next_sleep *= 0.5 + random()  # → [0.5, 1.5)
+                logger.debug(
+                    'exponential backup %(elapsed)ss/%(timeout)s, using sleep=%(next_sleep)s from exp=%(exponential)s',
+                    dict(elapsed=elapsed, timeout=timeout, next_sleep=next_sleep, exponential=exponential),
+                )
+                time.sleep(next_sleep) if next_sleep else None
+                if elapsed >= timeout:
+                    logger.debug('exponential backup timeout exceeded %(timeout)s', dict(timeout=timeout))
+                    raise TimeoutError(f"{func.__name__} exceeded timeout of {timeout}s")
+
+        return wrapper
+
+    return decorator
+
+
+from minibatch import Buffer
+from minibatch.window import RelaxedTimeWindow
+
+
+class FlushWindow(RelaxedTimeWindow):
+    """A window that flushes all data in the buffer
+
+    This is useful if you don't care when the data has been inserted, nor how many
+    items are in the buffer. Use this if you want to flush the buffer every time
+    you read it. This is the fastest way to process data. Specify size=N to limit
+    each window to at most N items. If size=None or size=0 all buffered data is
+    returned - caution, this may use large amounts of memory.
+    """
+
+    def __init__(self, stream_name, size=None, interval=None, **kwargs):
+        super().__init__(stream_name, **kwargs)
+        self.interval = interval if interval is not None else 0.01
+        self.size = size or None
+
+    def window_ready(self):
+        last_read = datetime.utcnow()
+        max_read = datetime.utcnow()
+        return True, (last_read, max_read)
+
+    def query(self, *args):
+        last_read, max_read = args
+        fltkwargs = dict(stream=self.stream_name, created__lte=last_read, processed=False)
+        logger.debug(f'RelaxedTimeWindow.query {fltkwargs=}')
+        qs = Buffer.objects.no_cache().filter(**fltkwargs)
+        return qs if not self.size else qs.limit(self.size)
+
+    def timestamp(self, *args):
+        self.stream.modify(last_read=datetime.utcnow())

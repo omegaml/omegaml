@@ -70,9 +70,10 @@ class TracingMixin(ConversationModelMixinBase):
             if self.guardrails:
                 self._log_events('guardrails', conversation_id, result)
 
-    def _log_events(self, event, conversation_id, data):
+    def _log_events(self, event, conversation_id, data, key=None):
         if self.tracking:
-            self.tracking.log_events(event, conversation_id, ensure_list(data))
+            key = key or conversation_id
+            self.tracking.log_events(event, key, ensure_list(data), conversation_id=conversation_id)
             self.tracking.flush()
 
     def _track_usage(self, response, conversation_id):
@@ -80,3 +81,5 @@ class TracingMixin(ConversationModelMixinBase):
         if self.tracking:
             for metric, value in data.get('usage', {}).items():
                 self.tracking.log_event('usage', metric, value, conversation_id=conversation_id)
+            for metric, value in data.get('timings', {}).items():
+                self.tracking.log_event('timings', metric, value, conversation_id=conversation_id)

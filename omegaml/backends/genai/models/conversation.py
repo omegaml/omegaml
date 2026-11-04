@@ -165,6 +165,7 @@ class ConversationModelBackend(GenAIBaseBackend):
             'provider': provider,
         }
         attributes = {
+            'model': model,
             'prompt': prompt or query.get('prompt'),
             'template': template or query.get('template'),
             'pipeline': pipeline or None,

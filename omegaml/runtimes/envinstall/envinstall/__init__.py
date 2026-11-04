@@ -40,8 +40,8 @@ def run(om, *args, package=None, requirements=None, action='install', options=No
             assert reqspec, "specify either package= or requirements= (no default .system/requirements.txt exists)"
             # -- determine action
             action_opts = {
-                'install': f'-U {reqspec}',
-                'uninstall': f'-y {reqspec}',
+                'install': f'--no-input -U {reqspec}',
+                'uninstall': f'--no-input  -y {reqspec}',
             }
             opts = options or action_opts.get(action) or ''
             # run pip install

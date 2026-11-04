@@ -3,15 +3,14 @@ import cachetools
 from omegaml import defaults as _base_config
 from omegaml._version import version
 from omegaml.omega import OmegaDeferredInstance
-from omegaml.util import base_loader
+from omegaml.util import base_loader, first_call_cached
 from omegaml.util import load_class as load_class
 from omegaml.util import settings as settings
 
 # session cache must be defined here globally so can be imported from anywhere
 # without causing circular import issues
 #: session cache
-session_cache = cachetools.cached(cache=cachetools.TTLCache(**_base_config.OMEGA_SESSION_CACHE))
-
+session_cache = first_call_cached(cachetools.TTLCache, _base_config, 'OMEGA_SESSION_CACHE')
 
 # link implementation
 def link(_omega):
@@ -33,6 +32,8 @@ def link(_omega):
 # -- base_loader only loads classes, does not instantiate
 # -- deferred instance provides setup to load and link on access
 _omega = base_loader(_base_config)
+
+
 setup = _omega.setup
 __version__ = version = getattr(_omega, 'version', version)
 Omega = _omega.Omega

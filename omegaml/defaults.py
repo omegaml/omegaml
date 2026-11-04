@@ -8,6 +8,10 @@ from pathlib import Path
 
 from omegaml.util import dict_merge, inprogress, markup, mlflow_available, tryOr
 
+# make sure we see the current path
+# -- fixes apparent change in python 3.14 where sys.path does not include cwd even though -m site shows it
+sys.path.insert(0, os.getcwd()) if os.getcwd() not in sys.path else None
+
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_pytest_runner.py', '_jb_unittest_runner.py'}
 cmd_args = (basename(v) for v in sys.argv)
@@ -232,7 +236,7 @@ OMEGA_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 #: default log level
 #: .. versionchanged:: 0.18.0
 #:     set default loglevel
-OMEGA_LOGLEVEL = os.environ.get('OMEGA_LOGLEVEL') or 'INFO'
+OMEGA_LOGLEVEL = str(os.environ.get('OMEGA_LOGLEVEL') or 'INFO').upper()
 #: tracking providers
 OMEGA_TRACKING_PROVIDERS = {
     'simple': 'omegaml.backends.tracking.OmegaSimpleTracker',
@@ -263,6 +267,10 @@ OMEGA_CARDS_ENABLED = truefalse(os.environ.get('OMEGA_CARDS_ENABLED', False))
 OMEGA_EVENTS_STREAMER = os.environ.get('OMEGA_EVENTS_STREAMER', 'inline')
 #: events streaming ssechat server
 OMEGA_EVENTS_STREAMER_URL = os.environ.get('OMEGA_EVENTS_STREAMER_URL', '/events/chat/completions')
+#: events streaming timeout in seconds, defaults to 10 minutes (new data resets the timeout)
+OMEGA_EVENTS_TIMEOUT = int(os.environ.get('OMEGA_EVENTS_TIMEOUT', '600'))
+#: events streaming batch size, at most N, defaults to 10 events
+OMEGA_EVENTS_BATCHSIZE = int(os.environ.get('OMEGA_EVENTS_TIMEOUT', '10'))
 #: vector db
 OMEGA_VECTORDB_URL = os.environ.get('OMEGA_VECTORDB_URL', 'vector+mongodb://')
 #: show loading progress, defaults to True, set to '0' to disable
@@ -521,7 +529,7 @@ def load_framework_support(vars=globals()):
             vars['OMEGA_STORE_BACKENDS'].update(backends)
 
 
-def load_eedefaults():
+def load_eedefaults(vars=globals()):
     # ensure eedefaults are loaded prior to any other processing
     # -- fixes load order issue in Python 3.14 causing eedfaults to be applied too late
     try:
@@ -529,7 +537,7 @@ def load_eedefaults():
     except:
         return
     else:
-        update_from_obj(eedefaults)
+        update_from_obj(eedefaults, vars=vars)
 
 
 @inprogress(text='loading configuration...')
@@ -558,7 +566,7 @@ def setup_logging():
         # -- sometimes resultins in large amounts of inadverted pymongo log output
         # -- https://www.mongodb.com/docs/languages/python/pymongo-driver/current/monitoring-and-logging/logging/
         'root': OMEGA_LOGLEVEL,
-        'omega': OMEGA_LOGLEVEL,
+        'omegaml': OMEGA_LOGLEVEL,
         'pymongo': 'ERROR',
         'pymongo.command': 'WARNING',
         'pymongo.connection': 'ERROR',
@@ -578,20 +586,29 @@ def setup_logging():
     logger.setLevel(OMEGA_LOGLEVEL)
 
 
+def disable_telemetry():
+    # disable onnxruntime telemetry collection, due to https://github.com/microsoft/onnxruntime/blob/main/docs/Privacy.md
+    os.environ.setdefault('ORT_DISABLE_TELEMETRY', '1')
+    os.environ.setdefault('ORT_LOGGING_LEVEL', 'ERROR')
+    # disable mlflow telemetry https://mlflow.org/docs/latest/community/usage-tracking/
+    os.environ.setdefault('MLFLOW_DISABLE_TELEMETRY', 'true')
+    # general do not track https://donottrack.sh/
+    os.environ.setdefault('DO_NOT_TRACK', '1')
+
+
 # -- test support
 if not is_cli_run and is_test_run:
     # this is to avoid using production settings during test
     OMEGA_MONGO_URL = OMEGA_MONGO_URL.replace('/omega', '/testdb')
     OMEGA_LOCAL_RUNTIME = True
     OMEGA_RESTAPI_URL = 'local'
-    OMEGA_LOGLEVEL = 'INFO'
+    OMEGA_LOGLEVEL = 'DEBUG'
 else:
-    # load commerical defaults
-    load_eedefaults()
     # overrides in actual operations
     load_config_file()
 
 setup_logging()
+disable_telemetry()
 # load extensions, always last step to ensure we have user configs loaded
 update_from_env()
 

@@ -178,6 +178,79 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
             },
         )
 
+    def test_openai_chat_completions_toolcall(self):
+        self._setup_chat_model()
+        # openai api
+        # -- non-streaming
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "web_search",
+                    "description": "Search the web for up-to-date information",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"query": {"type": "string"}},
+                        "required": ["query"],
+                    },
+                },
+            }
+        ]
+        resp = self.client.post(
+            '/api/openai/v1/chat/completions',
+            json={
+                "model": "mymodel",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "hello",
+                    }
+                ],
+                "tools": tools,
+                "tool_choice": "auto",
+            },
+            auth=self.auth,
+            headers=self._headers,
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers['Content-Type'], 'application/json')
+        self.assertEqual(
+            resp.json,
+            {
+                'model': 'mymodel',
+                'content': 'hello',
+                'tool_call': [{'name': 'web_search'}],
+                'resource_uri': 'mymodel',
+            },
+        )
+        # -- streaming
+        resp = self.client.post(
+            '/api/openai/v1/chat/completions',
+            json={
+                "model": "mymodel",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "hello",
+                    }
+                ],
+                "stream": True,
+            },
+            auth=self.auth,
+            headers=self._headers,
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers['Content-Type'], 'text/event-stream')
+        data = [json.loads(d.split(b'data: ')[-1]) if d.startswith(b'data:') else d for d in resp.iter_encoded()]
+        self.assertEqual(len(data[-1]['content']), len('hello'))
+        self.assertEqual(
+            subdict(data[-1], ['content', 'delta']),
+            {
+                'content': 'hello',
+                'delta': 'o',
+            },
+        )
+
     def test_openai_audio_transcribe(self):
         self._setup_voice_model()
         wav_file_path = Path(omegaml.__file__).parent / 'example/demo/multimodal/resources/sample.wav'
@@ -268,8 +341,24 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
     def _setup_chat_model(self):
         # test save and restore
         class MyModel(GenAIModelHandler):
-            def complete(self, prompt, messages=None, conversation_id=None, data=None, stream=False, **kwargs):
-                prompt = prompt or '\n'.join([m['content'] for m in messages if m['role'] == 'user'])
+            def complete(
+                self, prompt, messages=None, conversation_id=None, data=None, stream=False, raw=False, **kwargs
+            ):
+                print('***', prompt)
+                print('***', messages)
+                empty_prompt = not prompt
+                tools = []
+                if empty_prompt and isinstance(messages, list):
+                    prompt = '\n'.join([m['content'] for m in messages if m['role'] == 'user'])
+                elif isinstance(prompt, dict) and isinstance(messages, list):
+                    # simulate openai style prompt
+                    tools = prompt.get('tools', [])
+                    prompt = messages[-1].get('content')
+                elif isinstance(prompt, str):
+                    prompt = prompt  # explicit use of just the prompt, as a string  # ruff: ignore[self-assigning-variable]
+                else:
+                    raise ValueError(f'Invalid input data, expected string or dict, got {type(prompt)}')
+
                 if stream:
 
                     def stream_result():
@@ -277,12 +366,13 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
                             yield {'model': 'mymodel', 'delta': c, 'content': prompt[:i] + c}
 
                     return stream_result()
-                return {
-                    'model': 'mymodel',
-                    'content': prompt,
-                }
+                result = {'model': 'mymodel', 'content': prompt}
+                if tools:
+                    result.update(tool_call=[{'name': t['function']['name']} for t in tools])
+                return result
 
         self.om.models.put(MyModel, 'mymodel', replace=True)
+        del MyModel
 
     def _setup_voice_model(self):
         # test save and restore
