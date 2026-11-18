@@ -76,7 +76,7 @@ class VirtualObjectMixin:
         if not should_version and self._isvirtual(name):
             try:
                 handler = self._getvirtualobjfn(name)
-                result = handler(method='drop', meta=self._vobj_meta, store=self, force=force)
+                result = handler(method='drop', meta=self._vobj_meta, store=self, force=force, **kwargs)
             except Exception:
                 if not force:
                     raise
