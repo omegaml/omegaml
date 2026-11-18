@@ -1,11 +1,10 @@
 import unittest
+from base64 import b64encode
 from pathlib import Path
 from unittest import mock, skip
 
-from gridfs import GridOut
-
 import omegaml
-from omegaml.backends.genai.modality.multicontent import guess_type
+from omegaml.backends.genai.modality.multicontent import binary_to_openai_content, extract_base64, guess_type
 from omegaml.backends.genai.models import ConversationModel
 from omegaml.client.util import dotable, subdict
 from omegaml.tests.util import OmegaTestMixin
@@ -22,7 +21,7 @@ class MultimodalityTestCase(OmegaTestMixin, unittest.TestCase):
         model: ConversationModel = self.om.models.get('mymodel', data_store=self.om.datasets)
         model.provider = OpenAIProvider
         model.provider.transcribe.side_effect = lambda audio_path, *args, **kwargs: dotable(
-            {"text": "Hello world, what have you become?", "audio": audio_path},
+            {"text": "Hello world, what have you become?"},
         )
         # model.base_url = 'http://neptun:13305/v1'
         base_path = Path(omegaml.__file__).parent / 'example/demo/multimodal/resources'
@@ -32,7 +31,7 @@ class MultimodalityTestCase(OmegaTestMixin, unittest.TestCase):
             resp,
             {
                 'text': 'Hello world, what have you become?',
-                'audio': base_path / 'sample.wav',
+                'format': 'json',
             },
         )
         # use a dataset as input
@@ -44,7 +43,17 @@ class MultimodalityTestCase(OmegaTestMixin, unittest.TestCase):
             subdict(resp, ['text']),
             {'text': 'Hello world, what have you become?'},
         )
-        self.assertIsInstance(resp['audio'], GridOut)
+
+    def test_extract_b64data(self):
+        wav_file_path = Path(omegaml.__file__).parent / 'example/demo/multimodal/resources/sample.wav'
+        with open(wav_file_path, 'rb') as fin:
+            audio_bytes = fin.read()
+        audio_bytes_b64 = b64encode(audio_bytes)
+        audio_bytes_data = binary_to_openai_content(audio_bytes)['content'][0]['input_audio']['data']
+        audio_bytes_url = f"data:audio/mpeg;base64,{audio_bytes_b64.decode('utf-8')}"
+        self.assertEqual(extract_base64(audio_bytes_b64), audio_bytes)
+        self.assertEqual(extract_base64(audio_bytes_data), audio_bytes)
+        self.assertEqual(extract_base64(audio_bytes_url), audio_bytes)
 
     @skip('TODO mock remote path')
     def test_speech(self):

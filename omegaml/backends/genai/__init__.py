@@ -64,6 +64,7 @@ class ConversationModelBackendMixin:
         model = self.get(modelname)
         model.load()
         data = self._resolve_input_data('generate', Xname, **kwargs)
+        data = data[0] if isinstance(data, list) else data
         return model.generate(data)
 
     def embed(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
@@ -91,13 +92,17 @@ class ConversationModelBackendMixin:
         model = self.get(modelname)
         model.load()
         data = self._resolve_input_data('transcribe', Xname, **kwargs)
-        return model.transcribe(data, **kwargs)
+        data = data[0] if isinstance(data, list) else data
+        audio = data.get('audio') if isinstance(data, dict) else data
+        return model.transcribe(audio, **kwargs)
 
     def speech(self, modelname, Xname, rName=None, pure_python=True, **kwargs):
         model = self.get(modelname)
         model.load()
         data = self._resolve_input_data('speech', Xname, **kwargs)
-        return model.speech(data, **kwargs)
+        data = data[0] if isinstance(data, list) else data
+        text = data.get('input') if isinstance(data, dict) else data
+        return model.speech(text, **kwargs)
 
     def predict(self, *args, **kwargs):
         raise NotImplementedError('A GenAIModel does not support prediction, use complete or generate')

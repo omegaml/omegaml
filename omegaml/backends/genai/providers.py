@@ -8,8 +8,10 @@ from urllib.parse import urljoin
 
 import requests
 from openai import OpenAI
+from requests import Response
 from requests._types import SupportsRead
 
+from omegaml.backends.genai.modality.multicontent import extract_base64, is_base64
 from omegaml.util import ensure_list, tryOr
 
 filelike = Union[Path, FileIO, BytesIO, SupportsRead]
@@ -54,7 +56,7 @@ class MultimodalProvider(Provider):
         speed: float = 1.0,
         stream: bool = False,
         output_path: Path | str | None = None,
-    ) -> bytes:
+    ) -> bytes | Path | Response:
         """
         Generate speech from ``text`` and optionally write it to a file.
 
@@ -75,8 +77,8 @@ class MultimodalProvider(Provider):
 
         Returns
         -------
-        bytes
-            Raw audio data returned by the API.
+        bytes|str|Response
+            Raw audio data returned by the API or output_path, of Response if stream=True
 
         Raises
         ------
@@ -110,7 +112,7 @@ class MultimodalProvider(Provider):
 
         if output_path is not None:
             Path(output_path).write_bytes(audio_bytes)
-            return output_path
+            return Path(output_path)
 
         return audio_bytes if not stream else resp
 
@@ -123,7 +125,7 @@ class MultimodalProvider(Provider):
         response_format: Literal["json", "text", "srt", "verbose_json", "vtt"] = "json",
         temperature: float = 0.0,
         stream: bool = False,
-    ) -> str | dict | requests.Response:
+    ) -> str | dict | bytes:
         """
         Transcribe an audio file with an OpenAI‑compatible Whisper endpoint.
 
@@ -147,7 +149,7 @@ class MultimodalProvider(Provider):
 
         Returns
         -------
-        str | dict | requests.Response
+        str | dict | bytes
             The transcription in the requested format.
         """
         url = f"{self.base_url}/audio/transcriptions"
@@ -171,6 +173,10 @@ class MultimodalProvider(Provider):
             name = getattr(audio_path, 'name', 'audio.wav')
             fobj = audio_path  # type io.BytesIO
             files = {"file": (name, audio_path, "application/octet-stream")}
+        elif is_base64(audio_path) or str(audio_path).startswith('data:'):
+            name = 'audio.wav'
+            fobj = BytesIO(extract_base64(audio_path, default=b'-invalid-base64-'))
+            files = {"file": (name, fobj, "application/octet-stream")}
         elif isinstance(audio_path, bytes):
             name = 'audio.wav'
             fobj = BytesIO(audio_path)
@@ -190,7 +196,7 @@ class MultimodalProvider(Provider):
             return response.json()
         elif response_format in ('srt', 'vtt'):
             return response.text.strip()
-        return response
+        return response.content
 
     def generate_image(
         self,
