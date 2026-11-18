@@ -13,9 +13,9 @@ from jose import jwe
 from omegaml.backends.restapi.streamable import StreamableResourceMixin
 from omegaml.util import utcnow
 
-TIMEOUT = 100  # timeout in seconds
+TIMEOUT = 3600  # timeout in seconds
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 bp = Blueprint('ssechat', __name__)
 context = threading.local()
 
@@ -44,7 +44,7 @@ def get_auth_env():
 def authorized(fn):
     """decorator to authorize views
 
-    Checks authorization cookie, aborts with HTTP 401 if not present or could not
+    Checks stream authorization headers (crumbs), aborts with HTTP 401 if not present or could not
     be authenticated. Otherwise calls the view function as is.
 
     Usage:
@@ -69,16 +69,34 @@ def authorized(fn):
     # -- using a salt means every payload results in a different cipher text, even if the payload is the same
     # -- the JWE can't be modified because it is signed
     # -- token becomes useless after timeout
+    # how to specify the token
+    # -- either 'Stream-Token' header or 'stream-token' cookie, cookie takes preference
+    # -- not all clients support a cookie jar, so they can send the stream-token header instead
+    # -- this is also more compatible with reverse proxies which typically can add headers to redirect, not cookies
+    # -- see RFC 6265 on ambient authority and redirect handling
+    # Originally, /chat/completions responded with 307 + Set-Cookie only
+    # - this was implemented according to RFC 6265bis, s5.3 (SHOULD handle Set-Cookies for 307)
+    # - new uses the Stream-Token header as session_id:token (both scoped to the particular stream)
+    # Rationale:
+    # - not all clients support sending Cookies on redirects (e.g. nodejs does not)
+    # - headers are compatible with reverse proxies so this can be handled transparently for clients
+    # - no security impact as the token is encrypted the same way as the cookie was
+    # - we will not implement a solution with ?request args as recommened by RFC6265, s.8.2 suggests as
+    #   which arguably is worse
 
     def decode_payload():
-        session_id = request.cookies.get('session_id')
-        token = request.cookies.get('token')
+        session_id, token = (
+            request.cookies.get('stream-token') or request.headers.get('stream-token') or 'invalid:invalid'
+        ).split(':', 1)
         key = pbkdf2_hmac(
             'sha256', Streamable.SECRET_KEY.encode('utf-8'), str(session_id).encode('utf-8'), Streamable.PBKDF_ITER
         )
-        payload = json.loads(jwe.decrypt(token, key))
-        logger.debug('key %s', key)
-        logger.debug('token %s', token)
+        try:
+            payload = json.loads(jwe.decrypt(token, key))
+        finally:
+            logger.debug('headers %s', request.headers)
+            logger.debug('key %s', key)
+            logger.debug('token %s', token)
         logger.debug('payload %s', payload)
         return session_id, payload
 
@@ -101,7 +119,7 @@ def authorized(fn):
             # ':' => means we have userid:apikey
             # not '.' => means we don't have a jwt
             # we only want the apikey
-            token = token.split(':')[-1]
+            token = token.split(':', 1)[-1]
         return token
 
     def inner(*args, **kwargs):
@@ -117,12 +135,14 @@ def authorized(fn):
             auth_token = None
             userid = None
             payload = None
+            logger.error(f'failed authorization due to {e}')
+            logger.debug(f'failed authorization due to {e}', exc_info=True)
         else:
             message = f'token verified {verified}'
             userid = payload.get('userid')
             # -- userid and qualifier included in redirection
             # -- apikey in authorization header
-            # -- session id from cookie
+            # -- session id from stream headers (crumbs)
             # -- payload decoded from JWE token
         if not verified:
             abort(401, description=message)
@@ -137,6 +157,8 @@ def authorized(fn):
             verified = False
             message = str(e)
             payload = None
+            logger.error(f'failed get_omega_from_apikey session due to {e}')
+            logger.debug(f'failed get_omega_from_apikey session due to {e}', exc_info=True)
         if not verified:
             abort(401, description=message)
         context.session_id = session_id
@@ -184,8 +206,7 @@ def sse_json(fn):
 @sse_json
 def stream_result(key):
     streamable = Streamable(context.om, streamer='inline')
-    for chunk in streamable.prepare_streaming_result(stream=key, raw=True):
-        yield chunk
+    yield from streamable.prepare_streaming_result(stream=key, raw=True)
 
 
 @bp.route('/events/chat/completions', methods=['GET', 'POST'])

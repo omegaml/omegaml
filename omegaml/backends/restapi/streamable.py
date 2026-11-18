@@ -154,13 +154,10 @@ class StreamableResourceMixin:
             logger.debug(f'token {token}')
             return session_id, token.decode('utf-8')
 
-        def make_secure_cookies(payload):
+        def make_secure_crumbs(payload):
+            # encrypt payload and issue a session id as a salt for decryption
             session_id, token = encrypt_payload(payload)
-            cookies = {
-                'session_id': session_id,
-                'token': token,
-            }
-            return cookies
+            return f'{session_id}:{token}'
 
         payload = {
             'stream': str(stream),
@@ -168,7 +165,8 @@ class StreamableResourceMixin:
             'qualifier': tryOr(lambda: self.om.runtime.auth.qualifier, None),
             'created': utcnow().isoformat(),
         }
-        cookies = make_secure_cookies(payload)
+        stream_token = make_secure_crumbs(payload)
+        cookies = {'stream-token': stream_token}
         location = self.om.defaults.OMEGA_EVENTS_STREAMER_URL
         # redirect client, preserving the headers and http method
         # -- rfc9110 on 302/307: a user agent MAY change the request method from POST to GET
@@ -176,7 +174,16 @@ class StreamableResourceMixin:
         #    status code can be used instead.
         # -- https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/307
         # -- https://www.rfc-editor.org/rfc/rfc9110#status.307
-        return '', 307, {'Location': location, 'Content-Type': 'text/event-stream'}, cookies
+        return (
+            '',
+            307,
+            {
+                'Location': location,
+                'Content-Type': 'text/event-stream',
+                'Stream-Token': stream_token,
+            },
+            cookies,
+        )
 
 
 def exponential_backoff(
