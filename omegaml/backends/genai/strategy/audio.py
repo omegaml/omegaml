@@ -13,7 +13,9 @@ def allowed_file(filename):
 
 
 class AudioMixin(ConversationModelMixinBase):
-    def transcribe(self, audio, language=None, response_format=None, data_store=None, as_dict=False, **kwargs):
+    def transcribe(
+        self, audio, language=None, response_format=None, data_store=None, as_dict=False, raw=False, **kwargs
+    ):
         """transcribe an audio file
 
         Args:
@@ -23,6 +25,7 @@ class AudioMixin(ConversationModelMixinBase):
               see MultimodalProvider.transcribe() for more options
             data_store (OmegaStore): the om.datasets instance to use if audio is a string, defaults to self.data_store
             as_dict (bool): if True response will be provided as a dict of format
+            raw (bool): if True return the raw format as by the provider
 
         Returns:
             obj (str|dict): the response in the specified format, defaults to dict for response_format=='json'
@@ -60,6 +63,7 @@ class AudioMixin(ConversationModelMixinBase):
         dataset=None,
         data_store=None,
         as_dict=False,
+        raw: bool = False,
         **kwargs,
     ):
         """synthesize speech from text
@@ -77,6 +81,7 @@ class AudioMixin(ConversationModelMixinBase):
             output_path (str|Path): optional, the fully qualified filename for the output file, prefer dataset for efficiency
             as_dict (bool): defaults to False, if True response will be provided as a dict of format {'audio': response, 'is_dataset': True
                if dataset is not None, 'format': response_format}
+            raw (bool): if True return the raw format as by the provider
 
         Returns:
             obj (dict|str|Metadata|iterable): the response in the specified format, defaults to dict for as_dict=True

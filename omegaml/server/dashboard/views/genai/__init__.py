@@ -16,7 +16,7 @@ from omegaml.util import utcnow
 class GenAIView(BaseView):
     @fv.route('/index')
     def index(self):
-        return redirect(url_for('.prompts_view_list'))
+        return redirect(url_for('.assistants_view_list'))
         om = self.om
         models = om.models.list(kind=['genai.text', 'genai.llm'], raw=True)
         indices = om.datasets.list(kind='pgvector.conx', raw=True)
