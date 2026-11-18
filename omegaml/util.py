@@ -1000,6 +1000,8 @@ def dict_merge(destination, source, delete_on='__delete__', subset=None, overrid
                 del destination[key]
             elif override or key not in destination:
                 destination[key] = value
+            elif not override:
+                destination[key] = destination.get(key, '') + value
     return destination
 
 
