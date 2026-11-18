@@ -847,7 +847,7 @@ class MDataFrame:
         if inspect:
             result = pipeline
         else:
-            result = self.collection.aggregate(pipeline, allowDiskUse=True)
+            self.collection.aggregate(pipeline, allowDiskUse=True)
             result = MDataFrame(self.collection.database[target_name], force_columns=expected_columns)
         return result
 
