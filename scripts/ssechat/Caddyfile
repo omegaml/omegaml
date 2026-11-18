@@ -1,6 +1,21 @@
-:5000
+:5000 {
+  route {
+        # sse chat events
+        reverse_proxy /events/* localhost:5002
+        reverse_proxy /api/openai/* localhost:5001 {
+            @redirect {
+               status 307
+               header Location /events/*
+            }
 
-route {
-    reverse_proxy /events/* localhost:5002
-	reverse_proxy /* localhost:5001
+            handle_response @redirect {
+              rewrite * {rp.header.Location}
+	      request_header Stream-Token {rp.header.Stream-Token}
+              reverse_proxy localhost:5002 {
+                 method GET
+              }
+            }
+        }
+        reverse_proxy /* localhost:5001
+  }
 }

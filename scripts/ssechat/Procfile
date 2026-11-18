@@ -1,6 +1,6 @@
 web: caddy run -c scripts/ssechat/Caddyfile
 server: OMEGA_EVENTS_STREAMER=ssechat PORT=5001 python -m omegaml.server
 worker: om runtime celery worker
-sse: gunicorn --reload "omegaml.server.events:create_app()" -k gevent -b localhost:5002 --threads 50
+sse: gunicorn --reload "omegaml.server.events:create_app()" -k gevent -b localhost:5002 --threads 50 ${DEBUG+"--log-level=DEBUG"}
 
 

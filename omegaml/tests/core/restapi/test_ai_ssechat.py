@@ -79,14 +79,12 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         result = resource.prepare_streaming_result(stream='messages')
         self.assertIsInstance(result, (list, tuple))
         # verify we get a redirect
-        body, status_code, headers, cookies = result
+        body, status_code, headers = result
         self.assertIn(status_code, (302, 307))
         self.assertEqual(headers.get('Location'), om.defaults.OMEGA_EVENTS_STREAMER_URL)
-        # verify the cookies are encrypted
-        self.assertIn('token', cookies)
-        self.assertIn('session_id', cookies)
-        token = cookies.get('token')
-        session_id = cookies.get('session_id')
+        # verify the stream headers (aka crumbs) are encrypted
+        self.assertIn('Stream-Token', headers)
+        session_id, token = headers.get('Stream-Token', ':').split(':', 1)
         token_header = jwe.get_unverified_header(token)
         self.assertEqual(
             token_header,
@@ -111,40 +109,41 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         )
         self.assertEqual(contents.get('stream'), 'messages')
 
-    def _create_cookies(self, om=None):
+    def _create_stream_crumbs(self, om=None):
         # simulate a streaming result using 'ssechat' streamer
-        # -- we only do this to get a valid cookie, as if produced the /chat/completions api
+        # -- we only do this to get a valid stream headers (crumbs), as if produced the /chat/completions api
         resource = StreamableResourceMixin(streamer='ssechat')
         resource.om = om or self.om
         result = resource.prepare_streaming_result(stream='messages')
         self.assertIsInstance(result, (list, tuple))
-        body, status_code, headers, cookies = result
-        return cookies
+        body, status_code, headers = result
+        subheaders = lambda d, keys: {k: v for k, v in d.items() if k.lower() in keys}
+        return subheaders(headers, 'stream-token')
 
     def test_ssechat_unauthorized(self):
-        cookies = self._create_cookies()
+        crumbs = self._create_stream_crumbs()
         # verify ssechat events response
-        # a) no cookies set
+        # a) no stream headers (crumbs) set
         # -- expect 401
         with self.app.test_client() as client:
             response = client.get('/events/chat/completions')
             self.assertTrue(response.status_code, 401)
 
     def test_ssechat_valid(self):
-        # b) cookies set correctly
+        # b) stream headers (crumbs) set correctly
         # -- expect 201, a valid stream
-        cookies = self._create_cookies()
-        with self.app.test_client() as client:
-            with patch('omegaml.server.events.ssechat.stream_result') as stream_result:
-                for k, v in cookies.items():
-                    client.set_cookie(k, v)
-                response = client.get('/events/chat/completions')
-                self.assertTrue(response.status_code, 201)
-                self.assertTrue(response.mimetype, 'text/event-stream')
-                stream_result.assert_called_once_with('messages')
+        crumbs = self._create_stream_crumbs()
+        with (
+            self.app.test_client() as client,  # fmt:asis
+            patch('omegaml.server.events.ssechat.stream_result') as stream_result,
+        ):
+            response = client.get('/events/chat/completions', headers=crumbs)
+            self.assertTrue(response.status_code, 201)
+            self.assertTrue(response.mimetype, 'text/event-stream')
+            stream_result.assert_called_once_with('messages')
 
     def test_ssechat_streaming(self):
-        cookies = self._create_cookies()
+        crumbs = self._create_stream_crumbs()
         # c) test streaming actually works
         stream = self.om.streams.get('.system/complete/messages')
         producer_events = [
@@ -161,9 +160,7 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
             },
         )
         with self.app.test_client() as client:
-            for k, v in cookies.items():
-                client.set_cookie(k, v)
-            response = client.get('/events/chat/completions')
+            response = client.get('/events/chat/completions', headers=crumbs)
             self.assertTrue(response.status_code, 201)
             self.assertTrue(response.mimetype, 'text/event-stream')
             self.assertTrue(response.is_streamed)
@@ -181,7 +178,7 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
     def test_ssechat_valid_authorization(self):
         auth = OmegaRuntimeAuthentication('testuser', 'sometoken', 'developer')
         om = OmegaCloud(auth=auth)
-        cookies = self._create_cookies(om=om)
+        crumbs = self._create_stream_crumbs(om=om)
         for auth_kind in ('Bearer', 'ApiKey'):
             with (
                 self.app.test_client() as client,
@@ -191,17 +188,13 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
                 auth_env = MagicMock()
                 get_auth_env.return_value = auth_env
                 auth_env.get_omega_from_apikey.return_value = om
-                for k, v in cookies.items():
-                    client.set_cookie(k, v)
                 if auth_kind == 'ApiKey':
                     request_token = f'{om.runtime.auth.userid}:{om.runtime.auth.apikey}'
                 else:
                     request_token = f'{om.runtime.auth.apikey}'
                 response = client.get(
                     '/events/chat/completions',
-                    headers={
-                        'Authorization': f'{auth_kind} {request_token}',
-                    },
+                    headers={'Authorization': f'{auth_kind} {request_token}', **crumbs},
                 )
                 self.assertTrue(response.status_code, 201)
                 self.assertTrue(response.mimetype, 'text/event-stream')
