@@ -1,6 +1,8 @@
 import json
 import unittest
+from base64 import b64encode
 from pathlib import Path
+from unittest import mock
 
 import omegaml
 from omegaml import Omega
@@ -330,6 +332,84 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
             },
         )
 
+    def test_openai_audio_transcribe_provider(self):
+        # e2e test from rest api to provider
+        self._setup_provider_model()
+        wav_file_path = Path(omegaml.__file__).parent / 'example/demo/multimodal/resources/sample.wav'
+        with open(wav_file_path, 'rb') as fin:
+            audio_bytes = b64encode(fin.read())
+        with mock.patch.dict('omegaml.backends.genai.strategy.provider.PROVIDERS') as MOCK_PROVIDERS:
+            mock_provider = mock.MagicMock()
+            mock_provider.transcribe.side_effect = lambda *args, **kwargs: {
+                'text': 'hello world',
+            }
+            # PROVIDERS is a list of classes => instantiated at runtime, so we return a callable
+            MOCK_PROVIDERS['openai'] = lambda *args, **kwargs: mock_provider
+            self.client.is_json = False
+            resp = self.client.post(
+                '/api/openai/v1/audio/transcriptions',
+                data={
+                    'file': (wav_file_path, 'test.wav'),
+                    'model': 'foomodel',
+                },
+                content_type='multipart/form-data',
+                auth=self.auth,
+                headers=self._headers,
+            )
+            mock_provider.transcribe.assert_called_once()
+            mock_provider.transcribe.assert_called_once_with(
+                audio_bytes,
+                response_format='json',
+                stream=False,
+                language=None,
+            )
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp.headers['Content-Type'], 'application/json')
+            self.assertEqual(
+                resp.json,
+                {
+                    'model': 'foomodel',
+                    'text': 'hello world',
+                    'resource_uri': 'foomodel',
+                },
+            )
+
+    def test_openai_audio_speech_provider(self):
+        # e2e test from rest api to provider
+        self._setup_provider_model()
+        wav_file_path = Path(omegaml.__file__).parent / 'example/demo/multimodal/resources/sample.wav'
+        with open(wav_file_path, 'rb') as fin:
+            audio_bytes = fin.read()
+            audio_bytes_b64 = b64encode(audio_bytes)
+        with mock.patch.dict('omegaml.backends.genai.strategy.provider.PROVIDERS') as MOCK_PROVIDERS:
+            mock_provider = mock.MagicMock()
+            mock_provider.speech.side_effect = lambda *args, **kwargs: audio_bytes
+            # PROVIDERS is a list of classes => instantiated at runtime, so we return a callable
+            MOCK_PROVIDERS['openai'] = lambda *args, **kwargs: mock_provider
+            self.client.is_json = False
+            resp = self.client.post(
+                '/api/openai/v1/audio/speech',
+                json={
+                    'model': 'foomodel',
+                    'input': 'hello world',
+                },
+                auth=self.auth,
+                headers=self._headers,
+            )
+            mock_provider.speech.assert_called_once()
+            self.assertEqual(mock_provider.speech.call_args.args[0], 'hello world')
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp.headers['Content-Type'], 'application/json')
+            self.assertEqual(
+                resp.json,
+                {
+                    'response': audio_bytes_b64.decode('utf-8'),
+                    'format': 'audio/mpeg',
+                    'model': 'foomodel',
+                    'resource_uri': 'foomodel',
+                },
+            )
+
     def _create_embedding_model(self):
         # test save and restore
         class MyEmbeddingModel(GenAIModelHandler):
@@ -399,6 +479,9 @@ class GenAITestCase(OmegaTestMixin, unittest.TestCase):
                 }
 
         self.om.models.put(VoiceModel, 'voicemodel', replace=True)
+
+    def _setup_provider_model(self):
+        self.om.models.put('openai+http://localhost/v1;model=foo', 'foomodel')
 
 
 if __name__ == '__main__':

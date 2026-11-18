@@ -35,7 +35,7 @@ def omega_invoke(self, modelname, Xname, rName=None, pure_python=True, stream=Fa
 @shared_task(base=OmegamlTask, bind=True)
 def omega_transcribe(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
     default_kwargs = {
-        'as_dict': True,
+        'response_format': 'json',  # remove once we can return raw VTT format
     }
     result = self.get_delegate(modelname).perform(
         'transcribe',
@@ -51,8 +51,7 @@ def omega_transcribe(self, modelname, Xname, rName=None, pure_python=True, strea
 @shared_task(base=OmegamlTask, bind=True)
 def omega_speech(self, modelname, Xname, rName=None, pure_python=True, stream=False, **kwargs):
     default_kwargs = {
-        'dataset': f'.audio/speech/{self.request.id}',
-        'as_dict': True,
+        'as_dict': True,  # remove once we can return actual audio
     }
     result = self.get_delegate(modelname).perform(
         'speech',

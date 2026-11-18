@@ -6,7 +6,7 @@ import pandas as pd
 from omegaml import _base_config
 from omegaml.backends.restapi.resource import GenericResourceMixin
 from omegaml.backends.restapi.streamable import StreamableResourceMixin
-from omegaml.util import ensure_json_serializable, isTrue
+from omegaml.util import ensure_json_serializable, isTrue, tryOr
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +147,13 @@ class GenericModelResource(GenericResourceMixin, StreamableResourceMixin):
         model_id = self._resolve_model_id(model_id, payload)
         format_kwargs = self._result_format_kwargs(query, payload)
         datax = payload or (query.get('dataX') or query.get('audio') or payload)
-        payload.setdefault('audio', payload.pop('files', payload).get('file'))
+        # files are standardized by OmegaFlaskResourceMixin.get_query_payload()
+        # -- 'files' is a dict of name => b64encode(file.read()), where name is 'file' by default
+        # -- 'audio' could be a deliberately set parameter by the json version of the API (takes precedence)
+        # -- at most one file is accepted
+        files = payload.pop('files', payload)
+        audio = files.get('file') or tryOr(lambda: files.get(next(files.keys())), None)
+        payload.setdefault('audio', audio)
         promise = self.om.runtime.model(model_id).transcribe(datax, **format_kwargs)
         # TODO how do we output raw format when it is not json? prepare_result needs to handle this case
         result = self.prepare_result(promise, model_id=model_id, **format_kwargs) if not self.is_async else promise

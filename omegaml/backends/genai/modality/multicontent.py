@@ -1,6 +1,8 @@
 import mimetypes
 import os
 import re
+from base64 import b64decode
+from io import BytesIO
 from typing import Any, BinaryIO
 
 from omegaml.backends.genai.modality.image import jpg_to_base64
@@ -34,7 +36,7 @@ def detect_mime(data: bytes) -> str:
 
 
 def binary_to_openai_content(
-    file_obj: BinaryIO, *, as_uri: bool = False, audio_kwargs: dict, image_kwargs: dict
+    file_obj: BinaryIO | bytes, *, as_uri: bool = False, audio_kwargs: dict = None, image_kwargs: dict = None
 ) -> dict[str, Any]:
     r"""
     Read an arbitrary binary *file‑like* object and build an OpenAI‑compatible
@@ -52,8 +54,8 @@ def binary_to_openai_content(
 
     Parameters
     ----------
-    file_obj : BinaryIO
-        Any object exposing ``read()`` and returning ``bytes``.
+    file_obj : BinaryIO|bytes
+        Any object exposing ``read()`` and returning ``bytes``, or a bytes string.
     as_uri : bool, default ``False``
         When ``True`` the function always returns a data‑URI (useful for
         embedding in HTML).  For non‑image/audio types the flag has no effect
@@ -74,6 +76,8 @@ def binary_to_openai_content(
         'max_height': 256,
     }
     # Detect MIME from the content
+    if isinstance(file_obj, bytes):
+        file_obj = BytesIO(file_obj)
     mime = detect_mime(file_obj.read(1024))
     file_obj.seek(0)
 
@@ -155,6 +159,24 @@ def is_base64(s):
     if not isinstance(s, str) or len(s) % 4 != 0:
         return False
     return bool(re.fullmatch(r'[A-Za-z0-9+/]*={0,2}', s))
+
+
+def extract_base64(value, default=None):
+    """Extract base64 data from a data URI or raw string."""
+    if not isinstance(value, (str, bytes)):
+        return default
+
+    # Check for data URI format
+    match = re.match(r'^data:[^;]+;base64,(.+)$', str(value))
+    if match:
+        b64_string = match.group(1)
+    else:
+        b64_string = value
+
+    try:
+        return b64decode(b64_string, validate=True)
+    except Exception:
+        return default
 
 
 # ----------------------------------------------------------------------

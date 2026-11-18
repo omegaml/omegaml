@@ -2,8 +2,10 @@ from pathlib import Path
 from typing import cast
 from uuid import uuid4
 
+from omegaml.backends.genai.modality.multicontent import guess_type
 from omegaml.backends.genai.providers import MultimodalProvider
 from omegaml.backends.genai.strategy.mixinbase import ConversationModelMixinBase
+from omegaml.util import tryOr
 
 ALLOWED_EXTENSIONS = {"mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"}
 
@@ -13,7 +15,9 @@ def allowed_file(filename):
 
 
 class AudioMixin(ConversationModelMixinBase):
-    def transcribe(self, audio, language=None, response_format=None, data_store=None, as_dict=False, **kwargs):
+    def transcribe(
+        self, audio, language=None, response_format=None, data_store=None, as_dict=False, raw=False, **kwargs
+    ):
         """transcribe an audio file
 
         Args:
@@ -23,10 +27,12 @@ class AudioMixin(ConversationModelMixinBase):
               see MultimodalProvider.transcribe() for more options
             data_store (OmegaStore): the om.datasets instance to use if audio is a string, defaults to self.data_store
             as_dict (bool): if True response will be provided as a dict of format
+            raw (bool): if True return the raw format as by the provider
 
         Returns:
             obj (str|dict): the response in the specified format, defaults to dict for response_format=='json'
         """
+        response_format = response_format or 'json'
         data_store = data_store or self.data_store
         kwargs.update(
             language=language,
@@ -41,11 +47,10 @@ class AudioMixin(ConversationModelMixinBase):
         self.pipeline(method='prepare', audio=audio, **kwargs)
         resp = provider.transcribe(audio, **kwargs)
         self.pipeline(method='process', audio_response=resp, **kwargs)
-        if as_dict:
+        if not raw or as_dict:
             resp = {
-                'response': resp,
-                'is_dataset': is_dataset,
                 'format': response_format,
+                **(resp if isinstance(resp, dict) else {'response': resp}),
             }
         return resp
 
@@ -60,6 +65,7 @@ class AudioMixin(ConversationModelMixinBase):
         dataset=None,
         data_store=None,
         as_dict=False,
+        raw: bool = False,
         **kwargs,
     ):
         """synthesize speech from text
@@ -70,17 +76,19 @@ class AudioMixin(ConversationModelMixinBase):
             language (str): optional, language code, defaults to the model's default language
             speed (float): the speed to synthesize in, defaults to 1.0, range in 0.25 to 4.0
             response_format (str): the response format requested from the model provider, see MultimodalProvider.speech()
-               for more options
+               for more options, defaults to 'audio'
             stream (bool): if True returns an iterator over all chunks in the response, defaults to False
             dataset (str): optional, the name of the output file in om.dataset, mutually exclusive with output_path
             data_store (OmegaStore): optional, the om.datasets store, defaults to self.data_store
             output_path (str|Path): optional, the fully qualified filename for the output file, prefer dataset for efficiency
             as_dict (bool): defaults to False, if True response will be provided as a dict of format {'audio': response, 'is_dataset': True
                if dataset is not None, 'format': response_format}
+            raw (bool): if True return the raw format as by the provider
 
         Returns:
             obj (dict|str|Metadata|iterable): the response in the specified format, defaults to dict for as_dict=True
         """
+        response_format = response_format or 'audio'
         provider = cast(MultimodalProvider, self.provider)
         self.pipeline(method='prepare', text=text, **kwargs)
         if dataset is not None:
@@ -102,10 +110,9 @@ class AudioMixin(ConversationModelMixinBase):
         if dataset is not None:
             meta = data_store.put(kwargs['output_path'], dataset, replace=True)
             resp = meta
-        if as_dict:
+        if not raw or as_dict:
             resp = {
-                'response': resp,
-                'is_dataset': dataset is not None,
-                'format': response_format,
+                'format': tryOr(lambda: guess_type(resp), response_format),
+                **(resp if isinstance(resp, dict) else {'response': resp}),
             }
         return resp
