@@ -577,6 +577,8 @@ def setup_logging():
         'celery.utils.functional': 'ERROR',
         # omega store is too verbose
         'omegaml.store.base': 'ERROR',
+        # flask is too verbose
+        'watchdog.observers': 'ERROR',
     }
     for name, level in default_loglevels.items():
         pymongo_logger = logging.getLogger(name)
