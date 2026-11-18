@@ -255,7 +255,8 @@ class CompletionsMixin(ConversationModelMixinBase):
                 if chunks:
                     # consolidate previous chunks, if any
                     # -- in streaming mode, tool_calls can be sent in multiple chunks
-                    # -- merge partial tool_calls by index
+                    # -- merge partial tool_calls by index, append values to existing keys
+                    # -- e.g. { key: foo } may arrive as three deltas, { key: f }, { key: o }, { key: o }
                     tool_calls_map = {}
                     chunked_msgs = (self._get_response_message(c) for c in chunks)
                     chunked_calls = (c.get('tool_calls') for c in chunked_msgs if 'tool_calls' in c)
@@ -263,7 +264,8 @@ class CompletionsMixin(ConversationModelMixinBase):
                     for partial_call in partial_calls:
                         idx = partial_call.get('index', 0)
                         tool_calls_map.setdefault(idx, tool_message.get('tool_calls') or {})
-                        dict_merge(tool_calls_map[idx], partial_call)
+                        # dict_merge(..., override=False) to append values
+                        dict_merge(tool_calls_map[idx], partial_call, override=False)
                     # -- finalize tool call message
                     tool_calls = sorted(tool_calls_map.values(), key=lambda v: v.get('index'))
                 else:
