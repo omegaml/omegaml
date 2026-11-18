@@ -69,9 +69,25 @@ def authorized(fn):
     # -- using a salt means every payload results in a different cipher text, even if the payload is the same
     # -- the JWE can't be modified because it is signed
     # -- token becomes useless after timeout
+    # how to specify the token
+    # -- either 'Stream-Token' header or 'stream-token' cookie, cookie takes preference
+    # -- not all clients support a cookie jar, so they can send the stream-token header instead
+    # -- this is also more compatible with reverse proxies which typically can add headers to redirect, not cookies
+    # -- see RFC 6265 on ambient authority and redirect handling
+    # Originally, /chat/completions responded with 307 + Set-Cookie only
+    # - this was implemented according to RFC 6265bis, s5.3 (SHOULD handle Set-Cookies for 307)
+    # - new uses the Stream-Token header as session_id:token (both scoped to the particular stream)
+    # Rationale:
+    # - not all clients support sending Cookies on redirects (e.g. nodejs does not)
+    # - headers are compatible with reverse proxies so this can be handled transparently for clients
+    # - no security impact as the token is encrypted the same way as the cookie was
+    # - we will not implement a solution with ?request args as recommened by RFC6265, s.8.2 suggests as
+    #   which arguably is worse
 
     def decode_payload():
-        session_id, token = request.headers.get('stream-token', ':').split(':', 1)
+        session_id, token = (
+            request.cookies.get('stream-token') or request.headers.get('stream-token') or 'invalid:invalid'
+        ).split(':', 1)
         key = pbkdf2_hmac(
             'sha256', Streamable.SECRET_KEY.encode('utf-8'), str(session_id).encode('utf-8'), Streamable.PBKDF_ITER
         )

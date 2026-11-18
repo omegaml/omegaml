@@ -165,6 +165,7 @@ class StreamableResourceMixin:
             'created': utcnow().isoformat(),
         }
         stream_token = make_secure_crumbs(payload)
+        cookies = {'stream-token': stream_token}
         location = self.om.defaults.OMEGA_EVENTS_STREAMER_URL
         # redirect client, preserving the headers and http method
         # -- rfc9110 on 302/307: a user agent MAY change the request method from POST to GET
@@ -180,6 +181,7 @@ class StreamableResourceMixin:
                 'Content-Type': 'text/event-stream',
                 'Stream-Token': stream_token,
             },
+            cookies,
         )
 
 
