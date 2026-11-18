@@ -1,20 +1,17 @@
 import json
 import re
 from collections.abc import Generator
-from io import BytesIO, FileIO
+from io import BytesIO
 from pathlib import Path
-from typing import Literal, Union
+from typing import Literal
 from urllib.parse import urljoin
 
 import requests
 from openai import OpenAI
 from requests import Response
-from requests._types import SupportsRead
 
 from omegaml.backends.genai.modality.multicontent import extract_base64, is_base64
 from omegaml.util import ensure_list, tryOr
-
-filelike = Union[Path, FileIO, BytesIO, SupportsRead]
 
 
 class Provider:
@@ -118,7 +115,7 @@ class MultimodalProvider(Provider):
 
     def transcribe(
         self,
-        audio_path: str | Path | bytes | filelike,
+        audio_path: str | Path | bytes,
         *,
         model: str = "Whisper-Tiny",
         language: str | None = None,

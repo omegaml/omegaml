@@ -4,6 +4,7 @@ import logging
 import os
 import time
 from collections.abc import Callable
+from datetime import datetime
 from hashlib import pbkdf2_hmac
 from random import random
 from typing import Any
@@ -264,8 +265,8 @@ class FlushWindow(RelaxedTimeWindow):
         self.size = size or None
 
     def window_ready(self):
-        last_read = utcnow()
-        max_read = utcnow()
+        last_read = datetime.utcnow()
+        max_read = datetime.utcnow()
         return True, (last_read, max_read)
 
     def query(self, *args):
@@ -276,4 +277,4 @@ class FlushWindow(RelaxedTimeWindow):
         return qs if not self.size else qs.limit(self.size)
 
     def timestamp(self, *args):
-        self.stream.modify(last_read=utcnow())
+        self.stream.modify(last_read=datetime.utcnow())
