@@ -79,7 +79,7 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
         result = resource.prepare_streaming_result(stream='messages')
         self.assertIsInstance(result, (list, tuple))
         # verify we get a redirect
-        body, status_code, headers = result
+        body, status_code, headers, cookies = result
         self.assertIn(status_code, (302, 307))
         self.assertEqual(headers.get('Location'), om.defaults.OMEGA_EVENTS_STREAMER_URL)
         # verify the stream headers (aka crumbs) are encrypted
@@ -221,13 +221,17 @@ class SSEServerTests(OmegaTestMixin, unittest.TestCase):
                 auth_env = MagicMock()
                 get_auth_env.return_value = auth_env
                 auth_env.get_omega_from_apikey.return_value = om
+                for k, v in cookies.items():
+                    client.set_cookie(k, v)
                 if auth_kind == 'ApiKey':
                     request_token = f'{om.runtime.auth.userid}:{om.runtime.auth.apikey}'
                 else:
                     request_token = f'{om.runtime.auth.apikey}'
                 response = client.get(
                     '/events/chat/completions',
-                    headers={'Authorization': f'{auth_kind} {request_token}', **crumbs},
+                    headers={
+                        'Authorization': f'{auth_kind} {request_token}',
+                    },
                 )
                 self.assertTrue(response.status_code, 201)
                 self.assertTrue(response.mimetype, 'text/event-stream')
