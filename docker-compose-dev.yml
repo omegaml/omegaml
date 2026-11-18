@@ -1,6 +1,6 @@
 services:
   mongo:
-    image: mongo:7.0
+    image: mongo:8
     # https://www.mongodb.com/docs/manual/reference/ulimit/
     ulimits:
       nofile:
@@ -11,7 +11,7 @@ services:
       - "28017:28017"
     command: [ "--auth", "--oplogSize", "100", "--quiet" ]
   rabbitmq:
-    image: rabbitmq:3.13
+    image: rabbitmq:4.4
     ports:
       - "5672:5672"
     environment:

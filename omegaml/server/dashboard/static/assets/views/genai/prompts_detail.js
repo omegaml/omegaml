@@ -23,7 +23,7 @@ $(function () {
       data: JSON.stringify(data),
       success: function (response) {
         alert("saved");
-        window.location = url_for(".prompts_view_detail", {
+        window.location = url_for(".assistants_view_detail", {
           name: response.name,
         });
       },
