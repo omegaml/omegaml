@@ -31,6 +31,7 @@ class AudioMixin(ConversationModelMixinBase):
         kwargs.update(
             language=language,
             response_format=response_format,
+            model=self.model,
         )
         # see if we can read from the datastore
         is_dataset = isinstance(audio, str) and data_store and audio in data_store
@@ -92,6 +93,7 @@ class AudioMixin(ConversationModelMixinBase):
             language=language,
             voice=voice,
             speed=speed,
+            model=self.model,
             # stream=stream,
         )
         resp = provider.speech(
