@@ -114,7 +114,7 @@ class ToolCallingMixin(ConversationModelMixinBase):
                         'result': str(tool_result),
                     },
                 )
-            else:
+            elif self.strategy('tool_validation') == 'strict':
                 # invalid tool call
                 tool_result = 'tool call was invalid'
                 tool_response = {"role": "tool", "tool_call_id": tool_id, "content": str(tool_result)}

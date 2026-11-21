@@ -75,11 +75,16 @@ class CompletionsMixin(ConversationModelMixinBase):
 
         def parse_completion_response(r):
             response, _, response_message, raw_response = r
-            return response_message if not raw else raw_response
+            return cleaned(response_message) if not raw else raw_response
 
         def parse_chat_response(r):
             conversation_id, response, _, response_message, raw_response = r
-            return response_message if not raw else raw_response
+            return cleaned(response_message) if not raw else raw_response
+
+        def cleaned(message):
+            # remove any None fields, except content
+            keep_empty_fields = ('content',)
+            return {k: v for k, v in message.items() if v is not None or k in keep_empty_fields}
 
         def generate_response_stream_once(prompt, messages, use_tools):
             if not chat and conversation_id is None:
@@ -106,37 +111,46 @@ class CompletionsMixin(ConversationModelMixinBase):
             response_gen = (parsed for parsed in parsed_gen if isinstance(parsed, (list, dict, tuple)))
             return response_gen
 
+        def maybe_handle_tool_calls(response):
+            # handle tool calls, if any
+            tool_calls = self._has_tool_calls(response)
+            should_call_tools = (agentic or use_tools) and self.tools
+            if response and tool_calls and should_call_tools:
+                intermediate_results, tool_prompts = self._handle_toolcalls(response, tool_calls, conversation_id)
+                return tool_prompts, intermediate_results
+
         def generate_response_loop(prompt, messages, use_tools):
-            turn_prompt = prompt
-            intermediate_results = None
             turn_count = 0
-            while True:
-                response = None
-                tool_calls = None
+            max_turns = self.strategy.get('max_turns')
+            # prompt events is the list of pending events in this loop
+            # -- events are tuples of (prompt, messages, intermediate_results)
+            # -- gets extended for tool calls
+            # -- we process events until none are left
+            # -- this simplifies processing of tool calls (no global variables required), and is easy to extend
+            prompt_events = []
+            prompt_events.append((prompt, messages, {}))
+            while (turn_count is None or turn_count < max_turns) and prompt_events:
                 turn_count += 1
-                # the stream may contain multiple partial toolcall messages
-                # -- first, generate the full stream until it stops
-                # -- then, check for tool calls across the consolidate stream
-                # -- use_tools=True triggers tool choices, actual decision to run below
+                turn_prompt, messages, intermediate_results = prompt_events.pop(0)
                 try:
                     for response in generate_response_stream_once(turn_prompt, messages, use_tools=use_tools):
                         if not raw and intermediate_results:
                             # FIXME move to conversation state
                             response.setdefault('intermediate_results', []).append(intermediate_results)
                             intermediate_results = None
+                        # -- check for tool calls across (finish_reason == 'tool_calls)
+                        # -- use_tools=True triggers tool choices, actual decision to run below
+                        if tool_results := maybe_handle_tool_calls(response):
+                            tool_prompts, intermediate_results = tool_results
+                            prompt_events.append((tool_prompts, messages, intermediate_results))
+                            break  # for loop
+                        # no tool calls, or all tool calls completed, yield response
                         yield response
-                        tool_calls = self._has_tool_calls(response, implicit=not raw)
                 except Exception as e:
                     logger.warning(f'could not process response due to {e} in {conversation_id=}', exc_info=True)
                     response = {"error": {"message": f"could not process response in {conversation_id=}"}}
                     yield response
-                    break
-                if response and tool_calls and (agentic or use_tools) and self.tools:
-                    intermediate_results, tool_prompts = self._handle_toolcalls(response, tool_calls, conversation_id)
-                    turn_prompt = tool_prompts
-                    continue
-                # abort if no more tool calls, or not agentic
-                break
+                    prompt_events = []  # clear all pending events to end the response loop
 
         response_gen = generate_response_loop(prompt, messages, use_tools)
         return response_gen if stream else [response for response in response_gen][-1]
@@ -289,6 +303,10 @@ class CompletionsMixin(ConversationModelMixinBase):
             return response, prompt_message, response_message
 
         def resolve_response(response, prompt_message, use_tools=False):
+            """
+            process a canonical provider response in openai /chat/completions format
+            -- see https://github.com/TomzxCode/llm-message-specs/blob/main/02-openai-chat-completions.md
+            """
             raw_response = response.to_dict() if hasattr(response, 'to_dict') else response
             if len(raw_response['choices']) == 0:
                 # this should not happen per the protocol - if it does, simulate an empty delta
@@ -305,11 +323,24 @@ class CompletionsMixin(ConversationModelMixinBase):
                     },
                     raw_response,
                 )
-            response_message = response['choices'][0]['message']
-            response_message.setdefault('conversation_id', conversation_id)
-            response, prompt_message, response_message = capture_tool_calls(
-                response, prompt_message, response_message, use_tools=use_tools
-            )
+            # always align the message format with resolve_chunk
+            # -- not using a common function because chunk processed needs to consolidate across events
+            if response['choices']:
+                raw_message = self._get_response_message(response)
+                response_message = {
+                    "role": raw_message.get('role'),
+                    'reasoning': raw_message.get('reasoning'),
+                    "content": raw_message.get('content'),
+                    "conversation_id": conversation_id,
+                    "tool_calls": raw_message.get('tool_calls'),
+                    "finish_reason": response['choices'][0].get('finish_reason'),
+                }
+                response_message.setdefault('conversation_id', conversation_id)
+                response, prompt_message, response_message = capture_tool_calls(
+                    response, prompt_message, response_message, use_tools=use_tools
+                )
+            else:
+                response_message = {}
             response_message = (
                 self.pipeline(
                     method='process',
@@ -361,19 +392,16 @@ class CompletionsMixin(ConversationModelMixinBase):
             if chunk['choices']:
                 content += str(chunk['choices'][0]['delta'].get('content') or '')
                 reasoning += str(chunk['choices'][0]['delta'].get('reasoning') or '')
-                if raw:
-                    response_message = chunk['choices'][0]['delta']
-                else:
-                    response_message = {
-                        "role": chunk['choices'][0]['delta'].get('role'),
-                        "delta": chunk['choices'][0]['delta'].get('content'),
-                        'reasoning': reasoning,
-                        "content": content,
-                        "conversation_id": conversation_id,
-                        "tool_calls": chunk['choices'][0]['delta'].get('tool_calls'),
-                        "finish_reason": chunk['choices'][0].get('finish_reason'),
-                    }
-                    # response_message.update(consolidated)
+                response_message = {
+                    "role": chunk['choices'][0]['delta'].get('role'),
+                    "delta": chunk['choices'][0]['delta'].get('content'),
+                    'reasoning': reasoning,
+                    "content": content,
+                    "conversation_id": conversation_id,
+                    "tool_calls": chunk['choices'][0]['delta'].get('tool_calls'),
+                    "finish_reason": chunk['choices'][0].get('finish_reason'),
+                }
+                # response_message.update(consolidated)
                 response_message.setdefault('conversation_id', conversation_id)
                 response, prompt_message, response_message = capture_tool_calls(
                     chunk, prompt_message, response_message, use_tools=use_tools, as_delta=True, chunks=chunks
@@ -476,7 +504,7 @@ class CompletionsMixin(ConversationModelMixinBase):
         return message
 
     def _get_finish_reason(self, response):
-        return (response.get('choices') or [{}])[-1].get('finish_reason')
+        return (response.get('choices') or [response])[-1].get('finish_reason')
 
     def _has_tool_calls(self, response, implicit=False):
         message = self._get_response_message(response)

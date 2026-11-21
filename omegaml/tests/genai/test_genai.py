@@ -343,6 +343,32 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         self.assertIsInstance(toolfn, FunctionType)
         self.assertEqual(toolfn(), 'sunny')
 
+    @skipUnless(False, "TODO stream tool_calls elements across several chunks")
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
+    def test_tool_call_stream_chunks(self, OpenAIProvider):
+        om = self.om
+        meta = om.models.put('openai+http://localhost/mymodel', 'mymodel')
+        openai_response_to_call_tool = dotable(
+            {
+                "choices": [
+                    {
+                        "finish_reason": "tool_calls",
+                        "message": {
+                            "role": "assistant",
+                            "content": None,
+                            'tool_calls': [
+                                {
+                                    'id': "call_tool_1",
+                                    "type": "function",
+                                    "function": {"name": "weather", "arguments": "{}"},
+                                }
+                            ],
+                        },
+                    }
+                ]
+            },
+        )
+
     @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_tool_use_notrack(self, OpenAIProvider):
         # use tools/ prefix in attribute['tools']

@@ -498,6 +498,10 @@ class ConversationModel(
             'guardrails': 'all',
             # choice of tools
             'tool_choice': 'auto',
+            # tool calling lenience, 'client|strict', strict means tools must be available in self.tools
+            'tool_validation': 'client',
+            # max turns in core loop, limits maximum number of tool cal, set to None for no limits
+            'max_turns': 10,
             # override by user provided
             **(strategy or {}),
         }
