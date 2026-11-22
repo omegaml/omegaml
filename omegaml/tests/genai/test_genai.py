@@ -453,8 +453,12 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
             openai_response_to_tool_result_stream,
         ]
         # prompt to call a tools, do not use tools
-        # -- expect the model to respond by suggesting a tool_call
         result = model.complete('what is the weather like?', use_tools=False)
+        # -- expect the tool calling to arrive at the model provider
+        self.assertIn('messages', model.provider.complete.call_args.kwargs)
+        self.assertIn('tools', model.provider.complete.call_args.kwargs)
+        self.assertIn('tool_choice', model.provider.complete.call_args.kwargs)
+        # -- expect the model to respond by suggesting a tool_call (tool use is disabled)
         self.assertEqual(
             subdict(result, ['role', 'content', 'tool_calls']),
             {
@@ -475,6 +479,7 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         # stream result
         results = list(model.complete('what is the weather like?', use_tools=True, stream=True))
         self.assertTrue(len(results) > 0)
+        # -- expect no tool calls in results, as tools consumed already
         self.assertEqual(
             subdict(results[-1], ['role', 'content']), {'content': 'the weather is sunny', 'role': 'assistant'}
         )
@@ -799,9 +804,9 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
                 }
             ]
         })
-        # -- we don't actually call the tools, guardrails still run because model requests running
+        # -- we don't actually call the tools
         resp = model.complete('hello', use_tools=False)
-        self.assertEqual(model.guardrails[0].validated_steps, ['prompt', 'input', 'response', 'action', 'output'])
+        self.assertEqual(model.guardrails[0].validated_steps, ['prompt', 'input', 'response', 'output'])
 
         # test guardrails are called for documents
         # -- reload to model to get a fresh guardrail
@@ -822,9 +827,9 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
                 }
             ]
         })
-        # -- we don't actually call the tools, guardrails still run because model requests running
+        # -- we don't actually call the tools
         resp = model.complete('hello', use_tools=False)
-        self.assertEqual(model.guardrails[0].validated_steps, ['prompt', 'input', 'response', 'action', 'output'])
+        self.assertEqual(model.guardrails[0].validated_steps, ['prompt', 'input', 'response', 'output'])
 
     @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
     def test_guardrails_policy(self, OpenAIProvider):
@@ -884,3 +889,49 @@ class GenAIModelTests(OmegaTestMixin, TestCase):
         })
         resp = model.complete('hello')
         self.assertEqual(resp.get('content'), 'hello good world')
+
+    @mock.patch('omegaml.backends.genai.providers.OpenAIProvider')
+    def test_native_tools_calling(self, OpenAIProvider):
+        # test completion() tool definitions reach the provider, and tool calls are in results
+        om = self.om
+        om.models.put('openai+http://localhost/mymodel', 'mymodel')
+        model = om.models.get('mymodel')
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "web_search",
+                    "description": "Search the web for up-to-date information",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"query": {"type": "string"}},
+                        "required": ["query"],
+                    },
+                },
+            }
+        ]
+        user_message = "What's the weather in Tokyo today?"
+        messages = [{"role": "user", "content": user_message}]
+        prompt = {
+            'messages': messages,
+            'tools': tools,
+            'tool_choice': 'auto',
+        }
+        # setup mock model provider
+        model.provider = OpenAIProvider
+        model.provider.complete.side_effect = lambda *args, **kwargs: dotable({
+            "choices": [
+                {
+                    "finish_reason": "tool_calls",
+                    "message": {"role": "assistant", "content": None, 'tool_calls': [{"name": "web_search"}]},
+                }
+            ]
+        })
+        # call model
+        result = model.complete(prompt)
+        # assert messages and tool specs arrived at model provider
+        self.assertIn('messages', model.provider.complete.call_args.kwargs)
+        self.assertIn('tools', model.provider.complete.call_args.kwargs)
+        self.assertIn('tool_choice', model.provider.complete.call_args.kwargs)
+        # assert toolcall is in response
+        self.assertIn('tool_calls', result)
