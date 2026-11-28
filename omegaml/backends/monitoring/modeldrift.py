@@ -139,9 +139,10 @@ class ModelDriftMonitor(DriftMonitorBase):
         index_cols = ['experiment', 'run', 'step', 'dt']
         key_cols = ['key']
         value_cols = ['value']
+        df = df.where(df.notna(), 1).infer_objects(copy=False)
         df = (
             pd
-            .pivot_table(df.fillna(1), index=index_cols, columns=key_cols, values=value_cols, dropna=True)
+            .pivot_table(df, index=index_cols, columns=key_cols, values=value_cols, dropna=True)
             .droplevel(0, axis=1)
             .reset_index()
         )
