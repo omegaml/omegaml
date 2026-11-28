@@ -8,6 +8,10 @@ from pathlib import Path
 
 from omegaml.util import dict_merge, inprogress, markup, mlflow_available, tryOr
 
+# make sure we see the current path
+# -- fixes apparent change in python 3.14 where sys.path does not include cwd even though -m site shows it
+sys.path.insert(0, os.getcwd()) if os.getcwd() not in sys.path else None
+
 # determine how we're run
 test_runners = {'test', 'nosetest', 'pytest', '_jb_pytest_runner.py', '_jb_unittest_runner.py'}
 cmd_args = (basename(v) for v in sys.argv)
@@ -521,7 +525,7 @@ def load_framework_support(vars=globals()):
             vars['OMEGA_STORE_BACKENDS'].update(backends)
 
 
-def load_eedefaults():
+def load_eedefaults(vars=globals()):
     # ensure eedefaults are loaded prior to any other processing
     # -- fixes load order issue in Python 3.14 causing eedfaults to be applied too late
     try:
@@ -529,7 +533,7 @@ def load_eedefaults():
     except:
         return
     else:
-        update_from_obj(eedefaults)
+        update_from_obj(eedefaults, vars=vars)
 
 
 @inprogress(text='loading configuration...')
@@ -586,8 +590,6 @@ if not is_cli_run and is_test_run:
     OMEGA_RESTAPI_URL = 'local'
     OMEGA_LOGLEVEL = 'INFO'
 else:
-    # load commerical defaults
-    load_eedefaults()
     # overrides in actual operations
     load_config_file()
 
