@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest import TestCase, skip
 
@@ -308,6 +308,19 @@ class JobTests(TestCase):
         meta = om.jobs.schedule('testjob', run_at='00 08 * * 1,2,3')
         self._check_scheduled_job()
         self.assertEqual(meta.attributes['config']['run-at'], '00 08 * * 1,2,3')
+
+    def test_schedule_job_with_string_job_run_ts(self):
+        # job_runs[].ts comes back as a string after the metadata is edited
+        # in the dashboard; scheduling must still work (#616)
+        om = self.om
+        om.jobs.create(["print('hello')"], 'testjob')
+        meta = om.jobs.metadata('testjob')
+        meta.attributes['job_runs'] = [{'status': 'OK', 'ts': '2026-10-01T06:30:00'}]
+        meta.save()
+        meta = om.jobs.schedule('testjob', run_at='00 08 * * *')
+        trigger = meta.attributes['triggers'][-1]
+        self.assertEqual(trigger['status'], 'PENDING')
+        self.assertEqual(trigger['run-at'], datetime(2026, 10, 1, 8, 0))
 
     def test_create_jobs_from_code(self):
         om = self.om

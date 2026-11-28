@@ -7,6 +7,7 @@ from uuid import uuid4
 import gridfs
 import yaml
 from croniter import croniter
+from dateutil import parser as dateparser
 from jupyter_client import AsyncKernelManager
 from nbformat import NotebookNode
 from nbformat import read as nbread
@@ -131,6 +132,20 @@ class NotebookBackend(BaseDataBackend):
             return nb
         else:
             raise gridfs.errors.NoFile(f">{name}< does not exist in jobs bucket '{self.store.bucket}'")
+
+
+def _as_datetime(value):
+    """ return value as a naive UTC datetime
+
+    job_runs[].ts is stored as a datetime, but becomes a string when the
+    job's metadata is edited and saved as JSON, e.g. in the dashboard.
+    croniter only accepts datetimes, so parse strings back.
+    """
+    if isinstance(value, str):
+        value = dateparser.parse(value)
+    if isinstance(value, datetime.datetime) and value.tzinfo is not None:
+        value = value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+    return value
 
 
 class NotebookMixin:
@@ -531,7 +546,7 @@ class NotebookMixin:
         if last_run is None:
             job_runs = attrs.get('job_runs')
             if job_runs:
-                last_run = job_runs[-1]['ts']
+                last_run = _as_datetime(job_runs[-1]['ts'])
             else:
                 last_run = datetime.datetime.utcnow()
         # calculate next run time
