@@ -1,0 +1,191 @@
+Release notes release/0.16.0
+============================
+
+Released 2023-11-09
+
+What’s Changed
+--------------
+
+-  upgrade dependencies to pandas, jupyterhub by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/324
+-  ensure sql connection string secrets are properly encoded by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/327
+-  Enhance tracking by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/316
+-  upgrade rabbitmq to latest release by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/328
+-  refactor jupyterlab 4.0 dependency to nbclassic by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/330
+-  more promotion backends by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/285
+-  combine swagger docs from multiple services by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/331
+-  Create SECURITY.md by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/333
+-  [Snyk] Security upgrade tensorflow/tensorflow from
+   2.11.0rc1-gpu-jupyter to 2.13.0rc0-gpu-jupyter by @omegaml in
+   https://github.com/omegaml/omegaml/pull/329
+-  upgrade dependencies by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/334
+-  Fix flask dependency by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/338
+-  update jupyter hub by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/343
+-  fix IndexError on empty model version by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/345
+-  Fix 346 empty swagger input by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/347
+-  [Snyk] Security upgrade tensorflow/tensorflow from
+   2.13.0rc0-gpu-jupyter to 2.13.0-gpu-jupyter by @omegaml in
+   https://github.com/omegaml/omegaml/pull/349
+-  [Snyk] Security upgrade tensorflow/tensorflow from
+   2.13.0rc0-gpu-jupyter to 2.13.0rc2-gpu-jupyter by @omegaml in
+   https://github.com/omegaml/omegaml/pull/337
+-  [Snyk] Security upgrade jupyterhub/jupyterhub from latest to 4.0.2 by
+   @omegaml in https://github.com/omegaml/omegaml/pull/342
+-  Update sql docs by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/323
+-  cli: om load from config file, if exists outside of current directory
+   by @miraculixx in https://github.com/omegaml/omegaml/pull/348
+-  update makefile by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/350
+-  log exceptions in runtime tasks by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/336
+
+**Full Changelog**:
+https://github.com/omegaml/omegaml/compare/release/0.15.5…release/0.16.0
+
+Changes
+~~~~~~~
+
+-  Bump version: 0.16.0-rc2 → 0.16.0
+   `4bde4c9 <https://github.com/omegaml/omegaml/commit/4bde4c9>`__
+-  Bump version: 0.16.0-rc1 → 0.16.0-rc2
+   `dac6d26 <https://github.com/omegaml/omegaml/commit/dac6d26>`__
+-  Bump version: 0.16.0-dev1 → 0.16.0-rc1
+   `7debfdd <https://github.com/omegaml/omegaml/commit/7debfdd>`__
+-  Bump version: 0.15.6-rc1 → 0.16.0-dev1
+   `65365c5 <https://github.com/omegaml/omegaml/commit/65365c5>`__
+-  Bump version: 0.15.6-dev7 → 0.15.6-rc1
+   `98238f2 <https://github.com/omegaml/omegaml/commit/98238f2>`__
+-  upgrade circleci machine image
+   `30fe7c7 <https://github.com/omegaml/omegaml/commit/30fe7c7>`__
+-  Bump version: 0.15.6-dev6 → 0.15.6-dev7
+   `1aaa961 <https://github.com/omegaml/omegaml/commit/1aaa961>`__
+-  Bump version: 0.15.6-dev5 → 0.15.6-dev6
+   `6646414 <https://github.com/omegaml/omegaml/commit/6646414>`__
+-  jupyter tests ensure file browser is shown
+   `d6c6174 <https://github.com/omegaml/omegaml/commit/d6c6174>`__
+-  Bump version: 0.15.6-dev4 → 0.15.6-dev5
+   `4db250a <https://github.com/omegaml/omegaml/commit/4db250a>`__
+-  Bump version: 0.15.6-dev3 → 0.15.6-dev4
+   `d57db2a <https://github.com/omegaml/omegaml/commit/d57db2a>`__
+-  Bump version: 0.15.6-dev2 → 0.15.6-dev3
+   `a67e23a <https://github.com/omegaml/omegaml/commit/a67e23a>`__
+-  Bump version: 0.15.6-dev1 → 0.15.6-dev2
+   `c62764e <https://github.com/omegaml/omegaml/commit/c62764e>`__
+-  update tensorflow dependencies
+   `4b4169a <https://github.com/omegaml/omegaml/commit/4b4169a>`__
+-  release build 0.15.6
+   `d5b9bba <https://github.com/omegaml/omegaml/commit/d5b9bba>`__
+-  Merge pull request #336 from omegaml/log-exception-on-debug
+   `1983e3f <https://github.com/omegaml/omegaml/commit/1983e3f>`__
+-  log exceptions in runtime tasks
+   `b84f55d <https://github.com/omegaml/omegaml/commit/b84f55d>`__
+-  Merge pull request #350 from omegaml/update-devtools
+   `a3de3a0 <https://github.com/omegaml/omegaml/commit/a3de3a0>`__
+-  update makefile
+   `c8d1046 <https://github.com/omegaml/omegaml/commit/c8d1046>`__
+-  Merge pull request #348 from omegaml/fix-config-loading-basedir
+   `3818ae3 <https://github.com/omegaml/omegaml/commit/3818ae3>`__
+-  cli: om load from config file, if exists outside of current directory
+   `9b63018 <https://github.com/omegaml/omegaml/commit/9b63018>`__
+-  Merge pull request #323 from omegaml/update-sql-docs
+   `c9c0cc3 <https://github.com/omegaml/omegaml/commit/c9c0cc3>`__
+-  update sql alchemy docs
+   `30ed63d <https://github.com/omegaml/omegaml/commit/30ed63d>`__
+-  Merge pull request #342 from
+   omegaml/snyk-fix-479d77bb0802d2754e2fdacd6ff5aecd
+   `8698538 <https://github.com/omegaml/omegaml/commit/8698538>`__
+-  Merge pull request #337 from
+   omegaml/snyk-fix-ebd741390d0f8310f7b24ca8d1307dfe
+   `205ee54 <https://github.com/omegaml/omegaml/commit/205ee54>`__
+-  Merge pull request #349 from
+   omegaml/snyk-fix-9b805d15a403d746f4086e41440b466d
+   `d6f43bd <https://github.com/omegaml/omegaml/commit/d6f43bd>`__
+-  Merge pull request #347 from omegaml/fix-346-empty-swagger-input
+   `a28d7cf <https://github.com/omegaml/omegaml/commit/a28d7cf>`__
+-  swagger specs are valid even if no input schema is specified
+   `0a0a295 <https://github.com/omegaml/omegaml/commit/0a0a295>`__
+-  Merge pull request #345 from omegaml/fix-344-empty-model-version
+   `3129354 <https://github.com/omegaml/omegaml/commit/3129354>`__
+-  Update test_modelversions.py
+   `53325d9 <https://github.com/omegaml/omegaml/commit/53325d9>`__
+-  Merge pull request #343 from omegaml/fix-jupyter-upgrade-issue
+   `92ee2b6 <https://github.com/omegaml/omegaml/commit/92ee2b6>`__
+-  update jupyter hub
+   `f1288b2 <https://github.com/omegaml/omegaml/commit/f1288b2>`__
+-  Merge pull request #338 from omegaml/fix-flask-dependency
+   `165963d <https://github.com/omegaml/omegaml/commit/165963d>`__
+-  Merge pull request #334 from omegaml/upgrade-dependencies
+   `598cc95 <https://github.com/omegaml/omegaml/commit/598cc95>`__
+-  upgrade dependencies
+   `2f25ed4 <https://github.com/omegaml/omegaml/commit/2f25ed4>`__
+-  Merge pull request #329 from
+   omegaml/snyk-fix-424c2e7c4a49f71671d6383f35f0b49a
+   `40ab916 <https://github.com/omegaml/omegaml/commit/40ab916>`__
+-  Merge pull request #333 from omegaml/miraculixx-patch-4
+   `48a01f0 <https://github.com/omegaml/omegaml/commit/48a01f0>`__
+-  Create SECURITY.md
+   `3ebc051 <https://github.com/omegaml/omegaml/commit/3ebc051>`__
+-  Merge pull request #331 from omegaml/combine-swagger
+   `eb5e8b0 <https://github.com/omegaml/omegaml/commit/eb5e8b0>`__
+-  combine swagger docs from multiple services
+   `be107d6 <https://github.com/omegaml/omegaml/commit/be107d6>`__
+-  Merge pull request #285 from omegaml/promotion-backends
+   `f3c81c3 <https://github.com/omegaml/omegaml/commit/f3c81c3>`__
+-  formalize promotion methods
+   `bd8df75 <https://github.com/omegaml/omegaml/commit/bd8df75>`__
+-  Merge pull request #330 from omegaml/fix-nbclassic
+   `7669b26 <https://github.com/omegaml/omegaml/commit/7669b26>`__
+-  Merge pull request #328 from omegaml/upgrade-rabbitmq
+   `0dcce9b <https://github.com/omegaml/omegaml/commit/0dcce9b>`__
+-  upgrade rabbitmq to latest release
+   `9bb57ef <https://github.com/omegaml/omegaml/commit/9bb57ef>`__
+-  Merge pull request #316 from omegaml/enhance-tracking
+   `fdcd63a <https://github.com/omegaml/omegaml/commit/fdcd63a>`__
+-  update task tracking semantics from inside runtime
+   `872fb56 <https://github.com/omegaml/omegaml/commit/872fb56>`__
+-  Merge pull request #327 from omegaml/encode-sqlsecrets-url
+   `5b51cdc <https://github.com/omegaml/omegaml/commit/5b51cdc>`__
+-  ensure sql connection string secrets are properly encoded
+   `19d6cb2 <https://github.com/omegaml/omegaml/commit/19d6cb2>`__
+-  Merge pull request #324 from omegaml/upgrade-dependencies
+   `9b30d8c <https://github.com/omegaml/omegaml/commit/9b30d8c>`__
+-  upgrade dependencies to pandas, jupyterhub
+   `dfc4ab4 <https://github.com/omegaml/omegaml/commit/dfc4ab4>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fix: scripts/docker/jyhub/Dockerfile to reduce vulnerabilities
+   `1fc5506 <https://github.com/omegaml/omegaml/commit/1fc5506>`__
+-  fix: scripts/docker/omegaml-tensorflow/Dockerfile to reduce
+   vulnerabilities
+   `ca2c3dc <https://github.com/omegaml/omegaml/commit/ca2c3dc>`__
+-  fix: scripts/docker/omegaml-tensorflow/Dockerfile to reduce
+   vulnerabilities
+   `d28b3dc <https://github.com/omegaml/omegaml/commit/d28b3dc>`__
+-  fix IndexError on empty model version
+   `f5885a5 <https://github.com/omegaml/omegaml/commit/f5885a5>`__
+-  fix flask json dependency
+   `395e54a <https://github.com/omegaml/omegaml/commit/395e54a>`__
+-  fix: scripts/docker/omegaml-tensorflow/Dockerfile to reduce
+   vulnerabilities
+   `e7db15c <https://github.com/omegaml/omegaml/commit/e7db15c>`__
+
+Refactor
+~~~~~~~~
+
+-  refactor jupyterlab 4.0 dependency to nbclassic
+   `1aa9dd9 <https://github.com/omegaml/omegaml/commit/1aa9dd9>`__

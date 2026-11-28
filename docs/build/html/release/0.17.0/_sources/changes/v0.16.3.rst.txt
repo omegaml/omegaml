@@ -1,0 +1,163 @@
+Release notes release/0.16.3
+============================
+
+Released 2024-07-25
+
+dependency upgrades, enhancements for minibatch streams, data pipelines,
+service APIs, UX.
+
+What’s Changed
+--------------
+
+-  TrackingProvider now allows for batching of data retrieval by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/384
+-  update dependencies by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/390
+-  update R installation by @omegaml in
+   https://github.com/omegaml/omegaml/pull/391
+-  improve om.streams semantics by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/388
+-  update based on snyk report by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/395
+-  update datapipeline for parallel map-style processing by @miraculixx
+   in https://github.com/omegaml/omegaml/pull/396
+-  update dependencies by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/397
+-  fix recursion issue due to pymongo 4.7 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/405
+-  fix tracking fails on added columns by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/401
+-  enhance input/output validation by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/398
+-  add R installation to docker file by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/399
+-  dependency updates by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/407
+-  enable nullable schema fields by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/413
+-  ensure runtime.require() updates routing options by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/417
+-  AuthenticationEnv.prepare_env() sets None value as blank by
+   @miraculixx in https://github.com/omegaml/omegaml/pull/415
+-  disable monogdb logging on startup by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/418
+-  add loading progress spinner by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/419
+-  ignore local mongoinit.js by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/420
+-  fix pandas 2.x compatibility by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/421
+-  allow setting worker concurrency from env by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/422
+-  fix envinstall pip error by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/426
+-  speedup omega base loading by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/427
+-  Bump version: 0.16.2 → 0.16.3-dev1 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/409
+
+**Full Changelog**:
+https://github.com/omegaml/omegaml/compare/release/0.16.2…release/0.16.3
+
+Changes
+~~~~~~~
+
+-  Merge pull request #409 from omegaml/release-build-0.16.3
+   `14c7a12 <https://github.com/omegaml/omegaml/commit/14c7a12>`__
+-  build release 0.16.3
+   `dac9438 <https://github.com/omegaml/omegaml/commit/dac9438>`__
+-  Merge pull request #427 from omegaml/speedup-loading
+   `57f9d7a <https://github.com/omegaml/omegaml/commit/57f9d7a>`__
+-  improve loading spee
+   `e948c45 <https://github.com/omegaml/omegaml/commit/e948c45>`__
+-  speed up loading times
+   `db73130 <https://github.com/omegaml/omegaml/commit/db73130>`__
+-  Merge pull request #426 from omegaml/fix-envinstall-autoinstall
+   `5306f73 <https://github.com/omegaml/omegaml/commit/5306f73>`__
+-  Merge pull request #422 from
+   omegaml/enable-setting-worker-concurrency-env
+   `aa34ea8 <https://github.com/omegaml/omegaml/commit/aa34ea8>`__
+-  allow setting worker concurrency from env
+   `627dc2c <https://github.com/omegaml/omegaml/commit/627dc2c>`__
+-  Merge pull request #421 from omegaml/fix-pandas-2.x-compat
+   `5aa28dc <https://github.com/omegaml/omegaml/commit/5aa28dc>`__
+-  Merge pull request #420 from omegaml/ignore-local-mongo-init.js
+   `f83c747 <https://github.com/omegaml/omegaml/commit/f83c747>`__
+-  ignore local mongoinit.js
+   `42ee338 <https://github.com/omegaml/omegaml/commit/42ee338>`__
+-  Merge pull request #419 from omegaml/add-loading-progress
+   `9a6c440 <https://github.com/omegaml/omegaml/commit/9a6c440>`__
+-  add loading progress spinner
+   `9826bcd <https://github.com/omegaml/omegaml/commit/9826bcd>`__
+-  Merge pull request #418 from omegaml/disable-mongo-debugging
+   `a1c1c3c <https://github.com/omegaml/omegaml/commit/a1c1c3c>`__
+-  disable monogdb logging on startup
+   `b3a0f96 <https://github.com/omegaml/omegaml/commit/b3a0f96>`__
+-  Merge pull request #415 from omegaml/fix-runtime-env-values
+   `f91e8ad <https://github.com/omegaml/omegaml/commit/f91e8ad>`__
+-  AuthenticationEnv.prepare_env() sets None value as blank
+   `530eb3b <https://github.com/omegaml/omegaml/commit/530eb3b>`__
+-  Merge pull request #417 from omegaml/fix-runtime-routing
+   `787697e <https://github.com/omegaml/omegaml/commit/787697e>`__
+-  ensure runtime.require() updates routing options
+   `1b17ba5 <https://github.com/omegaml/omegaml/commit/1b17ba5>`__
+-  Merge pull request #413 from omegaml/enable-api-nullable-fields
+   `dc66fae <https://github.com/omegaml/omegaml/commit/dc66fae>`__
+-  enable nullable schema fields
+   `1cdab99 <https://github.com/omegaml/omegaml/commit/1cdab99>`__
+-  Merge pull request #407 from omegaml/fix-dependabot-alerts
+   `00e52b8 <https://github.com/omegaml/omegaml/commit/00e52b8>`__
+-  dependency updates
+   `bb32e26 <https://github.com/omegaml/omegaml/commit/bb32e26>`__
+-  Merge pull request #399 from omegaml/add-r-setup-dockerfile
+   `bbc93be <https://github.com/omegaml/omegaml/commit/bbc93be>`__
+-  add R installation to docker file
+   `6dffcda <https://github.com/omegaml/omegaml/commit/6dffcda>`__
+-  Merge pull request #398 from omegaml/enhance-input-validation
+   `1449a2d <https://github.com/omegaml/omegaml/commit/1449a2d>`__
+-  enhance input/output validation
+   `0054554 <https://github.com/omegaml/omegaml/commit/0054554>`__
+-  Merge pull request #401 from omegaml/fix-400-datarevision-columns
+   `6603822 <https://github.com/omegaml/omegaml/commit/6603822>`__
+-  Merge pull request #405 from omegaml/fix-pymongo-4.7-timeout
+   `7544f43 <https://github.com/omegaml/omegaml/commit/7544f43>`__
+-  Merge pull request #397 from omegaml/update-dependencies
+   `dd7922d <https://github.com/omegaml/omegaml/commit/dd7922d>`__
+-  update dependencies
+   `730bb77 <https://github.com/omegaml/omegaml/commit/730bb77>`__
+-  Merge pull request #396 from omegaml/update-datapipeline
+   `3868ff2 <https://github.com/omegaml/omegaml/commit/3868ff2>`__
+-  update datapipeline for parallel map-style processing
+   `5fdd88c <https://github.com/omegaml/omegaml/commit/5fdd88c>`__
+-  Merge pull request #395 from omegaml/update-snyk-ignores
+   `1ee0f38 <https://github.com/omegaml/omegaml/commit/1ee0f38>`__
+-  update based on snyk report
+   `8e192b4 <https://github.com/omegaml/omegaml/commit/8e192b4>`__
+-  Merge pull request #388 from omegaml/improve-streams-handling
+   `c325c5a <https://github.com/omegaml/omegaml/commit/c325c5a>`__
+-  improve om.streams semantics
+   `2fe5bfc <https://github.com/omegaml/omegaml/commit/2fe5bfc>`__
+-  Merge pull request #391 from omegaml/update-pyver-releases
+   `55e7049 <https://github.com/omegaml/omegaml/commit/55e7049>`__
+-  update R installation
+   `5f96069 <https://github.com/omegaml/omegaml/commit/5f96069>`__
+-  Merge pull request #390 from omegaml/update-dependencies
+   `ad55440 <https://github.com/omegaml/omegaml/commit/ad55440>`__
+-  update dependencies
+   `0cc8b4d <https://github.com/omegaml/omegaml/commit/0cc8b4d>`__
+-  Merge pull request #384 from omegaml/enable-batched-tracking-data
+   `2e2a1ef <https://github.com/omegaml/omegaml/commit/2e2a1ef>`__
+-  TrackingProvider now allows for batching of data retrieval
+   `99a174d <https://github.com/omegaml/omegaml/commit/99a174d>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fix envinstall pip error
+   `806d4bb <https://github.com/omegaml/omegaml/commit/806d4bb>`__
+-  fix pandas 2.x compatibility
+   `83433b1 <https://github.com/omegaml/omegaml/commit/83433b1>`__
+-  fix datarevisions traces on column additions
+   `1bfc5df <https://github.com/omegaml/omegaml/commit/1bfc5df>`__
+-  fix recursion issue due to pymongo 4.7
+   `f5ee78e <https://github.com/omegaml/omegaml/commit/f5ee78e>`__

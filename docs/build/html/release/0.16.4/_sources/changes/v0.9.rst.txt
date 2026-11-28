@@ -1,0 +1,15 @@
+Release notes release/0.9
+=========================
+
+Released 2018-10-23
+
+Changes
+~~~~~~~
+
+-  Merge pull request #72 from miraculixx/patrick/split-ce
+   `c3e6ba4 <https://github.com/omegaml/omegaml/commit/c3e6ba4>`__
+-  split community edition
+   `af2ed44 <https://github.com/omegaml/omegaml/commit/af2ed44>`__
+-  enable more statistics split omega community edition, make enterprise
+   edition
+   `7201ebf <https://github.com/omegaml/omegaml/commit/7201ebf>`__

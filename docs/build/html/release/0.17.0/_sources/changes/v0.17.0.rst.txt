@@ -1,0 +1,35 @@
+Release notes release/0.17.0-rc1
+================================
+
+Released 2025-04-12
+
+What’s Changed
+--------------
+
+-  chore: tensorflow is lazy-loaded by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/453
+-  chore - fix ipython dependency issue by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/479
+-  chore: support celery 5.5 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/478
+-  build(deps): bump gunicorn from 22.0.0 to 23.0.0 in /omegaml/server
+   by @dependabot in https://github.com/omegaml/omegaml/pull/473
+-  docs: add changes 0.16.4 by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/482
+-  chore: various updates by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/481
+-  enable core gen ai features by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/476
+-  ci: publish latest docs to gh-pages by @miraculixx in
+   https://github.com/omegaml/omegaml/pull/486
+
+**Full Changelog**:
+https://github.com/omegaml/omegaml/compare/release/0.16.4…release/0.17.0-rc1
+
+Changes
+~~~~~~~
+
+-  Merge pull request #486 from omegaml/circleci-publish-docs
+   `317c943 <https://github.com/omegaml/omegaml/commit/317c943>`__
+-  ci: publish latest docs to gh-pages
+   `907d793 <https://github.com/omegaml/omegaml/commit/907d793>`__

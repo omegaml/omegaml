@@ -1,0 +1,292 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# sample using an Estimator model\n",
+    "\n",
+    "import tensorflow.compat.v1 as tf\n",
+    "tf.disable_v2_behavior()\n",
+    "\n",
+    "import numpy as np\n",
+    "\n",
+    "# load mnist dataset\n",
+    "((train_data, train_labels), (eval_data, eval_labels)) = tf.keras.datasets.mnist.load_data()\n",
+    "\n",
+    "train_data = train_data/np.float32(255)\n",
+    "train_labels = train_labels.astype(np.int32)  # not required\n",
+    "\n",
+    "eval_data = eval_data/np.float32(255)\n",
+    "eval_labels = eval_labels.astype(np.int32)  # not required\n",
+    "\n",
+    "# Create the Estimator\n",
+    "def make_classifier(model_dir=None):\n",
+    "    import tensorflow.compat.v1 as tf\n",
+    "    tf.disable_v2_behavior()\n",
+    "    \n",
+    "    def cnn_model_fn(features, labels, mode):\n",
+    "      import tensorflow.compat.v1 as tf\n",
+    "      tf.disable_v2_behavior()\n",
+    "    \n",
+    "      import numpy as np\n",
+    "      \"\"\"Model function for CNN.\"\"\"\n",
+    "      # Input Layer\n",
+    "      if isinstance(features, dict):\n",
+    "        features = features['x']\n",
+    "      input_layer = tf.reshape(features, [-1, 28, 28, 1])\n",
+    "        \n",
+    "\n",
+    "      # Convolutional Layer #1\n",
+    "      conv1 = tf.layers.conv2d(\n",
+    "          inputs=input_layer,\n",
+    "          filters=32,\n",
+    "          kernel_size=[5, 5],\n",
+    "          padding=\"same\",\n",
+    "          activation=tf.nn.relu)\n",
+    "\n",
+    "      # Pooling Layer #1\n",
+    "      pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)\n",
+    "\n",
+    "      # Convolutional Layer #2 and Pooling Layer #2\n",
+    "      conv2 = tf.layers.conv2d(\n",
+    "          inputs=pool1,\n",
+    "          filters=64,\n",
+    "          kernel_size=[5, 5],\n",
+    "          padding=\"same\",\n",
+    "          activation=tf.nn.relu)\n",
+    "      pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)\n",
+    "\n",
+    "      # Dense Layer\n",
+    "      pool2_flat = tf.reshape(pool2, [-1, 7 * 7 * 64])\n",
+    "      dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)\n",
+    "      dropout = tf.layers.dropout(\n",
+    "          inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)\n",
+    "\n",
+    "      # Logits Layer\n",
+    "      logits = tf.layers.dense(inputs=dropout, units=10)\n",
+    "\n",
+    "      predictions = {\n",
+    "          # Generate predictions (for PREDICT and EVAL mode)\n",
+    "          \"classes\": tf.argmax(input=logits, axis=1),\n",
+    "          # Add `softmax_tensor` to the graph. It is used for PREDICT and by the\n",
+    "          # `logging_hook`.\n",
+    "          \"probabilities\": tf.nn.softmax(logits, name=\"softmax_tensor\")\n",
+    "      }\n",
+    "\n",
+    "      if mode == tf.estimator.ModeKeys.PREDICT:\n",
+    "        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)\n",
+    "\n",
+    "      # Calculate Loss (for both TRAIN and EVAL modes)\n",
+    "      loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)\n",
+    "\n",
+    "      # Configure the Training Op (for TRAIN mode)\n",
+    "      if mode == tf.estimator.ModeKeys.TRAIN:\n",
+    "        optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)\n",
+    "        train_op = optimizer.minimize(\n",
+    "            loss=loss,\n",
+    "            global_step=tf.train.get_global_step())\n",
+    "        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)\n",
+    "\n",
+    "      # Add evaluation metrics (for EVAL mode)\n",
+    "      eval_metric_ops = {\n",
+    "          \"accuracy\": tf.metrics.accuracy(\n",
+    "              labels=labels, predictions=predictions[\"classes\"])\n",
+    "      }\n",
+    "      return tf.estimator.EstimatorSpec(\n",
+    "          mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)\n",
+    "    \n",
+    "    mnist_classifier = tf.estimator.Estimator(model_fn=cnn_model_fn, model_dir=model_dir)\n",
+    "    return mnist_classifier\n",
+    "    \n",
+    "mnist_classifier = make_classifier(model_dir=\"/tmp/mnist_convnet_model\")\n",
+    "# Set up logging for predictions\n",
+    "tensors_to_log = {\"probabilities\": \"softmax_tensor\"}\n",
+    "\n",
+    "logging_hook = tf.train.LoggingTensorHook(\n",
+    "    tensors=tensors_to_log, every_n_iter=50)\n",
+    "\n",
+    "# Train the model\n",
+    "train_input_fn = tf.estimator.inputs.numpy_input_fn(\n",
+    "    x={\"x\": train_data},\n",
+    "    y=train_labels,\n",
+    "    batch_size=100,\n",
+    "    num_epochs=None,\n",
+    "    shuffle=True)\n",
+    "\n",
+    "# train one step and display the probabilties\n",
+    "mnist_classifier.train(\n",
+    "    input_fn=train_input_fn,\n",
+    "    steps=1,\n",
+    "    hooks=[logging_hook])\n",
+    "# evaluate\n",
+    "eval_input_fn = tf.estimator.inputs.numpy_input_fn(\n",
+    "    x={\"x\": eval_data},\n",
+    "    y=eval_labels,\n",
+    "    num_epochs=1,\n",
+    "    shuffle=False)\n",
+    "eval_results = mnist_classifier.evaluate(input_fn=eval_input_fn)\n",
+    "print(eval_results)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!ls /tmp/mnist_convnet_model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!pip freeze | grep dill"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import omegaml as om \n",
+    "\n",
+    "om.models.get('tf-model-mnist-fn')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# we can save the model so it can be reused and re-fitted on the cluster\n",
+    "\n",
+    "import omegaml as om \n",
+    "from omegaml.backends.tensorflow import TFEstimatorModel\n",
+    "\n",
+    "om.datasets.put(train_data, 'mnist-X')\n",
+    "om.datasets.put(train_labels, 'mnist-Y')\n",
+    "\n",
+    "saveable_model = TFEstimatorModel(estimator_fn=make_classifier, model=mnist_classifier, v1_compat=True)\n",
+    "om.models.put(saveable_model, 'tf-model-mnist-fn')\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# fit on the cluster. this may take a while\n",
+    "om.runtime.model('tf-model-mnist-fn').fit('mnist-X', 'mnist-Y').get()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# re-load the model and predict from a numpy array\n",
+    "train_data = om.datasets.get('mnist-X')\n",
+    "\n",
+    "X = train_data[0:2, :]\n",
+    "\n",
+    "model_ = om.models.get('tf-model-mnist-fn')\n",
+    "[v for v in model_.predict(X)]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# predict on the cluster via direct input as numpy, or the numpy array stored as a dataset\n",
+    "train_data = om.datasets.get('mnist-X')\n",
+    "\n",
+    "#we can save the data as stacked images\n",
+    "om.datasets.put(train_data[0:2, :], 'mnist-sample')\n",
+    "om.runtime.model('tf-model-mnist-fn').predict('mnist-sample').get()\n",
+    "# or just pass the data as is\n",
+    "om.runtime.model('tf-model-mnist-fn').predict(train_data[0:2, :]).get()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# we can save the model as a SavedModel using a standard or custom input fn\n",
+    "# ServingInput is a helper to create a corresponding input fn from a given like=dataset\n",
+    "\n",
+    "from omegaml.backends.tensorflow.tfsavedmodel import ServingInput\n",
+    "\n",
+    "input_fn = ServingInput(features=['x'], like=train_data.reshape((-1, 28, 28, 1)), v1_compat=True)\n",
+    "\n",
+    "om.models.put(mnist_classifier, 'tf-model-mnist-estimator', \n",
+    "              serving_input_fn=input_fn)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# once saved we can again use the runtime to predict\n",
+    "om.datasets.put(train_data[0:2, :].reshape((-1, 28, 28, 1)), 'mnist-sample')\n",
+    "om.runtime.model('tf-model-mnist-estimator').predict('mnist-sample').get()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# or use the model REST API \n",
+    "import requests\n",
+    "from omegaml.client.auth import OmegaRestApiAuth\n",
+    "\n",
+    "url = getattr(om.defaults, 'OMEGA_RESTAPI_URL', 'http://localhost:5000')\n",
+    "auth = OmegaRestApiAuth.make_from(om)\n",
+    "dataset = 'mnist-sample'\n",
+    "modelname = 'tf-model-mnist-estimator'\n",
+    "predict_url = '{url}/api/v1/model/{modelname}/predict?datax={dataset}'.format(**locals())\n",
+    "resp = requests.put(predict_url, auth=auth)\n",
+    "print(predict_url)\n",
+    "print(resp.json())"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.9"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

@@ -1,0 +1,332 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## omega|ml - snowflake demo\n",
+    "\n",
+    "This demo demonstrates using omegaml with snowflake data sources directly in omega|ml\n",
+    "\n",
+    "* store & retrieve connections to snowflake for dynamic queries using SQL (dynamic: at runtime)\n",
+    "* store & retrieve views to snowflake (storing connection & static SQL)\n",
+    "* copy data from snowflake to omega|ml for further processing\n",
+    "\n",
+    "Installation\n",
+    "\n",
+    "1. install dependencies: `pip install --user -U snowflake-sqlalchemy==1.2.1 cffi==1.14`\n",
+    "2. register snow flake: \n",
+    "  \n",
+    "      from sqlalchemy.dialects import registry\n",
+    "      registry.register('snowflake', 'snowflake.sqlalchemy', 'dialect')\n",
+    "\n",
+    "Usage\n",
+    "\n",
+    "`om.datasets.put('snowflake://user:password@account', 'omega-dataset-name', sql='select ...', copy=True)`\n",
+    "\n",
+    "details see `help(omx_snowflake)`\n",
+    "\n",
+    "Version history\n",
+    "\n",
+    "- 0.1.0 - initial version (without support for copying data)\n",
+    "- 0.1.1 - support copying of data\n",
+    "- 0.1.2 - provide more robustness in parallel inserts on copy \n",
+    "- 0.1.3 - simplify using the omegaml sqlalchemy plugin"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# install dependencies\n",
+    "!pip install --user -U snowflake-sqlalchemy==1.2.1 'cffi<1.14'\n",
+    "from sqlalchemy.dialects import registry\n",
+    "registry.register('snowflake', 'snowflake.sqlalchemy', 'dialect')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import omegaml as om\n",
+    "\n",
+    "secrets = om.datasets.get('secrets')[0]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# build connection string\n",
+    "from getpass import getpass\n",
+    "#user = input('snowflake user name> ')\n",
+    "#password = getpass('snowflake password> ')\n",
+    "#account = input('snowflake account (remove .snowflake.com)> ')\n",
+    "snowflake_cxstr = 'snowflake://{user}:{password}@{account}/'.format(**secrets)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<sqlalchemy.engine.base.Connection at 0x7fc406afab38>"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# store just the connection\n",
+    "om.datasets.drop('mysnowflake', force=True)\n",
+    "om.datasets.put(snowflake_cxstr, 'mysnowflake')\n",
+    "om.datasets.get('mysnowflake', raw=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>COUNT(*)</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>6001215</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   COUNT(*)\n",
+       "0   6001215"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# store a connection reference with sql \n",
+    "om.datasets.drop('mysnowflake', force=True)\n",
+    "om.datasets.put(snowflake_cxstr, 'mysnowflake', \n",
+    "                sql='select count(*) from snowflake_sample_data.tpch_sf1.lineitem')\n",
+    "om.datasets.get('mysnowflake')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>COUNT(*)</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>6001215</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   COUNT(*)\n",
+       "0   6001215"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# query the connection with a specific sql, returning a pandas dataframe\n",
+    "om.datasets.drop('mysnowflake', force=True)\n",
+    "om.datasets.put(snowflake_cxstr, 'mysnowflake')\n",
+    "om.datasets.get('mysnowflake', \n",
+    "                sql='select count(*) from snowflake_sample_data.tpch_sf1.lineitem')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "1rows [00:00,  5.00rows/s]\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>COUNT(*)</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>6001215</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   COUNT(*)\n",
+       "0   6001215"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# copy the dataset to a native omegaml dataset\n",
+    "om.datasets.drop('mysnowflake', force=True)\n",
+    "om.datasets.put(snowflake_cxstr, \n",
+    "                'mysnowflake', \n",
+    "                sql='select count(*) from snowflake_sample_data.tpch_sf1.lineitem',\n",
+    "                copy=True)\n",
+    "om.datasets.get('mysnowflake')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "100000rows [00:08, 12883.57rows/s]\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "100000"
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# copy the dataset to a native omegaml dataset\n",
+    "om.datasets.drop('mysnowflake', force=True)\n",
+    "om.datasets.put(snowflake_cxstr, \n",
+    "                'mysnowflake', \n",
+    "                sql='select * from snowflake_sample_data.tpch_sf1.lineitem limit 1000',\n",
+    "                parse_dates=['l_shipdate', 'l_receiptdate', 'l_commitdate'],\n",
+    "                chunksize=100,\n",
+    "                append=False,\n",
+    "                copy=True)\n",
+    "len(om.datasets.getl('mysnowflake'))"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

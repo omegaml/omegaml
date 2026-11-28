@@ -1,0 +1,26 @@
+Release notes release/0.7
+=========================
+
+Released 2018-04-30
+
+Changes
+~~~~~~~
+
+-  Merge pull request #61 from miraculixx/patrick/deploy-jupyterhub
+   `7443554 <https://github.com/omegaml/omegaml/commit/7443554>`__
+-  added tutorial
+   `bf2162f <https://github.com/omegaml/omegaml/commit/bf2162f>`__
+-  finalize deployment particularities on dokku
+   `3ef8223 <https://github.com/omegaml/omegaml/commit/3ef8223>`__
+-  changes to enable jupyterhub working
+   `4dffb7d <https://github.com/omegaml/omegaml/commit/4dffb7d>`__
+-  deploy omjobs
+   `1fb81f5 <https://github.com/omegaml/omegaml/commit/1fb81f5>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fix tests
+   `881992a <https://github.com/omegaml/omegaml/commit/881992a>`__
+-  fix config api to get based on qualifier
+   `a565df6 <https://github.com/omegaml/omegaml/commit/a565df6>`__
