@@ -582,6 +582,21 @@ def setup_logging():
     logger.setLevel(OMEGA_LOGLEVEL)
 
 
+def disable_telemetry():
+    """disables on-by-default telemetry collection in frameworks
+
+    .. versionadded:: NEXT
+        disable telemetry for onnxruntime, mlflow and generally set DO_NOT_TRACK env variable
+    """
+    # disable onnxruntime telemetry collection, due to https://github.com/microsoft/onnxruntime/blob/main/docs/Privacy.md
+    os.environ.setdefault('ORT_DISABLE_TELEMETRY', '1')
+    os.environ.setdefault('ORT_LOGGING_LEVEL', 'ERROR')
+    # disable mlflow telemetry https://mlflow.org/docs/latest/community/usage-tracking/
+    os.environ.setdefault('MLFLOW_DISABLE_TELEMETRY', 'true')
+    # general do not track https://donottrack.sh/
+    os.environ.setdefault('DO_NOT_TRACK', '1')
+
+
 # -- test support
 if not is_cli_run and is_test_run:
     # this is to avoid using production settings during test
@@ -594,6 +609,7 @@ else:
     load_config_file()
 
 setup_logging()
+disable_telemetry()
 # load extensions, always last step to ensure we have user configs loaded
 update_from_env()
 
