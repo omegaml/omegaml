@@ -1,0 +1,359 @@
+Release notes release/0.6
+=========================
+
+Released 2018-04-10
+
+Changes
+~~~~~~~
+
+-  Merge pull request #59 from miraculixx/patrick/enable-qualifer-access
+   `ded29b7 <https://github.com/omegaml/omegaml/commit/ded29b7>`__
+-  add management command to authorize a user
+   `7f20e68 <https://github.com/omegaml/omegaml/commit/7f20e68>`__
+-  enable qualifier access to other users’ databases
+   `30148c7 <https://github.com/omegaml/omegaml/commit/30148c7>`__
+-  Merge pull request #54 from miraculixx/patrick/update-ghpages
+   `4037256 <https://github.com/omegaml/omegaml/commit/4037256>`__
+-  Merge pull request #58 from miraculixx/patrick/add-remote-deploy
+   `634124d <https://github.com/omegaml/omegaml/commit/634124d>`__
+-  add source-to-packaged code deploy update docs & tests, simplify
+   custom backend and mixin configuration
+   `d507f88 <https://github.com/omegaml/omegaml/commit/d507f88>`__
+-  Merge pull request #57 from miraculixx/patrick/enable-jupyterhub
+   `a4bf84d <https://github.com/omegaml/omegaml/commit/a4bf84d>`__
+-  Merge pull request #56 from miraculixx/patrick/enable-gridsearch
+   `4e9db40 <https://github.com/omegaml/omegaml/commit/4e9db40>`__
+-  cleanup
+   `4df0a02 <https://github.com/omegaml/omegaml/commit/4df0a02>`__
+-  enable jupyter hub instead of custom nb launcher
+   `aa4d7df <https://github.com/omegaml/omegaml/commit/aa4d7df>`__
+-  add automated gridsearch logging
+   `2a0b506 <https://github.com/omegaml/omegaml/commit/2a0b506>`__
+-  enable content manager to setup omega in jupyterhub and locally
+   `9315f58 <https://github.com/omegaml/omegaml/commit/9315f58>`__
+-  enable admin users to query arbitrary users config
+   `18a46f6 <https://github.com/omegaml/omegaml/commit/18a46f6>`__
+-  add automated gridsearch logging
+   `061094b <https://github.com/omegaml/omegaml/commit/061094b>`__
+-  Merge pull request #55 from miraculixx/patrick/remote-deploy-fixes
+   `f60b1ee <https://github.com/omegaml/omegaml/commit/f60b1ee>`__
+-  Merge pull request #53 from miraculixx/patrick/fix-missing-tests
+   `0b19542 <https://github.com/omegaml/omegaml/commit/0b19542>`__
+-  enable files to be found in whitenoise staticfiles
+   `6aa0bd3 <https://github.com/omegaml/omegaml/commit/6aa0bd3>`__
+-  use cryptic database names
+   `0427dab <https://github.com/omegaml/omegaml/commit/0427dab>`__
+-  Merge pull request #52 from miraculixx/patrick/add-minibatch
+   `755af77 <https://github.com/omegaml/omegaml/commit/755af77>`__
+-  Merge pull request #51 from miraculixx/patrick/fix-releasebuild
+   `e908048 <https://github.com/omegaml/omegaml/commit/e908048>`__
+-  gh pages setup
+   `b860580 <https://github.com/omegaml/omegaml/commit/b860580>`__
+-  add mailgun configuration
+   `ba07e9a <https://github.com/omegaml/omegaml/commit/ba07e9a>`__
+-  cleanup
+   `e19fdf3 <https://github.com/omegaml/omegaml/commit/e19fdf3>`__
+-  add decision_function and score tests
+   `0b6602e <https://github.com/omegaml/omegaml/commit/0b6602e>`__
+-  update api user identification
+   `694048c <https://github.com/omegaml/omegaml/commit/694048c>`__
+-  cleanup js libs
+   `a71a53c <https://github.com/omegaml/omegaml/commit/a71a53c>`__
+-  add missing js
+   `0c96fbe <https://github.com/omegaml/omegaml/commit/0c96fbe>`__
+-  update task names
+   `f3d1983 <https://github.com/omegaml/omegaml/commit/f3d1983>`__
+-  add missing js libs
+   `16afcad <https://github.com/omegaml/omegaml/commit/16afcad>`__
+-  add remote deploy
+   `5d31e2a <https://github.com/omegaml/omegaml/commit/5d31e2a>`__
+-  update minibatch, working version
+   `4302902 <https://github.com/omegaml/omegaml/commit/4302902>`__
+-  new approach to minibatch
+   `f5ce3ed <https://github.com/omegaml/omegaml/commit/f5ce3ed>`__
+-  update minibatch, working version
+   `cb89f5d <https://github.com/omegaml/omegaml/commit/cb89f5d>`__
+-  new approach to minibatch
+   `7f681aa <https://github.com/omegaml/omegaml/commit/7f681aa>`__
+-  add basic package functionality
+   `745f734 <https://github.com/omegaml/omegaml/commit/745f734>`__
+-  add missing release files
+   `85d8e77 <https://github.com/omegaml/omegaml/commit/85d8e77>`__
+-  Merge pull request #49 from miraculixx/patrick/add-ci
+   `686dbf3 <https://github.com/omegaml/omegaml/commit/686dbf3>`__
+-  ensure correct authentication database is used
+   `30ebf54 <https://github.com/omegaml/omegaml/commit/30ebf54>`__
+-  update and fix authentication on tests
+   `07b0c1e <https://github.com/omegaml/omegaml/commit/07b0c1e>`__
+-  update
+   `3ca56c4 <https://github.com/omegaml/omegaml/commit/3ca56c4>`__
+-  update shippable
+   `7fbd5cf <https://github.com/omegaml/omegaml/commit/7fbd5cf>`__
+-  add extra tests for and fix sort order on chuncked inserts / gets
+   `8d5b584 <https://github.com/omegaml/omegaml/commit/8d5b584>`__
+-  update shippable
+   `7f7c9e7 <https://github.com/omegaml/omegaml/commit/7f7c9e7>`__
+-  Merge pull request #48 from miraculixx/patrick/release-scripting-2
+   `7ddda46 <https://github.com/omegaml/omegaml/commit/7ddda46>`__
+-  update admin docs
+   `c1db2c2 <https://github.com/omegaml/omegaml/commit/c1db2c2>`__
+-  finalize release scripting
+   `819aa06 <https://github.com/omegaml/omegaml/commit/819aa06>`__
+-  setup branding in docs
+   `0f48c46 <https://github.com/omegaml/omegaml/commit/0f48c46>`__
+-  add tests, fix issues
+   `df495ec <https://github.com/omegaml/omegaml/commit/df495ec>`__
+-  update docs
+   `666eaf4 <https://github.com/omegaml/omegaml/commit/666eaf4>`__
+-  update distrelease
+   `a5d753f <https://github.com/omegaml/omegaml/commit/a5d753f>`__
+-  update gitignore
+   `1a2a6e5 <https://github.com/omegaml/omegaml/commit/1a2a6e5>`__
+-  update requirements
+   `cffc28c <https://github.com/omegaml/omegaml/commit/cffc28c>`__
+-  add development guide, improve related documentation
+   `e699da2 <https://github.com/omegaml/omegaml/commit/e699da2>`__
+-  enable model mixins
+   `1db6019 <https://github.com/omegaml/omegaml/commit/1db6019>`__
+-  update docs
+   `4c42b89 <https://github.com/omegaml/omegaml/commit/4c42b89>`__
+-  add configuration docs
+   `2eadab7 <https://github.com/omegaml/omegaml/commit/2eadab7>`__
+-  Merge pull request #46 from miraculixx/patrick/virtual-datasets
+   `c6bf9e2 <https://github.com/omegaml/omegaml/commit/c6bf9e2>`__
+-  Merge pull request #45 from miraculixx/patrick/restapi-docs
+   `8363586 <https://github.com/omegaml/omegaml/commit/8363586>`__
+-  add pandas external datasets
+   `b592828 <https://github.com/omegaml/omegaml/commit/b592828>`__
+-  enable store mixins, rename of options to common scheme
+   `d98ef27 <https://github.com/omegaml/omegaml/commit/d98ef27>`__
+-  add ccbackend dependency
+   `d838a3d <https://github.com/omegaml/omegaml/commit/d838a3d>`__
+-  update documentation
+   `6d82c79 <https://github.com/omegaml/omegaml/commit/6d82c79>`__
+-  add rest api docs
+   `3f285d7 <https://github.com/omegaml/omegaml/commit/3f285d7>`__
+-  Merge pull request #44 from miraculixx/patrick/table-viewer
+   `6826b22 <https://github.com/omegaml/omegaml/commit/6826b22>`__
+-  Merge pull request #34 from miraculixx/patrick/dask-runtime
+   `b7983e3 <https://github.com/omegaml/omegaml/commit/b7983e3>`__
+-  add dataset viewer
+   `eb79303 <https://github.com/omegaml/omegaml/commit/eb79303>`__
+-  temporarily switch off daskruntime tests
+   `304d24f <https://github.com/omegaml/omegaml/commit/304d24f>`__
+-  update documentation
+   `6a4d2a6 <https://github.com/omegaml/omegaml/commit/6a4d2a6>`__
+-  several stability fixes
+   `3f7cdf9 <https://github.com/omegaml/omegaml/commit/3f7cdf9>`__
+-  enable creation of job scripts from arbitrary code strings
+   `feb1f87 <https://github.com/omegaml/omegaml/commit/feb1f87>`__
+-  add the dask distributed runtime
+   `e9c6a8c <https://github.com/omegaml/omegaml/commit/e9c6a8c>`__
+-  Merge pull request #33 from miraculixx/patrick/check-jobsapi
+   `7d077f2 <https://github.com/omegaml/omegaml/commit/7d077f2>`__
+-  add jobs documentation
+   `f21db81 <https://github.com/omegaml/omegaml/commit/f21db81>`__
+-  update jobs api to run jobs on cluster and export html
+   `688186f <https://github.com/omegaml/omegaml/commit/688186f>`__
+-  export jobs to html
+   `de93a39 <https://github.com/omegaml/omegaml/commit/de93a39>`__
+-  Merge pull request #28 from miraculixx/patrick/generalize-backends
+   `c0aba62 <https://github.com/omegaml/omegaml/commit/c0aba62>`__
+-  support extensible backends
+   `51dc687 <https://github.com/omegaml/omegaml/commit/51dc687>`__
+-  Merge pull request #26 from miraculixx/patrick/webapp
+   `5358b2f <https://github.com/omegaml/omegaml/commit/5358b2f>`__
+-  Merge pull request #25 from miraculixx/patrick/release-scripting
+   `03d1b30 <https://github.com/omegaml/omegaml/commit/03d1b30>`__
+-  update ui, refactor a few things
+   `34436cb <https://github.com/omegaml/omegaml/commit/34436cb>`__
+-  clean up imports
+   `0b490e3 <https://github.com/omegaml/omegaml/commit/0b490e3>`__
+-  update
+   `c70f621 <https://github.com/omegaml/omegaml/commit/c70f621>`__
+-  update web app
+   `848c859 <https://github.com/omegaml/omegaml/commit/848c859>`__
+-  update release scripts
+   `3ef3743 <https://github.com/omegaml/omegaml/commit/3ef3743>`__
+-  add release scripting
+   `ca74b6a <https://github.com/omegaml/omegaml/commit/ca74b6a>`__
+-  Merge pull request #24 from miraculixx/patrick/migrate-py3
+   `da9883e <https://github.com/omegaml/omegaml/commit/da9883e>`__
+-  improve insertion performance by using multiprocessing
+   `3a209e5 <https://github.com/omegaml/omegaml/commit/3a209e5>`__
+-  update
+   `b29007d <https://github.com/omegaml/omegaml/commit/b29007d>`__
+-  buildpack fix
+   `4c61cf8 <https://github.com/omegaml/omegaml/commit/4c61cf8>`__
+-  update
+   `84028f5 <https://github.com/omegaml/omegaml/commit/84028f5>`__
+-  python 3.6 migration
+   `0def8aa <https://github.com/omegaml/omegaml/commit/0def8aa>`__
+-  add new runtime authentication
+   `bc18cbb <https://github.com/omegaml/omegaml/commit/bc18cbb>`__
+-  Merge pull request #23 from miraculixx/patrick/migrate-py3
+   `8950091 <https://github.com/omegaml/omegaml/commit/8950091>`__
+-  finish first release of documentation.
+   `4d7a1ec <https://github.com/omegaml/omegaml/commit/4d7a1ec>`__
+-  add more docs
+   `001facf <https://github.com/omegaml/omegaml/commit/001facf>`__
+-  more documentation, scheduler quick fix
+   `90bee23 <https://github.com/omegaml/omegaml/commit/90bee23>`__
+-  added first set of reference docs
+   `2ef677c <https://github.com/omegaml/omegaml/commit/2ef677c>`__
+-  add programming guide
+   `fae6a4f <https://github.com/omegaml/omegaml/commit/fae6a4f>`__
+-  improve documentation
+   `bddfaf1 <https://github.com/omegaml/omegaml/commit/bddfaf1>`__
+-  add basic guide docs
+   `7107f1b <https://github.com/omegaml/omegaml/commit/7107f1b>`__
+-  update to cleaned REST API
+   `a9ece54 <https://github.com/omegaml/omegaml/commit/a9ece54>`__
+-  further fixes to support py3
+   `8028d11 <https://github.com/omegaml/omegaml/commit/8028d11>`__
+-  Merge pull request #17 from miraculixx/patrick/add-pagination
+   `1b1ad9f <https://github.com/omegaml/omegaml/commit/1b1ad9f>`__
+-  Merge pull request #10 from miraculixx/patrick/webapp-setup
+   `6f74db1 <https://github.com/omegaml/omegaml/commit/6f74db1>`__
+-  add redoc api documentation
+   `007658b <https://github.com/omegaml/omegaml/commit/007658b>`__
+-  enable REST model api
+   `b459a9b <https://github.com/omegaml/omegaml/commit/b459a9b>`__
+-  enable user specific remote execution, bug fixing
+   `e11e039 <https://github.com/omegaml/omegaml/commit/e11e039>`__
+-  doc extension
+   `8afaceb <https://github.com/omegaml/omegaml/commit/8afaceb>`__
+-  updates for deployment
+   `b7a290e <https://github.com/omegaml/omegaml/commit/b7a290e>`__
+-  implement several performance improvements
+   `d51b58f <https://github.com/omegaml/omegaml/commit/d51b58f>`__
+-  add constance, mongohost dynamic settings
+   `7105974 <https://github.com/omegaml/omegaml/commit/7105974>`__
+-  update
+   `7332dc2 <https://github.com/omegaml/omegaml/commit/7332dc2>`__
+-  updates
+   `8fb2926 <https://github.com/omegaml/omegaml/commit/8fb2926>`__
+-  updates
+   `e206973 <https://github.com/omegaml/omegaml/commit/e206973>`__
+-  updates
+   `f7f8b25 <https://github.com/omegaml/omegaml/commit/f7f8b25>`__
+-  update
+   `75e1aa1 <https://github.com/omegaml/omegaml/commit/75e1aa1>`__
+-  updates
+   `8bc736e <https://github.com/omegaml/omegaml/commit/8bc736e>`__
+-  updates
+   `5a0189c <https://github.com/omegaml/omegaml/commit/5a0189c>`__
+-  updates
+   `f5abfe9 <https://github.com/omegaml/omegaml/commit/f5abfe9>`__
+-  update config
+   `bb97864 <https://github.com/omegaml/omegaml/commit/bb97864>`__
+-  updates
+   `c593b0d <https://github.com/omegaml/omegaml/commit/c593b0d>`__
+-  update requirements for deployment
+   `58ffca1 <https://github.com/omegaml/omegaml/commit/58ffca1>`__
+-  add buildpack
+   `ac22f6e <https://github.com/omegaml/omegaml/commit/ac22f6e>`__
+-  update for deployment
+   `e730248 <https://github.com/omegaml/omegaml/commit/e730248>`__
+-  store config in appropriate format
+   `8f74fa1 <https://github.com/omegaml/omegaml/commit/8f74fa1>`__
+-  add complete signup and config
+   `99d1d97 <https://github.com/omegaml/omegaml/commit/99d1d97>`__
+-  add client config api
+   `83feb40 <https://github.com/omegaml/omegaml/commit/83feb40>`__
+-  add user specific mongodb creation
+   `b405e8d <https://github.com/omegaml/omegaml/commit/b405e8d>`__
+-  config for orders and payments
+   `57b1dd4 <https://github.com/omegaml/omegaml/commit/57b1dd4>`__
+-  update
+   `f36a9d4 <https://github.com/omegaml/omegaml/commit/f36a9d4>`__
+-  setup webapp
+   `a82c73e <https://github.com/omegaml/omegaml/commit/a82c73e>`__
+-  Merge pull request #9 from miraculixx/patrick/client-configuration
+   `65a9846 <https://github.com/omegaml/omegaml/commit/65a9846>`__
+-  updates
+   `d2a9316 <https://github.com/omegaml/omegaml/commit/d2a9316>`__
+-  support basic filter on get
+   `19f80da <https://github.com/omegaml/omegaml/commit/19f80da>`__
+-  complete api tests
+   `5620fe6 <https://github.com/omegaml/omegaml/commit/5620fe6>`__
+-  add api tests
+   `f813c04 <https://github.com/omegaml/omegaml/commit/f813c04>`__
+-  add resource tests
+   `41e9868 <https://github.com/omegaml/omegaml/commit/41e9868>`__
+-  updates
+   `ee8d89b <https://github.com/omegaml/omegaml/commit/ee8d89b>`__
+-  updates doc
+   `e654ae1 <https://github.com/omegaml/omegaml/commit/e654ae1>`__
+-  updates
+   `b2dacbd <https://github.com/omegaml/omegaml/commit/b2dacbd>`__
+-  Merge pull request #1 from miraculixx/patrick-migrate-conda
+   `382c301 <https://github.com/omegaml/omegaml/commit/382c301>`__
+-  add shippable build
+   `b13abe0 <https://github.com/omegaml/omegaml/commit/b13abe0>`__
+-  migrate to conda installer
+   `0262ab4 <https://github.com/omegaml/omegaml/commit/0262ab4>`__
+
+Bug Fixes
+~~~~~~~~~
+
+-  fix docker build
+   `c0e1e6c <https://github.com/omegaml/omegaml/commit/c0e1e6c>`__
+-  fix shippable particularity for test output
+   `36a8958 <https://github.com/omegaml/omegaml/commit/36a8958>`__
+-  fix shippable tests
+   `13ec315 <https://github.com/omegaml/omegaml/commit/13ec315>`__
+-  fix tests
+   `a81eefd <https://github.com/omegaml/omegaml/commit/a81eefd>`__
+-  fix erronous test on decision function
+   `cac88bd <https://github.com/omegaml/omegaml/commit/cac88bd>`__
+-  fix complex username signup py3
+   `92ff291 <https://github.com/omegaml/omegaml/commit/92ff291>`__
+-  fix py2/py3 compatibility
+   `821bb75 <https://github.com/omegaml/omegaml/commit/821bb75>`__
+-  fix remaining tests
+   `e43c02b <https://github.com/omegaml/omegaml/commit/e43c02b>`__
+-  fix issues
+   `707b55e <https://github.com/omegaml/omegaml/commit/707b55e>`__
+-  fix warnings
+   `8375572 <https://github.com/omegaml/omegaml/commit/8375572>`__
+-  fix packaging
+   `ad37a78 <https://github.com/omegaml/omegaml/commit/ad37a78>`__
+-  fix release builds
+   `a0143d5 <https://github.com/omegaml/omegaml/commit/a0143d5>`__
+-  fix python3 urllib
+   `7111771 <https://github.com/omegaml/omegaml/commit/7111771>`__
+-  fix issues
+   `59d26ea <https://github.com/omegaml/omegaml/commit/59d26ea>`__
+-  fix default auth issue
+   `667318d <https://github.com/omegaml/omegaml/commit/667318d>`__
+-  fixed celeryapp configuration
+   `7fbf557 <https://github.com/omegaml/omegaml/commit/7fbf557>`__
+-  fix compatibility with py3
+   `5267a23 <https://github.com/omegaml/omegaml/commit/5267a23>`__
+-  fixes for py3 migration
+   `2a14f89 <https://github.com/omegaml/omegaml/commit/2a14f89>`__
+-  fix circleci build
+   `a73d6bd <https://github.com/omegaml/omegaml/commit/a73d6bd>`__
+-  fix database connection losing authentication, cleanup
+   `993415e <https://github.com/omegaml/omegaml/commit/993415e>`__
+-  fix bug that kept accumulating data in the database throughout tests
+   `2924458 <https://github.com/omegaml/omegaml/commit/2924458>`__
+-  fix unit tests
+   `4d5d96e <https://github.com/omegaml/omegaml/commit/4d5d96e>`__
+-  fixes `c7aa08f <https://github.com/omegaml/omegaml/commit/c7aa08f>`__
+-  fix api tests
+   `9e364a4 <https://github.com/omegaml/omegaml/commit/9e364a4>`__
+
+Refactor
+~~~~~~~~
+
+-  refactor mixins
+   `fd0037a <https://github.com/omegaml/omegaml/commit/fd0037a>`__
+-  refactors omegajobs, made jobs runnable on cluster via runtime
+   `30abee4 <https://github.com/omegaml/omegaml/commit/30abee4>`__
+-  refactored jobs content manager to work with omegastore instead of
+   directly mongodb
+   `6655f54 <https://github.com/omegaml/omegaml/commit/6655f54>`__
+-  refactoring runtime, ensure configuration is always regarding a user
+   `245c96a <https://github.com/omegaml/omegaml/commit/245c96a>`__

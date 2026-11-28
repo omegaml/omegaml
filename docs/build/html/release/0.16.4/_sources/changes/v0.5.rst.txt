@@ -1,0 +1,12 @@
+Release notes release/0.5
+=========================
+
+Released 2017-02-04
+
+Changes
+~~~~~~~
+
+-  updates
+   `5481f5a <https://github.com/omegaml/omegaml/commit/5481f5a>`__
+-  add mdataframe documentation
+   `ef83bb4 <https://github.com/omegaml/omegaml/commit/ef83bb4>`__
